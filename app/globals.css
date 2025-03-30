@@ -1,0 +1,62 @@
+@import './components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium;
+  }
+}
+
+@layer components {
+  .bill-tag {
+    @apply inline-block px-3 py-1 text-xs font-medium rounded-full;
+  }
+  
+  .bill-tag-policy {
+    @apply bill-tag bg-amber-100 text-amber-800;
+  }
+  
+  .bill-tag-status {
+    @apply bill-tag bg-blue-100 text-blue-800;
+  }
+  
+  .bill-tag-party-democrat {
+    @apply bill-tag bg-blue-100 text-blue-800;
+  }
+  
+  .bill-tag-party-republican {
+    @apply bill-tag bg-red-100 text-red-800;
+  }
+  
+  .bill-tag-party-independent {
+    @apply bill-tag bg-purple-100 text-purple-800;
+  }
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 245, 245, 245;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
