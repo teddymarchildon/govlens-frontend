@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getSavedBills, getSavedCongressmen } from '../../services/api';
+import { getSavedBills, getSavedCongressmen, unsaveBill, unsaveCongressman } from '../../services/api';
 import Link from 'next/link';
 import BillCard from '../../components/BillCard';
 import { Bill, Congressman } from '../../types/types';
@@ -43,6 +43,28 @@ export default function SavedItemsPage() {
       fetchSavedItems();
     }
   }, [user, authLoading]);
+
+  const handleUnsaveBill = async (savedBill: any) => {
+    if (!user) return;
+    
+    try {
+      await unsaveBill(user.id, savedBill.bill_id);
+      setSavedBills(savedBills.filter(bill => bill.id !== savedBill.id));
+    } catch (error) {
+      console.error('Error unsaving bill:', error);
+    }
+  };
+
+  const handleUnsaveCongressman = async (savedCongressman: any) => {
+    if (!user) return;
+    
+    try {
+      await unsaveCongressman(user.id, savedCongressman.congressman_id);
+      setSavedCongressmen(savedCongressmen.filter(congressman => congressman.id !== savedCongressman.id));
+    } catch (error) {
+      console.error('Error unsaving congressman:', error);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -110,7 +132,24 @@ export default function SavedItemsPage() {
               {savedBills.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {savedBills.map((savedBill) => (
-                    <BillCard key={savedBill.id} bill={savedBill.bill} />
+                    <div key={savedBill.id} className="relative group">
+                      <BillCard bill={savedBill.bill} />
+                      <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnsaveBill(savedBill);
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
+                          aria-label="Unsave this bill"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Unsave
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -131,8 +170,23 @@ export default function SavedItemsPage() {
                   {savedCongressmen.map((savedCongressman) => (
                     <div
                       key={savedCongressman.id}
-                      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group"
                     >
+                      <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnsaveCongressman(savedCongressman);
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
+                          aria-label="Unsave this congressman"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Unsave
+                        </button>
+                      </div>
                       <Link href={`/congressmen/${savedCongressman.congressman.id}`}>
                         <div className="p-6">
                           <div className="flex justify-between items-start mb-2">

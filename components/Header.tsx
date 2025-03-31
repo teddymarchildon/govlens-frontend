@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Header() {
   const pathname = usePathname();
   const { user, signOut, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => {
     return pathname === path ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-gray-900';
@@ -17,10 +19,25 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
+      setDropdownOpen(false);
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-10">
@@ -30,46 +47,7 @@ export default function Header() {
             <Link href="/" className="text-xl font-bold text-blue-600">
               GovLens
             </Link>
-            <nav className="hidden md:ml-8 md:flex md:space-x-8">
-              <Link 
-                href="/" 
-                className={`px-3 py-2 text-sm font-medium ${isActive('/')}`}
-              >
-                Home
-              </Link>
-              <Link 
-                href="/bills" 
-                className={`px-3 py-2 text-sm font-medium ${isActive('/bills')}`}
-              >
-                Bills
-              </Link>
-              <Link 
-                href="/congressmen" 
-                className={`px-3 py-2 text-sm font-medium ${isActive('/congressmen')}`}
-              >
-                Congressmen
-              </Link>
-              <Link 
-                href="/profile" 
-                className={`px-3 py-2 text-sm font-medium ${isActive('/profile')}`}
-              >
-                Profile
-              </Link>
-              <Link 
-                href="/saved" 
-                className={`px-3 py-2 text-sm font-medium ${isActive('/saved')}`}
-              >
-                Saved
-              </Link>
-              {user && (
-                <button
-                  onClick={handleSignOut}
-                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Sign Out
-                </button>
-              )}
-            </nav>
+            {/* Navigation links removed - using sidebar navigation only */}
           </div>
           
           <div className="flex items-center">
@@ -106,10 +84,46 @@ export default function Header() {
             )}
             
             {!loading && user && (
-              <div className="flex items-center">
-                <div className="h-8 w-8 rounded-full bg-gray-800 text-white flex items-center justify-center text-sm font-medium">
-                  ME
-                </div>
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center focus:outline-none"
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium cursor-pointer">
+                    {user.email?.substring(0, 2).toUpperCase() || 'ME'}
+                  </div>
+                </button>
+                
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
+                    <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
+                      Signed in as<br />
+                      <span className="font-medium text-gray-900 truncate block">{user.email}</span>
+                    </div>
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Your Profile
+                    </Link>
+                    <Link 
+                      href="/saved" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Saved Items
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -14,6 +14,7 @@ interface PageProps {
 }
 
 export default function CongressmanDetailPage({ params }: PageProps) {
+  const congressmanId = params.id;
   const [congressman, setCongressman] = useState<any>(null);
   const [sponsoredBills, setSponsoredBills] = useState<any[]>([]);
   const [cosponsoredBills, setCosponsoredBills] = useState<any[]>([]);
@@ -24,10 +25,10 @@ export default function CongressmanDetailPage({ params }: PageProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const congressmanData = await getCongressmanById(params.id);
-        const sponsoredData = await getCongressmanSponsoredBills(params.id);
-        const cosponsoredData = await getCongressmanCosponsoredBills(params.id);
-        const termsData = await getCongressmanTerms(params.id);
+        const congressmanData = await getCongressmanById(congressmanId);
+        const sponsoredData = await getCongressmanSponsoredBills(congressmanId);
+        const cosponsoredData = await getCongressmanCosponsoredBills(congressmanId);
+        const termsData = await getCongressmanTerms(congressmanId);
 
         setCongressman(congressmanData);
         setSponsoredBills(sponsoredData);
@@ -41,7 +42,7 @@ export default function CongressmanDetailPage({ params }: PageProps) {
     };
 
     fetchData();
-  }, [params.id]);
+  }, [congressmanId]);
 
   if (loading) {
     return (

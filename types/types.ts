@@ -14,7 +14,11 @@ export interface BillText {
   bill_id: string;
   pdf_url?: string;
   html_url?: string;
+  xml_url?: string;
   date?: string;
+  pdf_file_path?: string;
+  html_file_path?: string;
+  xml_file_path?: string;
 }
 
 export interface Congressman {

@@ -17,7 +17,11 @@ Columns:
 - bill_id: FK to bill
 - pdf_url: string
 - html_url: string
+- xml_url: string
 - date: date
+- pdf_file_path: string
+- html_file_path: string
+- xml_file_path: string
 
 ### sponsored_bills
 Columns:
@@ -79,5 +83,3 @@ Columns:
 - id: uuid
 - email: string
 - name: string
-
-

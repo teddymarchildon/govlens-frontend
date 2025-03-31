@@ -1,6 +1,11 @@
 import { supabase } from '../lib/supabase';
 import { Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
 
+// Storage API
+export const getStoragePublicUrl = (bucketName: string, filePath: string) => {
+  return supabase.storage.from(bucketName).getPublicUrl(filePath);
+};
+
 // Bills API
 export const getBills = async (params: any = {}) => {
   let query = supabase.from('bill').select('*');
@@ -11,6 +16,26 @@ export const getBills = async (params: any = {}) => {
 
   if (params.policy_area) {
     query = query.eq('policy_area', params.policy_area);
+  }
+
+  // If sponsor_id is provided, filter bills by sponsor
+  if (params.sponsor_id) {
+    // We need to get the bill IDs sponsored by this congressman first
+    const { data: sponsoredBills, error: sponsorError } = await supabase
+      .from('sponsored_bills')
+      .select('bill_id')
+      .eq('congressman_id', params.sponsor_id);
+
+    if (sponsorError) throw sponsorError;
+    
+    // If there are sponsored bills, filter the query
+    if (sponsoredBills && sponsoredBills.length > 0) {
+      const billIds = sponsoredBills.map(item => item.bill_id);
+      query = query.in('id', billIds);
+    } else {
+      // If no bills are sponsored by this congressman, return empty array
+      return [];
+    }
   }
 
   const { data, error } = await query;
@@ -80,6 +105,11 @@ export const getCongressmen = async (params: any = {}) => {
     query = query.eq('chamber', params.chamber);
   }
 
+  // Search by name if provided
+  if (params.search) {
+    query = query.ilike('full_name', `%${params.search}%`);
+  }
+
   const { data, error } = await query;
 
   if (error) throw error;
@@ -143,7 +173,7 @@ export const saveCongressman = async (userId: string, congressmanId: string) => 
       console.error('Error saving congressman:', error);
       throw error;
     }
-    
+
     console.log('Congressman saved successfully:', data);
     return data;
   } catch (error) {
@@ -165,7 +195,7 @@ export const unsaveCongressman = async (userId: string, congressmanId: string) =
       console.error('Error unsaving congressman:', error);
       throw error;
     }
-    
+
     console.log('Congressman unsaved successfully:', data);
     return data;
   } catch (error) {
@@ -186,7 +216,7 @@ export const isCongressmanSaved = async (userId: string, congressmanId: string) 
       console.error('Error checking if congressman is saved:', error);
       throw error;
     }
-    
+
     const isSaved = (count || 0) > 0;
     console.log(`Congressman saved status: ${isSaved}`, data);
     return isSaved;
@@ -211,7 +241,7 @@ export const saveBill = async (userId: string, billId: string) => {
       console.error('Error saving bill:', error);
       throw error;
     }
-    
+
     console.log('Bill saved successfully:', data);
     return data;
   } catch (error) {
@@ -233,7 +263,7 @@ export const unsaveBill = async (userId: string, billId: string) => {
       console.error('Error unsaving bill:', error);
       throw error;
     }
-    
+
     console.log('Bill unsaved successfully:', data);
     return data;
   } catch (error) {
@@ -254,7 +284,7 @@ export const isBillSaved = async (userId: string, billId: string) => {
       console.error('Error checking if bill is saved:', error);
       throw error;
     }
-    
+
     const isSaved = (count || 0) > 0;
     console.log(`Bill saved status: ${isSaved}`, data);
     return isSaved;
