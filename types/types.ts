@@ -21,6 +21,28 @@ export interface BillText {
   xml_file_path?: string;
 }
 
+export interface Law {
+  id: string;
+  congress: number;
+  type: string;
+  number: string;
+  title: string;
+  enacted_date?: string;
+  unique_id: string;
+}
+
+export interface LawText {
+  id: string;
+  law_id: string;
+  pdf_url?: string;
+  html_url?: string;
+  xml_url?: string;
+  date?: string;
+  pdf_file_path?: string;
+  html_file_path?: string;
+  xml_file_path?: string;
+}
+
 export interface Congressman {
   id: string;
   full_name: string;
