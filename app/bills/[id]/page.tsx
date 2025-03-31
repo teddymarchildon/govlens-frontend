@@ -109,7 +109,103 @@ export default function BillDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {showPdfViewer ? (
+      {/* Sponsors and Cosponsors in a more compact layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors?.length || 0})</h2>
+          {sponsors && sponsors.length > 0 ? (
+            <div className="bg-white rounded-lg shadow p-4">
+              {sponsors.map((sponsor) => (
+                <div key={sponsor.id} className="mb-2">
+                  <Link
+                    href={`/congressmen/${sponsor.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {sponsor.full_name}
+                  </Link>
+                  <div className="text-xs text-gray-600">
+                    {sponsor.party}-{sponsor.state}{sponsor.chamber === 'House' ? `, District ${sponsor.district || 'N/A'}` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No sponsors found</p>
+          )}
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Cosponsors ({cosponsors?.length || 0})</h2>
+          {cosponsors && cosponsors.length > 0 ? (
+            <div className="bg-white rounded-lg shadow p-4 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {cosponsors.map((cosponsor) => (
+                  <div key={cosponsor.id} className="mb-2">
+                    <Link
+                      href={`/congressmen/${cosponsor.id}`}
+                      className="font-medium hover:underline text-sm"
+                    >
+                      {cosponsor.full_name}
+                    </Link>
+                    <div className="text-xs text-gray-600">
+                      {cosponsor.party}-{cosponsor.state}{cosponsor.chamber === 'House' ? `, ${cosponsor.district || ''}` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p>No cosponsors found</p>
+          )}
+        </div>
+      </div>
+
+      {/* Bill Text and AI Chat sections side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Bill Text Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          {latestText ? (
+            <>
+              <div className="h-[500px] border rounded">
+                {latestText.pdf_url ? (
+                  <PdfViewer url={getPdfUrl(latestText)} className="h-full" />
+                ) : (
+                  <div className="bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap overflow-auto h-full">
+                    {`[Congressional Bills ${bill.congress}th Congress]
+[From the U.S. Government Publishing Office]
+[${bill.type.toUpperCase()}. ${bill.number} Introduced in ${bill.chamber || 'Congress'}]
+
+<DOC>
+
+
+${bill.congress}th CONGRESS
+1st Session
+${bill.type.toUpperCase()}. ${bill.number}
+
+${bill.title}
+
+
+IN THE ${bill.chamber?.toUpperCase() || 'CONGRESS OF THE UNITED STATES'}
+
+${bill.introduced_date ? new Date(bill.introduced_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+`}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <p>No bill texts available</p>
+          )}
+        </div>
+
+        {/* AI Chat Section */}
+        <div className="bg-white rounded-lg shadow">
+          <BillAiChat bill={bill} className="h-[600px]" />
+        </div>
+      </div>
+
+      {/* If you want to keep the PDF viewer with AI analysis as an option */}
+      {showPdfViewer && (
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Bill Analysis</h2>
@@ -158,108 +254,6 @@ export default function BillDetailPage({ params }: PageProps) {
             </div>
           )}
         </div>
-      ) : (
-        <>
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors?.length || 0})</h2>
-            {sponsors && sponsors.length > 0 ? (
-              <div className="bg-white rounded-lg shadow p-6">
-                {sponsors.map((sponsor) => (
-                  <div key={sponsor.id} className="mb-4">
-                    <Link
-                      href={`/congressmen/${sponsor.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      Rep. {sponsor.full_name}
-                    </Link>
-                    <div className="text-sm text-gray-600">
-                      {sponsor.party}-{sponsor.state}, District {sponsor.district || 'N/A'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No sponsors found</p>
-            )}
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Cosponsors ({cosponsors?.length || 0})</h2>
-            {cosponsors && cosponsors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg shadow p-6">
-                {cosponsors.map((cosponsor) => (
-                  <div key={cosponsor.id} className="mb-4">
-                    <Link
-                      href={`/congressmen/${cosponsor.id}`}
-                      className="font-medium hover:underline"
-                    >
-                      Rep. {cosponsor.full_name}
-                    </Link>
-                    <div className="text-sm text-gray-600">
-                      {cosponsor.party}-{cosponsor.state}, District {cosponsor.district || ''}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No cosponsors found</p>
-            )}
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Bill Text</h2>
-            <div className="bg-white rounded-lg shadow p-6">
-              {latestText ? (
-                <>
-                  <div className="mb-4 text-sm">
-                    <span className="font-medium">Latest Version:</span> {latestText.date ? new Date(latestText.date).toLocaleDateString() : 'N/A'}
-                  </div>
-                  <div className="flex flex-wrap gap-4">
-                    {(latestText.pdf_storage_url || latestText.pdf_url) && (
-                      <button
-                        onClick={handleViewPdf}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        View PDF with AI Analysis
-                      </button>
-                    )}
-                    {latestText.pdf_url && (
-                      <a
-                        href={getPdfUrl(latestText)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        Download PDF
-                      </a>
-                    )}
-                    {latestText.html_url && (
-                      <a
-                        href={latestText.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        View on Congress.gov
-                      </a>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p>No bill texts available</p>
-              )}
-            </div>
-          </div>
-        </>
       )}
     </div>
   );

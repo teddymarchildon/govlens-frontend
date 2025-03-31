@@ -23,16 +23,16 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
   // Format chamber and district info
   const getChamberInfo = () => {
     if (!congressman.chamber) return '';
-    
+
     const isHouse = congressman.chamber.toLowerCase() === 'house';
     const isSenate = congressman.chamber.toLowerCase() === 'senate';
-    
+
     if (isHouse) {
       return `U.S. Representative${congressman.district ? `, ${congressman.state}-${congressman.district}` : ''}`;
     } else if (isSenate) {
       return `U.S. Senator, ${congressman.state}`;
     }
-    
+
     return congressman.chamber;
   };
 
@@ -43,18 +43,18 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
           <h3 className="text-lg font-medium text-gray-900">
             {congressman.full_name}
           </h3>
-          
+
           <span className={`${getPartyTagClass(congressman.party)}`}>
             {congressman.party}
           </span>
         </div>
-        
+
         {congressman.chamber && (
           <p className="text-sm text-gray-600 mb-3">
             {getChamberInfo()}
           </p>
         )}
-        
+
         <div className="space-y-2 mb-4">
           {congressman.phone && (
             <div className="flex items-center text-sm text-gray-600">
@@ -64,15 +64,15 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
               {congressman.phone}
             </div>
           )}
-          
+
           {congressman.website && (
             <div className="flex items-center text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
               </svg>
-              <a 
-                href={congressman.website} 
-                target="_blank" 
+              <a
+                href={congressman.website}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
@@ -81,9 +81,9 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end">
-          <Link 
+          <Link
             href={`/congressmen/${congressman.id}`}
             className="text-blue-600 hover:text-blue-800 font-medium text-sm"
           >

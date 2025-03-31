@@ -130,7 +130,7 @@ export default function Sidebar() {
           ) : (
             <ul className="space-y-1">
               {savedItems.map((item) => (
-                <li key={item.id}>
+                <li key={`${item.type}-${item.itemId}`}>
                   <Link
                     href={`/${item.type === 'bill' ? 'bills' : 'congressmen'}/${item.itemId}`}
                     className="flex items-center px-3 py-2 text-sm hover:bg-gray-100 rounded-md"

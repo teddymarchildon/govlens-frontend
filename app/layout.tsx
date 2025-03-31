@@ -5,7 +5,12 @@ import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { AuthProvider } from '../contexts/AuthContext';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'GovLens - Legislative Research Platform',
@@ -18,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={`${inter.variable}`}>
+      <body className={`${inter.className} font-sans`}>
         <AuthProvider>
           <div className="min-h-screen bg-gray-50">
             <Header />

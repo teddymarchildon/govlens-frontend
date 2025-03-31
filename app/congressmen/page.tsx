@@ -65,77 +65,91 @@ export default function CongressmenPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Members of Congress</h1>
       
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Filter Congressmen</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label htmlFor="party-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Party
-            </label>
-            <select
-              id="party-filter"
-              value={party}
-              onChange={(e) => setParty(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Parties</option>
-              {parties.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <label htmlFor="state-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              State
-            </label>
-            <select
-              id="state-filter"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All States</option>
-              {states.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <label htmlFor="chamber-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Chamber
-            </label>
-            <select
-              id="chamber-filter"
-              value={chamber}
-              onChange={(e) => setChamber(e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Chambers</option>
-              {chambers.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="party-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Party
+          </label>
+          <select
+            id="party-filter"
+            value={party}
+            onChange={(e) => setParty(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All Parties</option>
+            {parties.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </div>
         
-        {(party || state || chamber) && (
+        <div>
+          <label htmlFor="state-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            State
+          </label>
+          <select
+            id="state-filter"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All States</option>
+            {states.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div>
+          <label htmlFor="chamber-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Chamber
+          </label>
+          <select
+            id="chamber-filter"
+            value={chamber}
+            onChange={(e) => setChamber(e.target.value)}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All Chambers</option>
+            {chambers.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      {(party || state || chamber) && (
+        <div className="mb-4 flex items-center">
+          <div className="text-sm text-gray-600 mr-2">Active filters:</div>
+          {party && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+              Party: {party}
+            </span>
+          )}
+          {state && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+              State: {state}
+            </span>
+          )}
+          {chamber && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+              Chamber: {chamber}
+            </span>
+          )}
           <button
             onClick={clearFilters}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            className="text-sm text-gray-500 hover:text-gray-700"
           >
-            Clear All Filters
+            Clear all
           </button>
-        )}
-      </div>
+        </div>
+      )}
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -143,7 +157,7 @@ export default function CongressmenPage() {
         </div>
       ) : (
         <>
-          <p className="mb-4">Showing {congressmen.length} members</p>
+          <p className="mb-4">Showing {congressmen.length} members of Congress</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {congressmen.map((congressman) => (
               <CongressmanCard key={congressman.id} congressman={congressman} />
