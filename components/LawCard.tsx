@@ -15,9 +15,15 @@ export default function LawCard({ law }: LawCardProps) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
       <Link href={`/laws/${law.id}`} className="block p-5">
         <div className="flex justify-between items-start mb-2">
-          <div className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-            {law.type.toUpperCase()} {law.number}
-          </div>
+          {law.policy_area ? (
+            <div className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+              {law.policy_area}
+            </div>
+          ) : (
+            <div className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+              Uncategorized
+            </div>
+          )}
           <div className="text-xs text-gray-500">
             Enacted: {formattedDate}
           </div>

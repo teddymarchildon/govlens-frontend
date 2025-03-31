@@ -37,8 +37,8 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-5">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <Link href={`/congressmen/${congressman.id}`} className="block p-5">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-medium text-gray-900">
             {congressman.full_name}
@@ -55,7 +55,7 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
           </p>
         )}
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2">
           {congressman.phone && (
             <div className="flex items-center text-sm text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,22 +75,14 @@ export default function CongressmanCard({ congressman }: CongressmanCardProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
+                onClick={(e) => e.stopPropagation()}
               >
                 Official Website
               </a>
             </div>
           )}
         </div>
-
-        <div className="flex justify-end">
-          <Link
-            href={`/congressmen/${congressman.id}`}
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-          >
-            View Profile
-          </Link>
-        </div>
-      </div>
+      </Link>
     </div>
   );
 }

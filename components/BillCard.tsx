@@ -10,8 +10,8 @@ export default function BillCard({ bill }: BillCardProps) {
   const billIdentifier = `${bill.type.toUpperCase()}. ${bill.number}`;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full">
-      <div className="p-4 relative">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
+      <Link href={`/bills/${bill.id}`} className="block p-4 h-full">
         <div className="flex justify-between items-start mb-2">
           <span className="text-sm font-semibold text-gray-700">{billIdentifier}</span>
 
@@ -26,21 +26,12 @@ export default function BillCard({ bill }: BillCardProps) {
           {bill.title}
         </h3>
 
-        <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
-          {bill.introduced_date && (
-            <div>
-              <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
-            </div>
-          )}
-
-          <Link
-            href={`/bills/${bill.id}`}
-            className="text-blue-600 hover:text-blue-800 font-medium"
-          >
-            View Details
-          </Link>
-        </div>
-      </div>
+        {bill.introduced_date && (
+          <div className="text-xs text-gray-500 mt-auto">
+            <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
+          </div>
+        )}
+      </Link>
     </div>
   );
 }

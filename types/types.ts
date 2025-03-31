@@ -29,6 +29,7 @@ export interface Law {
   title: string;
   enacted_date?: string;
   unique_id: string;
+  policy_area?: string;
 }
 
 export interface LawText {
