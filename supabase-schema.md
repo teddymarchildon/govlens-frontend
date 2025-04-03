@@ -10,6 +10,14 @@ Columns:
 - type: string
 - number: string
 - title: string
+- policy_area: string
+- introduced_date: date
+- bill_unique_id: string
+- law_enacted_date: date
+- law_number: string
+- law_type: string
+- law_unique_id: string
+- law_title: string
 
 ### bill_text
 Columns:
@@ -60,12 +68,6 @@ Columns:
 - district: string
 - chamber: string
 
-
-### committee
-Columns:
-- id: uuid
-- name: string
-
 ### saved_congressman
 Columns:
 - id: uuid
@@ -83,3 +85,11 @@ Columns:
 - id: uuid
 - email: string
 - name: string
+
+### bill_action
+Columns:
+- id: uuid
+- bill_id: FK to bill
+- date: date
+- text: string
+- type: string

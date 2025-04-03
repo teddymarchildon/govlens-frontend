@@ -2,8 +2,9 @@ import { supabase } from '../lib/supabase';
 import { Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
 
 // Storage API
-export const getStoragePublicUrl = (bucketName: string, filePath: string) => {
-  return supabase.storage.from(bucketName).getPublicUrl(filePath);
+export const getStoragePublicUrl = async (bucketName: string, filePath: string): Promise<string> => {
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  return data.publicUrl;
 };
 
 // Bills API

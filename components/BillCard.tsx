@@ -1,13 +1,44 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bill } from '../types/types';
+import { Bill, Congressman } from '../types/types';
+import { supabase } from '../lib/supabase';
 
 interface BillCardProps {
   bill: Bill;
 }
 
 export default function BillCard({ bill }: BillCardProps) {
+  const [sponsor, setSponsor] = useState<Congressman | null>(null);
+  const [loading, setLoading] = useState(true);
+
   // Format bill identifier (e.g., HR. 2139)
   const billIdentifier = `${bill.type.toUpperCase()}. ${bill.number}`;
+
+  useEffect(() => {
+    const fetchSponsor = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('sponsored_bills')
+          .select('congressman_id, congressman:congressman(*)')
+          .eq('bill_id', bill.id)
+          .limit(1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setSponsor(data[0].congressman as unknown as Congressman);
+        }
+      } catch (error) {
+        console.error('Error fetching sponsor:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSponsor();
+  }, [bill.id]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
@@ -26,11 +57,29 @@ export default function BillCard({ bill }: BillCardProps) {
           {bill.title}
         </h3>
 
-        {bill.introduced_date && (
-          <div className="text-xs text-gray-500 mt-auto">
-            <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
-          </div>
-        )}
+        <div className="flex flex-col space-y-2 mt-auto">
+          {sponsor && (
+            <div className="text-xs text-gray-700">
+              <span className="font-medium">Sponsored by:</span>{' '}
+              <Link 
+                href={`/congressmen/${sponsor.id}`} 
+                className="text-blue-600 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {sponsor.full_name}
+              </Link>
+              <span className="text-gray-500 ml-1">
+                ({sponsor.party}-{sponsor.state})
+              </span>
+            </div>
+          )}
+
+          {bill.introduced_date && (
+            <div className="text-xs text-gray-500">
+              <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
+            </div>
+          )}
+        </div>
       </Link>
     </div>
   );

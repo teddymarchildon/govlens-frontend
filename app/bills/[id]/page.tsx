@@ -21,7 +21,6 @@ export default function BillDetailPage({ params }: PageProps) {
   const [sponsors, setSponsors] = useState<any[]>([]);
   const [cosponsors, setCosponsors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTextVersion, setSelectedTextVersion] = useState<BillText | null>(null);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
 
   useEffect(() => {
@@ -37,11 +36,6 @@ export default function BillDetailPage({ params }: PageProps) {
         setTexts(textsData);
         setSponsors(sponsorsData);
         setCosponsors(cosponsorsData);
-
-        // Set the latest text version as selected by default
-        if (textsData && textsData.length > 0) {
-          setSelectedTextVersion(textsData[0]);
-        }
       } catch (error) {
         console.error('Error fetching bill data:', error);
       } finally {
@@ -60,15 +54,12 @@ export default function BillDetailPage({ params }: PageProps) {
   };
 
   // Generate the PDF URL from Supabase storage
-  const getPdfUrl = (text: BillText) => {
+  const getPdfUrl = async (text: BillText) => {
     if (bill && text && text.date) {
       // Get the public URL from Supabase storage
       const bucketName = 'bill-pdfs';
-      const publicUrlResponse = getStoragePublicUrl(bucketName, text.pdf_file_path!);
-
-      if (publicUrlResponse && publicUrlResponse.data) {
-        return publicUrlResponse.data.publicUrl;
-      }
+      const publicUrl = await getStoragePublicUrl(bucketName, text.pdf_file_path!);
+      return publicUrl;
     }
 
     // Fall back to the original PDF URL if we can't generate a storage URL
@@ -168,7 +159,7 @@ export default function BillDetailPage({ params }: PageProps) {
             <>
               <div className="h-[500px] border rounded">
                 {latestText.pdf_url ? (
-                  <PdfViewer url={getPdfUrl(latestText)} className="h-full" />
+                  <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
                 ) : (
                   <div className="bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap overflow-auto h-full">
                     {`[Congressional Bills ${bill.congress}th Congress]
@@ -200,61 +191,9 @@ ${bill.introduced_date ? new Date(bill.introduced_date).toLocaleDateString('en-U
 
         {/* AI Chat Section */}
         <div className="bg-white rounded-lg shadow">
-          <BillAiChat bill={bill} className="h-[600px]" />
+          <BillAiChat bill={bill} billText={latestText || undefined} className="h-[600px]" />
         </div>
       </div>
-
-      {/* If you want to keep the PDF viewer with AI analysis as an option */}
-      {showPdfViewer && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Bill Analysis</h2>
-            <button
-              onClick={() => setShowPdfViewer(false)}
-              className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-            >
-              Back to Bill Details
-            </button>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-6 h-[800px]">
-            <div className="flex-1 h-full">
-              {selectedTextVersion ? (
-                <PdfViewer url={getPdfUrl(selectedTextVersion)} className="h-full" />
-              ) : (
-                <div className="flex justify-center items-center h-full bg-gray-100 rounded-lg">
-                  <p>No PDF available for this bill</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1 h-full border rounded-lg shadow-sm">
-              <BillAiChat bill={bill} className="h-full" />
-            </div>
-          </div>
-
-          {texts && texts.length > 1 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-2">Other Versions</h3>
-              <div className="flex flex-wrap gap-2">
-                {texts.map((text) => (
-                  <button
-                    key={text.id}
-                    onClick={() => setSelectedTextVersion(text)}
-                    className={`px-3 py-1 text-sm rounded ${
-                      selectedTextVersion?.id === text.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    {text.date ? new Date(text.date).toLocaleDateString() : 'Unknown Date'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

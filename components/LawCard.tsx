@@ -2,14 +2,37 @@
 
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
-import { Law } from '@/types/types';
+import { Congressman } from '@/types/types';
+
+// Updated Law interface to match the bills table structure with sponsor
+interface Law {
+  id: string;
+  congress: number;
+  type: string;
+  number: string;
+  title: string;
+  policy_area: string;
+  introduced_date: string;
+  law_enacted_date: string;
+  law_number: string;
+  law_type: string;
+  law_unique_id: string;
+  law_title: string;
+  sponsor: {
+    congressman: Congressman;
+  }[];
+}
 
 interface LawCardProps {
   law: Law;
 }
 
 export default function LawCard({ law }: LawCardProps) {
-  const formattedDate = law.enacted_date ? formatDate(law.enacted_date) : 'Unknown date';
+  // Get the sponsor from the law object
+  const sponsor = law.sponsor && law.sponsor.length > 0 ? law.sponsor[0].congressman : null;
+  
+  // Use law_enacted_date instead of enacted_date
+  const formattedDate = law.law_enacted_date ? formatDate(law.law_enacted_date) : 'Unknown date';
   
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
@@ -28,12 +51,32 @@ export default function LawCard({ law }: LawCardProps) {
             Enacted: {formattedDate}
           </div>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2">{law.title}</h3>
-        <div className="flex items-center text-sm text-gray-600">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>Public Law {law.congress}-{law.number}</span>
+        <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2">
+          {law.law_title || law.title}
+        </h3>
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center text-sm text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Public Law {law.law_number || `${law.congress}-${law.number}`}</span>
+          </div>
+          
+          {sponsor && (
+            <div className="text-xs text-gray-700 mt-2">
+              <span className="font-medium">Sponsored by:</span>{' '}
+              <Link 
+                href={`/congressmen/${sponsor.id}`} 
+                className="text-blue-600 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {sponsor.full_name}
+              </Link>
+              <span className="text-gray-500 ml-1">
+                ({sponsor.party}-{sponsor.state})
+              </span>
+            </div>
+          )}
         </div>
       </Link>
     </div>

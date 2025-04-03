@@ -4,11 +4,40 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { formatDate } from '@/lib/utils';
-import { Law, LawText, Bill, Congressman } from '@/types/types';
+import { Congressman } from '@/types/types';
 import Link from 'next/link';
 import PdfViewer from '@/components/PdfViewer';
 import LawAiChat from '@/components/LawAiChat';
 import { getStoragePublicUrl } from '@/services/api';
+
+// Updated Law interface to match the bills table structure
+interface Law {
+  id: string;
+  congress: number;
+  type: string;
+  number: string;
+  title: string;
+  policy_area: string;
+  introduced_date: string;
+  law_enacted_date: string;
+  law_number: string;
+  law_type: string;
+  law_unique_id: string;
+  law_title: string;
+}
+
+// Updated LawText interface to match bill_text table
+interface LawText {
+  id: string;
+  law_id: string;
+  date: string;
+  pdf_url: string;
+  html_url: string;
+  xml_url: string;
+  pdf_file_path: string;
+  html_file_path: string;
+  xml_file_path: string;
+}
 
 export default function LawDetailPage() {
   const params = useParams();
@@ -17,7 +46,6 @@ export default function LawDetailPage() {
 
   const [law, setLaw] = useState<Law | null>(null);
   const [lawTexts, setLawTexts] = useState<LawText[]>([]);
-  const [relatedBills, setRelatedBills] = useState<Bill[]>([]);
   const [sponsors, setSponsors] = useState<Congressman[]>([]);
   const [cosponsors, setCosponsors] = useState<Congressman[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,21 +57,22 @@ export default function LawDetailPage() {
 
       setLoading(true);
       try {
-        // Fetch law details
+        // Fetch law details from the bill table where law_enacted_date is not null
         const { data: lawData, error: lawError } = await supabase
-          .from('law')
+          .from('bill')
           .select('*')
           .eq('id', lawId)
+          .not('law_enacted_date', 'is', null)
           .single();
 
         if (lawError) throw lawError;
         setLaw(lawData);
 
-        // Fetch law text versions
+        // Fetch bill text versions (which are now the law text versions)
         const { data: textData, error: textError } = await supabase
-          .from('law_text')
+          .from('bill_text')
           .select('*')
-          .eq('law_id', lawId)
+          .eq('bill_id', lawId)
           .order('date', { ascending: false });
 
         if (textError) throw textError;
@@ -54,75 +83,54 @@ export default function LawDetailPage() {
           setSelectedTextVersion(textData[0]);
         }
 
-        // Fetch related bills
-        const { data: billsLawsData, error: billsLawsError } = await supabase
-          .from('bills_laws')
-          .select('bill_id')
-          .eq('law_id', lawId);
+        // Fetch sponsors for this bill
+        const { data: sponsorsData, error: sponsorsError } = await supabase
+          .from('sponsored_bills')
+          .select('congressman:congressman(*)')
+          .eq('bill_id', lawId);
 
-        if (billsLawsError) throw billsLawsError;
+        if (sponsorsError) throw sponsorsError;
+        setSponsors((sponsorsData || []).map(item => item.congressman as unknown as Congressman));
 
-        if (billsLawsData && billsLawsData.length > 0) {
-          const billIds = billsLawsData.map(item => item.bill_id);
-          
-          const { data: billsData, error: billsError } = await supabase
-            .from('bill')
-            .select('*')
-            .in('id', billIds);
+        // Fetch cosponsors for this bill
+        const { data: cosponsorsData, error: cosponsorsError } = await supabase
+          .from('cosponsored_bills')
+          .select('congressman:congressman(*)')
+          .eq('bill_id', lawId);
 
-          if (billsError) throw billsError;
-          setRelatedBills(billsData || []);
-          
-          // If we have related bills, fetch sponsors and cosponsors for the first bill
-          if (billsData && billsData.length > 0) {
-            const primaryBillId = billsData[0].id;
-            
-            // Fetch sponsors
-            const { data: sponsorsData, error: sponsorsError } = await supabase
-              .from('sponsored_bills')
-              .select('congressman_id, congressman:congressman(*)')
-              .eq('bill_id', primaryBillId);
-              
-            if (sponsorsError) throw sponsorsError;
-            setSponsors(sponsorsData?.map(item => item.congressman) || []);
-            
-            // Fetch cosponsors
-            const { data: cosponsorsData, error: cosponsorsError } = await supabase
-              .from('cosponsored_bills')
-              .select('congressman_id, congressman:congressman(*)')
-              .eq('bill_id', primaryBillId);
-              
-            if (cosponsorsError) throw cosponsorsError;
-            setCosponsors(cosponsorsData?.map(item => item.congressman) || []);
-          }
-        }
+        if (cosponsorsError) throw cosponsorsError;
+        setCosponsors((cosponsorsData || []).map(item => item.congressman as unknown as Congressman));
 
       } catch (error) {
         console.error('Error fetching law details:', error);
+        // If law not found, redirect to 404 page
+        router.push('/404');
       } finally {
         setLoading(false);
       }
     };
 
     fetchLawDetails();
-  }, [lawId]);
+  }, [lawId, router]);
 
-  // Generate the PDF URL from Supabase storage
-  const getPdfUrl = (text: LawText | null) => {
-    if (!text) return '';
-    
-    // If we have a pdf_file_path, get the public URL from Supabase storage
-    if (text.pdf_file_path) {
-      const bucketName = 'law-pdfs';
-      const publicUrlResponse = getStoragePublicUrl(bucketName, text.pdf_file_path);
-      
-      if (publicUrlResponse && publicUrlResponse.data) {
-        return publicUrlResponse.data.publicUrl;
-      }
+  const handleTextVersionChange = (textId: string) => {
+    const selectedText = lawTexts.find(text => text.id === textId);
+    if (selectedText) {
+      setSelectedTextVersion(selectedText);
     }
-    
-    // Fall back to the original PDF URL if we can't generate a storage URL
-    return text.pdf_url || '';
+  };
+
+  // Helper function to get the PDF URL for the selected text version
+  const getPdfUrl = async () => {
+    if (!selectedTextVersion?.pdf_file_path) return null;
+
+    try {
+      const publicUrl = await getStoragePublicUrl('bill-pdfs', selectedTextVersion.pdf_file_path);
+      return publicUrl;
+    } catch (error) {
+      console.error('Error getting PDF URL:', error);
+      return null;
+    }
   };
 
   if (loading) {
@@ -139,12 +147,7 @@ export default function LawDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Law not found</p>
-        </div>
-        <div className="mt-4">
-          <Link href="/laws" className="text-blue-600 hover:underline">
-            ← Back to Laws
-          </Link>
+          <p className="text-red-700">Law not found.</p>
         </div>
       </div>
     );
@@ -154,23 +157,14 @@ export default function LawDetailPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <div className="mb-2 flex justify-between items-center">
-          {law.policy_area ? (
-            <span className="bg-amber-100 text-amber-800 text-sm font-semibold px-3 py-1 rounded">
-              {law.policy_area}
-            </span>
-          ) : (
-            <span className="bg-gray-100 text-gray-800 text-sm font-semibold px-3 py-1 rounded">
-              Uncategorized
-            </span>
-          )}
-          {/* Add SaveButton here if you want to implement saving laws */}
+          <span className="text-gray-600">{law.policy_area || 'Uncategorized'}</span>
         </div>
-        <h1 className="text-3xl font-bold mb-2">{law.type.toUpperCase()}. {law.number}</h1>
-        <h2 className="text-xl mb-4">{law.title}</h2>
-        
+        <h1 className="text-3xl font-bold mb-2">{law.law_title || law.title}</h1>
+        <h2 className="text-xl mb-4">Public Law {law.law_number || `${law.congress}-${law.number}`}</h2>
+
         <div className="mb-6">
           <div className="text-sm mb-1">
-            <span className="font-medium">Enacted:</span> {law.enacted_date && formatDate(law.enacted_date)}
+            <span className="font-medium">Enacted:</span> {law.law_enacted_date && formatDate(law.law_enacted_date)}
           </div>
           <div className="text-sm">
             <span className="font-medium">Congress:</span> {law.congress}
@@ -178,133 +172,80 @@ export default function LawDetailPage() {
         </div>
       </div>
 
-      {/* Related Bills */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Related Bills ({relatedBills.length})</h2>
-        {relatedBills.length > 0 ? (
-          <div className="bg-white rounded-lg shadow p-4">
-            {relatedBills.map((bill) => (
-              <div key={bill.id} className="mb-2">
-                <Link
-                  href={`/bills/${bill.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {bill.type.toUpperCase()}. {bill.number}: {bill.title}
-                </Link>
-                <div className="text-xs text-gray-600">
-                  Introduced: {bill.introduced_date && formatDate(bill.introduced_date)}
+      {/* Sponsors and Cosponsors in a more compact layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors?.length || 0})</h2>
+          {sponsors && sponsors.length > 0 ? (
+            <div className="bg-white rounded-lg shadow p-4">
+              {sponsors.map((sponsor) => (
+                <div key={sponsor.id} className="mb-2">
+                  <Link
+                    href={`/congressmen/${sponsor.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {sponsor.full_name}
+                  </Link>
+                  <div className="text-xs text-gray-600">
+                    {sponsor.party}-{sponsor.state}{sponsor.chamber === 'House' ? `, District ${sponsor.district || 'N/A'}` : ''}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No related bills found</p>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <p>No sponsors found</p>
+          )}
+        </div>
 
-      {/* Sponsors and Cosponsors */}
-      {(sponsors.length > 0 || cosponsors.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors.length})</h2>
-            {sponsors.length > 0 ? (
-              <div className="bg-white rounded-lg shadow p-4">
-                {sponsors.map((sponsor) => (
-                  <div key={sponsor.id} className="mb-2">
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Cosponsors ({cosponsors?.length || 0})</h2>
+          {cosponsors && cosponsors.length > 0 ? (
+            <div className="bg-white rounded-lg shadow p-4 max-h-60 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {cosponsors.map((cosponsor) => (
+                  <div key={cosponsor.id} className="mb-2">
                     <Link
-                      href={`/congressmen/${sponsor.id}`}
-                      className="font-medium hover:underline"
+                      href={`/congressmen/${cosponsor.id}`}
+                      className="font-medium hover:underline text-sm"
                     >
-                      {sponsor.full_name}
+                      {cosponsor.full_name}
                     </Link>
                     <div className="text-xs text-gray-600">
-                      {sponsor.party}-{sponsor.state}{sponsor.chamber === 'House' ? `, District ${sponsor.district || 'N/A'}` : ''}
+                      {cosponsor.party}-{cosponsor.state}{cosponsor.chamber === 'House' ? `, ${cosponsor.district || ''}` : ''}
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p>No sponsors found</p>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Cosponsors ({cosponsors.length})</h2>
-            {cosponsors.length > 0 ? (
-              <div className="bg-white rounded-lg shadow p-4 max-h-60 overflow-y-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {cosponsors.map((cosponsor) => (
-                    <div key={cosponsor.id} className="mb-2">
-                      <Link
-                        href={`/congressmen/${cosponsor.id}`}
-                        className="font-medium hover:underline text-sm"
-                      >
-                        {cosponsor.full_name}
-                      </Link>
-                      <div className="text-xs text-gray-600">
-                        {cosponsor.party}-{cosponsor.state}{cosponsor.chamber === 'House' ? `, ${cosponsor.district || ''}` : ''}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p>No cosponsors found</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Law Text and AI Chat in a two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Law Text with PDF Viewer */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Law Text</h2>
-              {selectedTextVersion && selectedTextVersion.date && (
-                <div className="text-sm text-gray-600">
-                  Version: {formatDate(selectedTextVersion.date)}
-                </div>
-              )}
             </div>
-          </div>
+          ) : (
+            <p>No cosponsors found</p>
+          )}
+        </div>
+      </div>
 
-          <div className="p-4">
-            {lawTexts.length > 0 ? (
-              <div className="h-[600px]">
-                {selectedTextVersion ? (
-                  <PdfViewer url={getPdfUrl(selectedTextVersion)} className="h-full" />
-                ) : (
-                  <div className="bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap overflow-auto h-full">
-                    {`[Public Law ${law.congress}-${law.number}]
-[From the U.S. Government Publishing Office]
-[${law.type.toUpperCase()}. ${law.number} Enacted]
-
-<DOC>
-
-
-${law.congress}th CONGRESS
-
-${law.type.toUpperCase()}. ${law.number}
-
-${law.title}
-
-
-${law.enacted_date ? formatDate(law.enacted_date) : 'Unknown date'}
-`}
-                  </div>
-                )}
+      {/* Law Text and AI Chat sections side by side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Law Text Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          {selectedTextVersion ? (
+            <>
+              <div className="h-[500px] border rounded">
+                <PdfViewer storagePath={selectedTextVersion.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
               </div>
-            ) : (
-              <p>No law texts available</p>
-            )}
-          </div>
+            </>
+          ) : (
+            <p>No law texts available</p>
+          )}
         </div>
 
         {/* AI Chat Section */}
         <div className="bg-white rounded-lg shadow">
-          <LawAiChat law={law} className="h-[600px]" />
+          <LawAiChat
+            lawId={law.id}
+            lawTitle={law.law_title || law.title}
+            lawText={selectedTextVersion || undefined}
+            className="h-[600px]"
+          />
         </div>
       </div>
     </div>
