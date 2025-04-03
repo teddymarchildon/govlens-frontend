@@ -11,12 +11,14 @@ interface BillAiChatProps {
 }
 
 const BillAiChat: React.FC<BillAiChatProps> = ({ bill, billText, className }) => {
+  // Only pass null when billText exists but has no html_file_path
+  const documentPath = billText === undefined ? undefined : billText.html_file_path || undefined;
+  console.log(billText);
   return (
     <AiChat
       title="AI Bill Assistant"
       subtitle={`${bill.type.toUpperCase()}. ${bill.number}: "${bill.title}"`}
-      documentPath={billText?.html_file_path}
-      documentBucket="bill-htmls"
+      documentPath={documentPath}
       className={className}
       disabledMessage="No HTML version available for this bill. AI chat is disabled."
       placeholder="Ask about this bill..."

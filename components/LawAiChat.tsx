@@ -12,6 +12,7 @@ interface LawAiChatProps {
 }
 
 const LawAiChat: React.FC<LawAiChatProps> = ({ lawTitle, lawText, className }) => {
+  console.log(lawText);
   return (
     <AiChat
       title="AI Law Assistant"

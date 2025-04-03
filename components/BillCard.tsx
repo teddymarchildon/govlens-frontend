@@ -26,7 +26,7 @@ export default function BillCard({ bill }: BillCardProps) {
           .limit(1);
 
         if (error) throw error;
-        
+
         if (data && data.length > 0) {
           setSponsor(data[0].congressman as unknown as Congressman);
         }
@@ -42,7 +42,7 @@ export default function BillCard({ bill }: BillCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
-      <Link href={`/bills/${bill.id}`} className="block p-4 h-full">
+      <div className="p-4 h-full flex flex-col">
         <div className="flex justify-between items-start mb-2">
           <span className="text-sm font-semibold text-gray-700">{billIdentifier}</span>
 
@@ -53,18 +53,22 @@ export default function BillCard({ bill }: BillCardProps) {
           )}
         </div>
 
-        <h3 className="text-base font-medium text-gray-900 mb-3 line-clamp-2">
-          {bill.title}
-        </h3>
+        <Link
+          href={`/bills/${bill.id}`}
+          className="block mb-3 hover:text-blue-600 transition-colors"
+        >
+          <h3 className="text-base font-medium text-gray-900 line-clamp-2">
+            {bill.title}
+          </h3>
+        </Link>
 
         <div className="flex flex-col space-y-2 mt-auto">
           {sponsor && (
             <div className="text-xs text-gray-700">
               <span className="font-medium">Sponsored by:</span>{' '}
-              <Link 
-                href={`/congressmen/${sponsor.id}`} 
+              <Link
+                href={`/congressmen/${sponsor.id}`}
                 className="text-blue-600 hover:underline"
-                onClick={(e) => e.stopPropagation()}
               >
                 {sponsor.full_name}
               </Link>
@@ -80,7 +84,7 @@ export default function BillCard({ bill }: BillCardProps) {
             </div>
           )}
         </div>
-      </Link>
+      </div>
     </div>
   );
 }
