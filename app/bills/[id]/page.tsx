@@ -20,8 +20,7 @@ export default function BillDetailPage({ params }: PageProps) {
   const [texts, setTexts] = useState<BillText[]>([]);
   const [sponsors, setSponsors] = useState<any[]>([]);
   const [cosponsors, setCosponsors] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,10 +47,6 @@ export default function BillDetailPage({ params }: PageProps) {
 
   // Get the most recent bill text if available
   const latestText = texts && texts.length > 0 ? texts[0] : null;
-
-  const handleViewPdf = () => {
-    setShowPdfViewer(true);
-  };
 
   // Generate the PDF URL from Supabase storage
   const getPdfUrl = async (text: BillText) => {

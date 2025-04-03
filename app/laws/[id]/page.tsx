@@ -49,7 +49,6 @@ export default function LawDetailPage() {
   const [sponsors, setSponsors] = useState<Congressman[]>([]);
   const [cosponsors, setCosponsors] = useState<Congressman[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTextVersion, setSelectedTextVersion] = useState<LawText | null>(null);
 
   useEffect(() => {
     const fetchLawDetails = async () => {
@@ -77,11 +76,6 @@ export default function LawDetailPage() {
 
         if (textError) throw textError;
         setLawTexts(textData || []);
-
-        // Set the most recent text version as selected
-        if (textData && textData.length > 0) {
-          setSelectedTextVersion(textData[0]);
-        }
 
         // Fetch sponsors for this bill
         const { data: sponsorsData, error: sponsorsError } = await supabase
@@ -113,25 +107,8 @@ export default function LawDetailPage() {
     fetchLawDetails();
   }, [lawId, router]);
 
-  const handleTextVersionChange = (textId: string) => {
-    const selectedText = lawTexts.find(text => text.id === textId);
-    if (selectedText) {
-      setSelectedTextVersion(selectedText);
-    }
-  };
-
-  // Helper function to get the PDF URL for the selected text version
-  const getPdfUrl = async () => {
-    if (!selectedTextVersion?.pdf_file_path) return null;
-
-    try {
-      const publicUrl = await getStoragePublicUrl('bill-pdfs', selectedTextVersion.pdf_file_path);
-      return publicUrl;
-    } catch (error) {
-      console.error('Error getting PDF URL:', error);
-      return null;
-    }
-  };
+  // Get the most recent law text
+  const latestText = lawTexts.length > 0 ? lawTexts[0] : null;
 
   if (loading) {
     return (
@@ -227,10 +204,10 @@ export default function LawDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Law Text Section */}
         <div className="bg-white rounded-lg shadow p-6">
-          {selectedTextVersion ? (
+          {latestText ? (
             <>
               <div className="h-[500px] border rounded">
-                <PdfViewer storagePath={selectedTextVersion.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
+                <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
               </div>
             </>
           ) : (
@@ -239,12 +216,12 @@ export default function LawDetailPage() {
         </div>
 
         {/* AI Chat Section */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-lg shadow h-[600px]">
           <LawAiChat
             lawId={law.id}
             lawTitle={law.law_title || law.title}
-            lawText={selectedTextVersion || undefined}
-            className="h-[600px]"
+            lawText={latestText || undefined}
+            className="h-full"
           />
         </div>
       </div>
