@@ -28,7 +28,7 @@ export const getBills = async (params: any = {}) => {
       .eq('congressman_id', params.sponsor_id);
 
     if (sponsorError) throw sponsorError;
-    
+
     // If there are sponsored bills, filter the query
     if (sponsoredBills && sponsoredBills.length > 0) {
       const billIds = sponsoredBills.map(item => item.bill_id);
@@ -131,21 +131,51 @@ export const getCongressmanById = async (congressmanId: string) => {
 export const getCongressmanSponsoredBills = async (congressmanId: string): Promise<Bill[]> => {
   const { data, error } = await supabase
     .from('sponsored_bills')
-    .select('bill_id, bill:bill(*)')
+    .select(`
+      bill_id,
+      bill:bill(
+        *,
+        sponsor:sponsored_bills!bill_id(
+          congressman:congressman(*)
+        ),
+        cosponsors:cosponsored_bills!bill_id(
+          congressman:congressman(*)
+        )
+      )
+    `)
     .eq('congressman_id', congressmanId);
 
   if (error) throw error;
-  return data.map(item => item.bill) as unknown as Bill[];
+  return data.map(item => ({
+    ...item.bill,
+    sponsor: item.bill.sponsor[0],
+    cosponsors: item.bill.cosponsors
+  })) as unknown as Bill[];
 };
 
 export const getCongressmanCosponsoredBills = async (congressmanId: string): Promise<Bill[]> => {
   const { data, error } = await supabase
     .from('cosponsored_bills')
-    .select('bill_id, bill:bill(*)')
+    .select(`
+      bill_id,
+      bill:bill(
+        *,
+        sponsor:sponsored_bills!bill_id(
+          congressman:congressman(*)
+        ),
+        cosponsors:cosponsored_bills!bill_id(
+          congressman:congressman(*)
+        )
+      )
+    `)
     .eq('congressman_id', congressmanId);
 
   if (error) throw error;
-  return data.map(item => item.bill) as unknown as Bill[];
+  return data.map(item => ({
+    ...item.bill,
+    sponsor: item.bill.sponsor[0],
+    cosponsors: item.bill.cosponsors
+  })) as unknown as Bill[];
 };
 
 export const getCongressmanTerms = async (congressmanId: string) => {
@@ -315,3 +345,18 @@ export const getSavedBills = async (userId: string) => {
   if (error) throw error;
   return data;
 };
+
+export async function getBillActions(billId: string) {
+  const { data, error } = await supabase
+    .from('bill_action')
+    .select('*')
+    .eq('bill_id', billId)
+    .order('date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching bill actions:', error);
+    throw error;
+  }
+
+  return data || [];
+}

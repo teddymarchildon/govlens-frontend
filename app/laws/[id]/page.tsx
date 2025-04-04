@@ -3,51 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { formatDate } from '@/lib/utils';
-import { Congressman } from '@/types/types';
-import Link from 'next/link';
-import PdfViewer from '@/components/PdfViewer';
-import LawAiChat from '@/components/LawAiChat';
-import { getStoragePublicUrl } from '@/services/api';
-
-// Updated Law interface to match the bills table structure
-interface Law {
-  id: string;
-  congress: number;
-  type: string;
-  number: string;
-  title: string;
-  policy_area: string;
-  introduced_date: string;
-  law_enacted_date: string;
-  law_number: string;
-  law_type: string;
-  law_unique_id: string;
-  law_title: string;
-}
-
-// Updated LawText interface to match bill_text table
-interface LawText {
-  id: string;
-  law_id: string;
-  date: string;
-  pdf_url: string;
-  html_url: string;
-  xml_url: string;
-  pdf_file_path: string;
-  html_file_path: string;
-  xml_file_path: string;
-}
+import { getBillActions } from '@/services/api';
+import BillOrLawDetail from '@/components/BillOrLawDetail';
 
 export default function LawDetailPage() {
   const params = useParams();
   const router = useRouter();
   const lawId = params.id as string;
 
-  const [law, setLaw] = useState<Law | null>(null);
-  const [lawTexts, setLawTexts] = useState<LawText[]>([]);
-  const [sponsors, setSponsors] = useState<Congressman[]>([]);
-  const [cosponsors, setCosponsors] = useState<Congressman[]>([]);
+  const [law, setLaw] = useState<any>(null);
+  const [lawTexts, setLawTexts] = useState<any[]>([]);
+  const [sponsors, setSponsors] = useState<any[]>([]);
+  const [cosponsors, setCosponsors] = useState<any[]>([]);
+  const [actions, setActions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,7 +52,7 @@ export default function LawDetailPage() {
           .eq('bill_id', lawId);
 
         if (sponsorsError) throw sponsorsError;
-        setSponsors((sponsorsData || []).map(item => item.congressman as unknown as Congressman));
+        setSponsors((sponsorsData || []).map(item => item.congressman));
 
         // Fetch cosponsors for this bill
         const { data: cosponsorsData, error: cosponsorsError } = await supabase
@@ -93,7 +61,11 @@ export default function LawDetailPage() {
           .eq('bill_id', lawId);
 
         if (cosponsorsError) throw cosponsorsError;
-        setCosponsors((cosponsorsData || []).map(item => item.congressman as unknown as Congressman));
+        setCosponsors((cosponsorsData || []).map(item => item.congressman));
+
+        // Fetch actions for this bill
+        const actionsData = await getBillActions(lawId);
+        setActions(actionsData);
 
       } catch (error) {
         console.error('Error fetching law details:', error);
@@ -106,9 +78,6 @@ export default function LawDetailPage() {
 
     fetchLawDetails();
   }, [lawId, router]);
-
-  // Get the most recent law text
-  const latestText = lawTexts.length > 0 ? lawTexts[0] : null;
 
   if (loading) {
     return (
@@ -131,100 +100,13 @@ export default function LawDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="mb-2 flex justify-between items-center">
-          <span className="text-gray-600">{law.policy_area || 'Uncategorized'}</span>
-        </div>
-        <h1 className="text-3xl font-bold mb-2">{law.law_title || law.title}</h1>
-        <h2 className="text-xl mb-4">Public Law {law.law_number || `${law.congress}-${law.number}`}</h2>
-
-        <div className="mb-6">
-          <div className="text-sm mb-1">
-            <span className="font-medium">Enacted:</span> {law.law_enacted_date && formatDate(law.law_enacted_date)}
-          </div>
-          <div className="text-sm">
-            <span className="font-medium">Congress:</span> {law.congress}
-          </div>
-        </div>
-      </div>
-
-      {/* Sponsors and Cosponsors in a more compact layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors?.length || 0})</h2>
-          {sponsors && sponsors.length > 0 ? (
-            <div className="bg-white rounded-lg shadow p-4">
-              {sponsors.map((sponsor) => (
-                <div key={sponsor.id} className="mb-2">
-                  <Link
-                    href={`/congressmen/${sponsor.id}`}
-                    className="font-medium hover:underline"
-                  >
-                    {sponsor.full_name}
-                  </Link>
-                  <div className="text-xs text-gray-600">
-                    {sponsor.party}-{sponsor.state}{sponsor.chamber === 'House' ? `, District ${sponsor.district || 'N/A'}` : ''}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p>No sponsors found</p>
-          )}
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Cosponsors ({cosponsors?.length || 0})</h2>
-          {cosponsors && cosponsors.length > 0 ? (
-            <div className="bg-white rounded-lg shadow p-4 max-h-60 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {cosponsors.map((cosponsor) => (
-                  <div key={cosponsor.id} className="mb-2">
-                    <Link
-                      href={`/congressmen/${cosponsor.id}`}
-                      className="font-medium hover:underline text-sm"
-                    >
-                      {cosponsor.full_name}
-                    </Link>
-                    <div className="text-xs text-gray-600">
-                      {cosponsor.party}-{cosponsor.state}{cosponsor.chamber === 'House' ? `, ${cosponsor.district || ''}` : ''}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p>No cosponsors found</p>
-          )}
-        </div>
-      </div>
-
-      {/* Law Text and AI Chat sections side by side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Law Text Section */}
-        <div className="bg-white rounded-lg shadow p-6">
-          {latestText ? (
-            <>
-              <div className="h-[500px] border rounded">
-                <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
-              </div>
-            </>
-          ) : (
-            <p>No law texts available</p>
-          )}
-        </div>
-
-        {/* AI Chat Section */}
-        <div className="bg-white rounded-lg shadow h-[600px]">
-          <LawAiChat
-            lawId={law.id}
-            lawTitle={law.law_title || law.title}
-            lawText={latestText || undefined}
-            className="h-full"
-          />
-        </div>
-      </div>
-    </div>
+    <BillOrLawDetail
+      item={law}
+      texts={lawTexts}
+      sponsors={sponsors}
+      cosponsors={cosponsors}
+      actions={actions}
+      isLaw={true}
+    />
   );
 }

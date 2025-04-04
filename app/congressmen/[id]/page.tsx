@@ -5,12 +5,15 @@ import { getCongressmanById, getCongressmanSponsoredBills, getCongressmanCospons
 import BillCard from '../../../components/BillCard';
 import { CongressmanTerm } from '../../../types/types';
 import SaveButton from '../../../components/SaveButton';
+import CongressmanAiChat from '../../../components/CongressmanAiChat';
 
 interface PageProps {
   params: {
     id: string;
   };
 }
+
+type TabType = 'bills' | 'terms' | 'statistics' | 'learn';
 
 export default function CongressmanDetailPage({ params }: PageProps) {
   const congressmanId = use(params).id;
@@ -19,6 +22,117 @@ export default function CongressmanDetailPage({ params }: PageProps) {
   const [cosponsoredBills, setCosponsoredBills] = useState<any[]>([]);
   const [terms, setTerms] = useState<CongressmanTerm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>('bills');
+
+  // Calculate statistics
+  const calculateStatistics = () => {
+    const sponsoredBecameLaw = sponsoredBills.filter(bill => bill.law_enacted_date).length;
+    const cosponsoredBecameLaw = cosponsoredBills.filter(bill => bill.law_enacted_date).length;
+
+    // Calculate cross-party collaboration
+    // 1. Bills they sponsored with other-party cosponsors
+    const sponsoredWithOtherParty = sponsoredBills.filter(bill => {
+      const cosponsors = bill.cosponsors || [];
+      return cosponsors.some((cosponsor: any) =>
+        cosponsor.congressman.party.toLowerCase() !== congressman.party.toLowerCase()
+      );
+    }).length;
+
+    // 2. Bills they cosponsored where the sponsor was from the other party
+    const cosponsoredOtherParty = cosponsoredBills.filter(bill => {
+      const sponsor = bill.sponsor;
+      return sponsor && sponsor.congressman.party.toLowerCase() !== congressman.party.toLowerCase();
+    }).length;
+
+    const totalCrossPartyBills = sponsoredWithOtherParty + cosponsoredOtherParty;
+    const totalBills = sponsoredBills.length + cosponsoredBills.length;
+
+    const crossPartyPercentage = totalBills > 0
+      ? Math.round((totalCrossPartyBills / totalBills) * 100)
+      : 0;
+
+    // Calculate policy area statistics
+    const policyAreaStats = [...sponsoredBills, ...cosponsoredBills].reduce((acc: any, bill) => {
+      const area = bill.policy_area || 'Uncategorized';
+      if (!acc[area]) {
+        acc[area] = {
+          total: 0,
+          becameLaw: 0,
+          crossParty: 0
+        };
+      }
+      acc[area].total++;
+      if (bill.law_enacted_date) acc[area].becameLaw++;
+
+      // Check for cross-party collaboration
+      const isCrossParty = bill.sponsor?.congressman.party.toLowerCase() !== congressman.party.toLowerCase() ||
+        (bill.cosponsors || []).some((cosponsor: any) =>
+          cosponsor.congressman.party.toLowerCase() !== congressman.party.toLowerCase()
+        );
+      if (isCrossParty) acc[area].crossParty++;
+
+      return acc;
+    }, {});
+
+    // Calculate activity over time
+    const activityByYear = [...sponsoredBills, ...cosponsoredBills].reduce((acc: any, bill) => {
+      const year = new Date(bill.introduced_date).getFullYear();
+      if (!acc[year]) {
+        acc[year] = {
+          total: 0,
+          becameLaw: 0,
+          sponsored: 0,
+          cosponsored: 0
+        };
+      }
+      acc[year].total++;
+      if (bill.law_enacted_date) acc[year].becameLaw++;
+      if (bill.sponsor?.id === congressman.id) {
+        acc[year].sponsored++;
+      } else {
+        acc[year].cosponsored++;
+      }
+      return acc;
+    }, {});
+
+    // Calculate bipartisan collaboration depth
+    const otherPartyCollaborators = [...sponsoredBills, ...cosponsoredBills].reduce((acc: any, bill) => {
+      const collaborators = new Set();
+
+      // Check sponsor
+      if (bill.sponsor && bill.sponsor.congressman.party.toLowerCase() !== congressman.party.toLowerCase()) {
+        collaborators.add(bill.sponsor.congressman.id);
+      }
+
+      // Check cosponsors
+      (bill.cosponsors || []).forEach((cosponsor: any) => {
+        if (cosponsor.congressman.party.toLowerCase() !== congressman.party.toLowerCase()) {
+          collaborators.add(cosponsor.congressman.id);
+        }
+      });
+
+      return acc + collaborators.size;
+    }, 0);
+
+    const avgOtherPartyCollaborators = totalBills > 0
+      ? (otherPartyCollaborators / totalBills).toFixed(1)
+      : 0;
+
+    return {
+      sponsoredBecameLaw,
+      cosponsoredBecameLaw,
+      sponsoredWithOtherParty,
+      cosponsoredOtherParty,
+      totalCrossPartyBills,
+      crossPartyPercentage,
+      totalBills,
+      policyAreaStats,
+      activityByYear,
+      avgOtherPartyCollaborators
+    };
+  };
+
+  const stats = calculateStatistics();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -159,9 +273,97 @@ export default function CongressmanDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {terms && terms.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Term History</h2>
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('bills')}
+              className={`${
+                activeTab === 'bills'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Bills ({sponsoredBills.length + cosponsoredBills.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('terms')}
+              className={`${
+                activeTab === 'terms'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Term History ({terms.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('statistics')}
+              className={`${
+                activeTab === 'statistics'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Statistics
+            </button>
+            <button
+              onClick={() => setActiveTab('learn')}
+              className={`${
+                activeTab === 'learn'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Learn More
+            </button>
+          </nav>
+        </div>
+
+        {activeTab === 'bills' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Sponsored Bills ({sponsoredBills.length})</h2>
+              {sponsoredBills.length > 0 ? (
+                <div className="space-y-4">
+                  {sponsoredBills.slice(0, 5).map((bill) => (
+                    <BillCard key={bill.id} bill={bill} />
+                  ))}
+                  {sponsoredBills.length > 5 && (
+                    <div className="text-center mt-4">
+                      <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                        View More
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-600">No sponsored bills found.</p>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Cosponsored Bills ({cosponsoredBills.length})</h2>
+              {cosponsoredBills.length > 0 ? (
+                <div className="space-y-4">
+                  {cosponsoredBills.slice(0, 5).map((bill) => (
+                    <BillCard key={bill.id} bill={bill} />
+                  ))}
+                  {cosponsoredBills.length > 5 && (
+                    <div className="text-center mt-4">
+                      <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                        View More
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-600">No cosponsored bills found.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'terms' && (
           <div className="space-y-4">
             {terms.map((term: CongressmanTerm) => (
               <div key={term.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
@@ -173,49 +375,230 @@ export default function CongressmanDetailPage({ params }: PageProps) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Sponsored Bills ({sponsoredBills.length})</h2>
-          {sponsoredBills.length > 0 ? (
-            <div className="space-y-4">
-              {sponsoredBills.slice(0, 5).map((bill) => (
-                <BillCard key={bill.id} bill={bill} />
-              ))}
-              {sponsoredBills.length > 5 && (
-                <div className="text-center mt-4">
-                  <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                    View More
-                  </button>
+        {activeTab === 'statistics' && (
+          <div className="space-y-8">
+            {/* Legislative Success Section */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Legislative Success</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-medium mb-2">Sponsored Bills</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {stats.sponsoredBecameLaw}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      out of {sponsoredBills.length} bills became law
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${(stats.sponsoredBecameLaw / sponsoredBills.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-gray-600">No sponsored bills found.</p>
-          )}
-        </div>
 
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Cosponsored Bills ({cosponsoredBills.length})</h2>
-          {cosponsoredBills.length > 0 ? (
-            <div className="space-y-4">
-              {cosponsoredBills.slice(0, 5).map((bill) => (
-                <BillCard key={bill.id} bill={bill} />
-              ))}
-              {cosponsoredBills.length > 5 && (
-                <div className="text-center mt-4">
-                  <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                    View More
-                  </button>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-medium mb-2">Cosponsored Bills</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {stats.cosponsoredBecameLaw}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      out of {cosponsoredBills.length} bills became law
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${(stats.cosponsoredBecameLaw / cosponsoredBills.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
-          ) : (
-            <p className="text-gray-600">No cosponsored bills found.</p>
-          )}
-        </div>
+
+            {/* Cross-Party Collaboration Section */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Cross-Party Collaboration</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-medium mb-2">Sponsored Bills with Other Party Cosponsors</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {stats.sponsoredWithOtherParty}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      out of {sponsoredBills.length} sponsored bills
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${(stats.sponsoredWithOtherParty / sponsoredBills.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <h4 className="text-lg font-medium mb-2">Cosponsored Other Party Bills</h4>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-3xl font-bold text-blue-600">
+                      {stats.cosponsoredOtherParty}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      out of {cosponsoredBills.length} cosponsored bills
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
+                        style={{ width: `${(stats.cosponsoredOtherParty / cosponsoredBills.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-lg font-medium">Total Cross-Party Collaboration</h4>
+                    <p className="text-sm text-gray-600">
+                      {stats.totalCrossPartyBills} out of {stats.totalBills} bills
+                    </p>
+                  </div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {stats.crossPartyPercentage}%
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full"
+                    style={{ width: `${stats.crossPartyPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="mt-6 bg-white rounded-lg p-4 shadow-sm">
+                <h4 className="text-lg font-medium mb-2">Average Other Party Collaborators per Bill</h4>
+                <div className="flex items-center space-x-4">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {stats.avgOtherPartyCollaborators}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    other party members per bill on average
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Policy Area Analysis Section */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Policy Area Analysis</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Object.entries(stats.policyAreaStats)
+                  .sort(([, a]: any, [, b]: any) => b.total - a.total)
+                  .map(([area, data]: [string, any]) => (
+                    <div key={area} className="bg-white rounded-lg p-4 shadow-sm">
+                      <h4 className="text-lg font-medium mb-2">{area}</h4>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Total Bills</span>
+                            <span className="font-medium">{data.total}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${(data.total / stats.totalBills) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Became Law</span>
+                            <span className="font-medium">{data.becameLaw}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{ width: `${(data.becameLaw / data.total) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-sm">
+                            <span>Cross-Party</span>
+                            <span className="font-medium">{data.crossParty}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-purple-600 h-2 rounded-full"
+                              style={{ width: `${(data.crossParty / data.total) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Legislative Activity Over Time Section */}
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Legislative Activity Over Time</h3>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2">Year</th>
+                        <th className="text-right py-2">Total Bills</th>
+                        <th className="text-right py-2">Sponsored</th>
+                        <th className="text-right py-2">Cosponsored</th>
+                        <th className="text-right py-2">Became Law</th>
+                        <th className="text-right py-2">Success Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(stats.activityByYear)
+                        .sort(([yearA], [yearB]) => parseInt(yearB) - parseInt(yearA))
+                        .map(([year, data]: [string, any]) => (
+                          <tr key={year} className="border-b">
+                            <td className="py-2">{year}</td>
+                            <td className="text-right py-2">{data.total}</td>
+                            <td className="text-right py-2">{data.sponsored}</td>
+                            <td className="text-right py-2">{data.cosponsored}</td>
+                            <td className="text-right py-2">{data.becameLaw}</td>
+                            <td className="text-right py-2">
+                              {Math.round((data.becameLaw / data.total) * 100)}%
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'learn' && (
+          <div className="space-y-8">
+            <CongressmanAiChat congressman={congressman} className="h-[600px]" />
+          </div>
+        )}
       </div>
     </div>
   );
