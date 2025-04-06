@@ -37,19 +37,16 @@ export default function LawCard({ law }: LawCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
       <div className="p-5 flex flex-col">
-        <div className="flex justify-between items-start mb-2">
+        <div className="mb-2">
           {law.policy_area ? (
-            <div className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+            <div className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded inline-block">
               {law.policy_area}
             </div>
           ) : (
-            <div className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+            <div className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded inline-block">
               Uncategorized
             </div>
           )}
-          <div className="text-xs text-gray-500">
-            Enacted: {formattedDate}
-          </div>
         </div>
         <Link
           href={`/laws/${law.id}`}
@@ -59,16 +56,12 @@ export default function LawCard({ law }: LawCardProps) {
             {law.law_title || law.title}
           </h3>
         </Link>
+        <div className="text-xs text-gray-500 mb-2">
+          Enacted: {formattedDate}
+        </div>
         <div className="flex flex-col space-y-2">
-          <div className="flex items-center text-sm text-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Public Law {law.law_number || `${law.congress}-${law.number}`}</span>
-          </div>
-
           {sponsor && (
-            <div className="text-xs text-gray-700 mt-2">
+            <div className="text-xs text-gray-700">
               <span className="font-medium">Sponsored by:</span>{' '}
               <Link
                 href={`/congressmen/${sponsor.id}`}

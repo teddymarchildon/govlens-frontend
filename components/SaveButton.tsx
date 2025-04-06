@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { saveCongressman, unsaveCongressman, isCongressmanSaved, saveBill, unsaveBill, isBillSaved } from '../services/api';
+import { saveCongressman, unsaveCongressman, isCongressmanSaved, saveBill, unsaveBill, isBillSaved, saveAgency, unsaveAgency, isAgencySaved } from '../services/api';
 
 interface SaveButtonProps {
   itemId: string;
-  itemType: 'congressman' | 'bill';
+  itemType: 'congressman' | 'bill' | 'agency';
   className?: string;
 }
 
@@ -28,6 +28,10 @@ export default function SaveButton({ itemId, itemType, className = '' }: SaveBut
         if (itemType === 'congressman') {
           const saved = await isCongressmanSaved(user.id, itemId);
           console.log(`Congressman saved status:`, saved);
+          setIsSaved(saved);
+        } else if (itemType === 'agency') {
+          const saved = await isAgencySaved(user.id, itemId);
+          console.log(`Agency saved status:`, saved);
           setIsSaved(saved);
         } else {
           const saved = await isBillSaved(user.id, itemId);
@@ -61,6 +65,14 @@ export default function SaveButton({ itemId, itemType, className = '' }: SaveBut
         } else {
           console.log(`Saving congressman ${itemId}`);
           await saveCongressman(user.id, itemId);
+        }
+      } else if (itemType === 'agency') {
+        if (isSaved) {
+          console.log(`Unsaving agency ${itemId}`);
+          await unsaveAgency(user.id, itemId);
+        } else {
+          console.log(`Saving agency ${itemId}`);
+          await saveAgency(user.id, itemId);
         }
       } else {
         if (isSaved) {

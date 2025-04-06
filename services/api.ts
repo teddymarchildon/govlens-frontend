@@ -360,3 +360,131 @@ export async function getBillActions(billId: string) {
 
   return data || [];
 }
+
+// Agencies API
+export const getAgencies = async (params: any = {}) => {
+  let query = supabase.from('agency').select('*, parent:parent_id(id, name, short_name)');
+
+  if (params.limit) {
+    query = query.limit(params.limit);
+  }
+
+  // Search by name if provided
+  if (params.search) {
+    query = query.ilike('name', `%${params.search}%`);
+  }
+
+  // Filter by parent agency
+  if (params.parent_id) {
+    query = query.eq('parent_id', params.parent_id);
+  }
+
+  // Sort results
+  const orderBy = params.order_by || 'name';
+  const order = params.order || 'asc';
+  query = query.order(orderBy, { ascending: order === 'asc' });
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+};
+
+export const getAgencyById = async (agencyId: string) => {
+  const { data, error } = await supabase
+    .from('agency')
+    .select('*, parent:parent_id(id, name, short_name)')
+    .eq('id', agencyId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getChildAgencies = async (parentId: string) => {
+  const { data, error } = await supabase
+    .from('agency')
+    .select('*')
+    .eq('parent_id', parentId);
+
+  if (error) throw error;
+  return data;
+};
+
+// Save/Unsave Agency
+export const saveAgency = async (userId: string, agencyId: string) => {
+  console.log(`Saving agency: userId=${userId}, agencyId=${agencyId}`);
+  try {
+    const { data, error } = await supabase
+      .from('saved_agency')
+      .insert([
+        { user_id: userId, agency_id: agencyId }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Error saving agency:', error);
+      throw error;
+    }
+
+    console.log('Agency saved successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Exception saving agency:', error);
+    throw error;
+  }
+};
+
+export const unsaveAgency = async (userId: string, agencyId: string) => {
+  console.log(`Unsaving agency: userId=${userId}, agencyId=${agencyId}`);
+  try {
+    const { data, error } = await supabase
+      .from('saved_agency')
+      .delete()
+      .match({ user_id: userId, agency_id: agencyId })
+      .select();
+
+    if (error) {
+      console.error('Error unsaving agency:', error);
+      throw error;
+    }
+
+    console.log('Agency unsaved successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Exception unsaving agency:', error);
+    throw error;
+  }
+};
+
+export const isAgencySaved = async (userId: string, agencyId: string) => {
+  console.log(`Checking if agency is saved: userId=${userId}, agencyId=${agencyId}`);
+  try {
+    const { data, error, count } = await supabase
+      .from('saved_agency')
+      .select('*', { count: 'exact' })
+      .match({ user_id: userId, agency_id: agencyId });
+
+    if (error) {
+      console.error('Error checking if agency is saved:', error);
+      throw error;
+    }
+
+    const isSaved = (count || 0) > 0;
+    console.log(`Agency saved status: ${isSaved}`, data);
+    return isSaved;
+  } catch (error) {
+    console.error('Exception checking if agency is saved:', error);
+    return false;
+  }
+};
+
+export const getSavedAgencies = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('saved_agency')
+    .select('*, agency:agency_id(*)')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data;
+};

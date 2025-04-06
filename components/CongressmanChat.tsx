@@ -248,46 +248,48 @@ const CongressmanChat: React.FC<CongressmanChatProps> = ({
         <p className="text-sm text-gray-600">{subtitle}</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`p-3 rounded-lg max-w-[80%] ${
-              message.role === 'user'
-                ? 'bg-blue-100 ml-auto'
-                : 'bg-gray-100'
-            }`}
-          >
-            <div className="prose prose-sm max-w-none">
-              <ReactMarkdown>
-                {message.content}
-              </ReactMarkdown>
-              {message.isStreaming && (
-                <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
-              )}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <div className="space-y-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`p-3 rounded-lg max-w-[80%] ${
+                message.role === 'user'
+                  ? 'bg-blue-100 ml-auto'
+                  : 'bg-gray-100'
+              }`}
+            >
+              <div className="prose prose-sm max-w-none">
+                <ReactMarkdown>
+                  {message.content}
+                </ReactMarkdown>
+                {message.isStreaming && (
+                  <span className="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-        {isLoading && !messages[messages.length - 1]?.isStreaming && (
-          <div className="bg-gray-100 p-3 rounded-lg max-w-[80%] animate-pulse">
-            <p>Thinking...</p>
-          </div>
-        )}
-        {messages.length === 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-            {QUICK_ACTIONS.map((action, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickAction(action.prompt)}
-                disabled={isLoading}
-                className="p-3 text-left bg-white hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50"
-              >
-                <h4 className="font-medium text-gray-900">{action.title}</h4>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{action.prompt}</p>
-              </button>
-            ))}
-          </div>
-        )}
+          ))}
+          {isLoading && !messages[messages.length - 1]?.isStreaming && (
+            <div className="bg-gray-100 p-3 rounded-lg max-w-[80%] animate-pulse">
+              <p>Thinking...</p>
+            </div>
+          )}
+          {messages.length === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+              {QUICK_ACTIONS.map((action, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickAction(action.prompt)}
+                  disabled={isLoading}
+                  className="p-3 text-left bg-white hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 disabled:opacity-50"
+                >
+                  <h4 className="font-medium text-gray-900">{action.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">{action.prompt}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="border-t p-4 bg-white rounded-b-lg flex-shrink-0">

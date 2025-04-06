@@ -89,3 +89,22 @@ export interface User {
   email: string;
   name?: string;
 }
+
+export interface Agency {
+  id: string;
+  remote_agency_id: number;
+  url: string;
+  name: string;
+  short_name: string;
+  description?: string;
+  remote_parent_id?: number;
+  parent_id?: string;
+  parent?: Agency;
+}
+
+export interface SavedAgency {
+  id: string;
+  agency_id: string;
+  user_id: string;
+  agency?: Agency;
+}

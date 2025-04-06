@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     };
 
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [systemMessage, userMessage],
       temperature: 0.7,
       max_tokens: 1000,

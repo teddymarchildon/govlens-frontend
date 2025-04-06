@@ -93,3 +93,14 @@ Columns:
 - date: date
 - text: string
 - type: string
+
+
+### agency
+Columns
+- id: uuid
+- remote_agency_id: int
+- url: text
+- name: text
+- short_name: text
+- remote_parent_id:
+- parent_id: FK to agency.id of remote_parent_id
