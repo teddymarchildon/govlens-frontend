@@ -108,3 +108,18 @@ export interface SavedAgency {
   user_id: string;
   agency?: Agency;
 }
+
+export interface AgencyDocument {
+  id: string;
+  title: string;
+  type: string;
+  publication_date: string;
+  pdf_url: string;
+  html_url: string;
+  xml_url: string;
+  pdf_file_path: string;
+  html_file_path: string;
+  xml_file_path: string;
+  abstract: string;
+  remote_document_number: string;
+}

@@ -49,12 +49,12 @@ export default function Header() {
             </Link>
             {/* Navigation links removed - using sidebar navigation only */}
           </div>
-          
+
           <div className="flex items-center">
             <div className="relative mr-4">
               <input
                 type="text"
-                placeholder="Search bills and proposals..."
+                placeholder="Search the government..."
                 className="w-64 bg-gray-100 border border-gray-300 rounded-md py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -65,27 +65,27 @@ export default function Header() {
                 </svg>
               </div>
             </div>
-            
+
             {!loading && !user && (
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Sign In
                 </Link>
-                <Link 
-                  href="/signup" 
+                <Link
+                  href="/signup"
                   className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
                 >
                   Sign Up
                 </Link>
               </div>
             )}
-            
+
             {!loading && user && (
               <div className="relative" ref={dropdownRef}>
-                <button 
+                <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center focus:outline-none"
                   aria-expanded={dropdownOpen}
@@ -95,22 +95,22 @@ export default function Header() {
                     {user.email?.substring(0, 2).toUpperCase() || 'ME'}
                   </div>
                 </button>
-                
+
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
                     <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
                       Signed in as<br />
                       <span className="font-medium text-gray-900 truncate block">{user.email}</span>
                     </div>
-                    <Link 
-                      href="/profile" 
+                    <Link
+                      href="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setDropdownOpen(false)}
                     >
                       Your Profile
                     </Link>
-                    <Link 
-                      href="/saved" 
+                    <Link
+                      href="/saved"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setDropdownOpen(false)}
                     >

@@ -15,10 +15,10 @@ export async function POST(request: Request) {
       const documentUrl = await getStoragePublicUrl(documentBucket, documentPath);
       const documentResponse = await fetch(documentUrl);
       const documentContent = await documentResponse.text();
-
+      console.log(documentUrl)
       const systemMessage: ChatCompletionMessageParam = {
         role: 'system',
-        content: `You are a helpful assistant analyzing a legislative bill document. Here is the document content in an HTML format:\n\n${documentContent}`
+        content: `You are a helpful assistant analyzing an executive order document. Here is the document content in an HTML format:\n\n${documentContent}`
       };
 
       const userMessage: ChatCompletionMessageParam = {

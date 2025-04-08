@@ -104,3 +104,32 @@ Columns
 - short_name: text
 - remote_parent_id:
 - parent_id: FK to agency.id of remote_parent_id
+
+
+### saved_agency
+Columns
+- id
+- user_id
+- agency_id
+
+
+### agency_document
+- id
+- pdf_url: URL
+- html_url: URL
+- xml_url: URL
+- pdf_file_path: string
+- xml_file_path: string
+- html_file_path: string
+- title: string
+- type: string
+- publication_date: day
+- abstract: text
+- remote_document_number: text
+- subtype: string
+
+### agency_agencydocument
+- id
+- agency_id: FK to agency.id
+- agency_document_id: FK to agency_document.id
+

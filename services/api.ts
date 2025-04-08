@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
+import { AgencyDocument, Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
 
 // Storage API
 export const getStoragePublicUrl = async (bucketName: string, filePath: string): Promise<string> => {
@@ -487,4 +487,63 @@ export const getSavedAgencies = async (userId: string) => {
 
   if (error) throw error;
   return data;
+};
+
+export const getAgencyDocuments = async (agencyId: string): Promise<AgencyDocument[]> => {
+  try {
+    // First, get all document IDs for this agency
+    const { data: agencyDocuments, error: agencyError } = await supabase
+      .from('agency_agencydocument')
+      .select('agency_document_id')
+      .eq('agency_id', agencyId);
+
+    if (agencyError) {
+      console.error('Error fetching agency document IDs:', agencyError);
+      throw agencyError;
+    }
+
+    if (!agencyDocuments || agencyDocuments.length === 0) {
+      return [];
+    }
+
+    // Extract document IDs
+    const documentIds = agencyDocuments.map(doc => doc.agency_document_id);
+
+    // Then, fetch all documents with those IDs
+    const { data: documents, error: documentsError } = await supabase
+      .from('agency_document')
+      .select('*')
+      .in('id', documentIds)
+      .order('publication_date', { ascending: false });
+
+    if (documentsError) {
+      console.error('Error fetching documents:', documentsError);
+      throw documentsError;
+    }
+
+    return documents || [];
+  } catch (error) {
+    console.error('Error in getAgencyDocuments:', error);
+    throw error;
+  }
+};
+
+export const getTopLevelAgencies = async (): Promise<Agency[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('agency')
+      .select('*')
+      .is('parent_id', null)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching top-level agencies:', error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getTopLevelAgencies:', error);
+    throw error;
+  }
 };
