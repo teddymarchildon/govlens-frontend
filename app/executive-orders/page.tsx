@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import SaveButton from '@/components/SaveButton';
+import ExecutiveOrderCard from '@/components/ExecutiveOrderCard';
 
 interface ExecutiveOrder {
   id: string;
@@ -154,36 +155,7 @@ export default function ExecutiveOrdersPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {orders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-semibold mb-2">
-                    <Link href={`/executive-orders/${order.id}`} className="hover:text-blue-600">
-                      {order.title}
-                    </Link>
-                  </h2>
-                  <SaveButton
-                    itemId={order.id}
-                    itemType="agency"
-                    className="text-gray-400 hover:text-blue-500"
-                  />
-                </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  Document Number: {order.remote_document_number}
-                </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  Published: {new Date(order.publication_date).toLocaleDateString()}
-                </div>
-                {order.agency && (
-                  <div className="text-sm text-gray-600">
-                    Agency: {order.agency.name}
-                  </div>
-                )}
-              </div>
-            </div>
+            <ExecutiveOrderCard key={order.id} order={order} />
           ))}
         </div>
       )}

@@ -31,35 +31,39 @@ export default function LawCard({ law }: LawCardProps) {
   // Get the sponsor from the law object
   const sponsor = law.sponsor && law.sponsor.length > 0 ? law.sponsor[0].congressman : null;
 
+  // Format law identifier (e.g., P.L. 117-5)
+  const lawIdentifier = `${law.law_type || 'P.L.'} ${law.law_number}`;
+
   // Use law_enacted_date instead of enacted_date
   const formattedDate = law.law_enacted_date ? formatDate(law.law_enacted_date) : 'Unknown date';
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
-      <div className="p-5 flex flex-col">
-        <div className="mb-2">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 h-full">
+      <div className="p-4 h-full flex flex-col">
+        <div className="flex justify-between items-start mb-2">
+          <span className="text-sm font-semibold text-gray-700">{lawIdentifier}</span>
+
           {law.policy_area ? (
-            <div className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded inline-block">
+            <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
               {law.policy_area}
-            </div>
+            </span>
           ) : (
-            <div className="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded inline-block">
+            <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
               Uncategorized
-            </div>
+            </span>
           )}
         </div>
+
         <Link
           href={`/laws/${law.id}`}
-          className="block mb-2 hover:text-blue-600 transition-colors"
+          className="block mb-3 hover:text-blue-600 transition-colors"
         >
-          <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
+          <h3 className="text-base font-medium text-gray-900 line-clamp-2">
             {law.law_title || law.title}
           </h3>
         </Link>
-        <div className="text-xs text-gray-500 mb-2">
-          Enacted: {formattedDate}
-        </div>
-        <div className="flex flex-col space-y-2">
+
+        <div className="flex flex-col space-y-2 mt-auto">
           {sponsor && (
             <div className="text-xs text-gray-700">
               <span className="font-medium">Sponsored by:</span>{' '}
@@ -74,6 +78,10 @@ export default function LawCard({ law }: LawCardProps) {
               </span>
             </div>
           )}
+
+          <div className="text-xs text-gray-500">
+            <span className="font-medium">Enacted:</span> {formattedDate}
+          </div>
         </div>
       </div>
     </div>

@@ -88,8 +88,19 @@ export default function Sidebar() {
     <aside className="w-64 h-screen bg-white border-r border-gray-200 fixed left-0 top-16 overflow-y-auto">
       <div className="p-4">
         <div className="mb-6">
-          <h3 className="text-xs uppercase font-semibold text-gray-500 mb-3">FEDERAL</h3>
+          <h3 className="text-xs uppercase font-semibold text-gray-500 mb-3">FEDERAL LAWS</h3>
           <ul className="space-y-1">
+            <li>
+              <Link
+                href="/laws"
+                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/laws')}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+                Laws
+              </Link>
+            </li>
             <li>
               <Link
                 href="/bills"
@@ -103,15 +114,32 @@ export default function Sidebar() {
             </li>
             <li>
               <Link
-                href="/laws"
-                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/laws')}`}
+                href="/agency-rules"
+                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/agency-rules')}`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                Laws
+                Agency Rules
               </Link>
             </li>
+            <li>
+              <Link
+                href="/executive-orders"
+                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/executive-orders')}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Executive Orders
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-xs uppercase font-semibold text-gray-500 mb-3">FEDERAL BODIES</h3>
+          <ul className="space-y-1">
             <li>
               <Link
                 href="/congressmen"
@@ -132,31 +160,6 @@ export default function Sidebar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 Federal Agencies
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/executive-orders"
-                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/executive-orders')}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Executive Orders
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/saved"
-                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/saved')}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                Saved
-                <span className="ml-auto bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">
-                  {savedItems.length}
-                </span>
               </Link>
             </li>
           </ul>

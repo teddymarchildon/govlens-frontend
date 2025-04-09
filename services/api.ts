@@ -547,3 +547,61 @@ export const getTopLevelAgencies = async (): Promise<Agency[]> => {
     throw error;
   }
 };
+
+export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]> => {
+  try {
+    // First, get all agency documents that are of type 'Rule'
+    let query = supabase
+      .from('agency_document')
+      .select(`
+        *,
+        agencies:agency_agencydocument!agency_document_id(
+          agency:agency(*)
+        )
+      `)
+      .eq('type', 'Rule')
+      .order('publication_date', { ascending: false });
+
+    // Apply limit if provided
+    if (params.limit) {
+      query = query.limit(params.limit);
+    }
+
+    // Filter by agency if provided
+    if (params.agencyId) {
+      // Get documents linked to this agency
+      const { data: agencyDocuments, error: agencyError } = await supabase
+        .from('agency_agencydocument')
+        .select('agency_document_id')
+        .eq('agency_id', params.agencyId);
+
+      if (agencyError) {
+        console.error('Error fetching agency document IDs:', agencyError);
+        throw agencyError;
+      }
+
+      if (!agencyDocuments || agencyDocuments.length === 0) {
+        return [];
+      }
+
+      // Extract document IDs
+      const documentIds = agencyDocuments.map(doc => doc.agency_document_id);
+      query = query.in('id', documentIds);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching agency rules:', error);
+      throw error;
+    }
+
+    return data?.map(doc => ({
+      ...doc,
+      agency: doc.agencies?.[0]?.agency
+    })) || [];
+  } catch (error) {
+    console.error('Error in getAgencyRules:', error);
+    throw error;
+  }
+};
