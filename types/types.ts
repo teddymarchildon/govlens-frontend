@@ -123,3 +123,59 @@ export interface AgencyDocument {
   abstract: string;
   remote_document_number: string;
 }
+
+export interface Court {
+  id: number;
+  name: string;
+  jurisdiction: string;
+  url: string;
+}
+
+export interface Judge {
+  id: string;
+  remote_id: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  suffix: string | null;
+  full_name: string;
+}
+
+export interface CourtOpinion {
+  id: string;
+  remote_id?: string;
+  title: string;
+  date: string;
+  pdf_file_path?: string;
+  text_file_path?: string;
+  html_file_path?: string;
+  author_id: string;
+  court_id: string;
+  created_at?: string;
+  updated_at?: string;
+  court?: Court;
+  author?: Judge;
+}
+
+export interface ClusterOpinion {
+  id: string;
+  remote_id: string;
+  date: string;
+  type: string;
+  pdf_file_path: string | null;
+  html_file_path: string | null;
+  text_file_path: string | null;
+  author: Judge;
+  joined_by: Judge[];
+}
+
+export interface Cluster {
+  id: string;
+  remote_id: string;
+  court_id: number;
+  court: Court;
+  slug: string;
+  case_name: string;
+  case_name_short: string;
+  opinions: ClusterOpinion[];
+}

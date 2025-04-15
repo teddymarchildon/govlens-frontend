@@ -1,94 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import Link from 'next/link';
+import { formatDate } from '@/lib/utils';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
-import ExecutiveOrderAiChat from '@/components/ExecutiveOrderAiChat';
+import AgencyRuleAiChat from '@/components/AgencyRuleAiChat';
+import { Agency } from '@/types/types';
 
-interface ExecutiveOrder {
+type TabType = 'details' | 'text';
+
+interface AgencyRule {
   id: string;
   title: string;
   remote_document_number: string;
   publication_date: string;
-  abstract: string;
-  pdf_url: string;
+  abstract?: string;
+  pdf_url?: string;
   pdf_file_path?: string;
+  html_url?: string;
   html_file_path?: string;
-  agency: {
-    id: string;
-    name: string;
-  } | null;
+  agency?: Agency;
 }
 
-type TabType = 'details' | 'text';
+interface AgencyRuleDetailProps {
+  rule: AgencyRule;
+}
 
-export default function ExecutiveOrderDetailPage() {
-  const { id } = useParams();
-  const [order, setOrder] = useState<ExecutiveOrder | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('details');
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('agency_document')
-        .select(`
-          id,
-          title,
-          remote_document_number,
-          publication_date,
-          abstract,
-          pdf_url,
-          pdf_file_path,
-          html_file_path,
-          agency:agency_agencydocument!agency_document_id(
-            agency:agency(id, name)
-          )
-        `)
-        .eq('id', id)
-        .eq('subtype', 'Executive Order')
-        .single();
-
-      if (error) {
-        console.error('Error fetching executive order:', error);
-        return;
-      }
-
-      // Transform the data to match our interface
-      const transformedData = data ? {
-        ...data,
-        agency: data.agency?.[0]?.agency || null
-      } : null;
-
-      setOrder(transformedData);
-      setLoading(false);
-    };
-
-    fetchOrder();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-gray-500">Executive order not found</div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Breadcrumb */}
       <nav className="mb-6 text-sm">
         <ol className="flex items-center space-x-2">
           <li>
@@ -98,34 +42,35 @@ export default function ExecutiveOrderDetailPage() {
           </li>
           <li className="text-gray-500">/</li>
           <li>
-            <Link href="/executive-orders" className="text-blue-600 hover:underline">
-              Executive Orders
+            <Link href="/agency-rules" className="text-blue-600 hover:underline">
+              Agency Rules
             </Link>
           </li>
           <li className="text-gray-500">/</li>
-          <li className="text-gray-700 truncate max-w-xs">{order.title}</li>
+          <li className="text-gray-700 truncate max-w-xs">{rule.title}</li>
         </ol>
       </nav>
 
+      {/* Header Information */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{order.title}</h1>
+              <h1 className="text-3xl font-bold mb-2">{rule.title}</h1>
               <div className="text-sm text-gray-600 mb-2">
-                Document Number: {order.remote_document_number}
+                Document Number: {rule.remote_document_number}
               </div>
               <div className="text-sm text-gray-600 mb-2">
-                Published: {new Date(order.publication_date).toLocaleDateString()}
+                Published: {rule.publication_date && formatDate(rule.publication_date)}
               </div>
-              {order.agency && (
+              {rule.agency && (
                 <div className="text-sm text-gray-600">
-                  Agency: {order.agency.name}
+                  Agency: {rule.agency.name}
                 </div>
               )}
             </div>
             <SaveButton
-              itemId={order.id}
+              itemId={rule.id}
               itemType="agency"
               className="text-gray-400 hover:text-blue-500"
             />
@@ -165,22 +110,22 @@ export default function ExecutiveOrderDetailPage() {
         {activeTab === 'details' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6">
-              {order.abstract && (
+              {rule.abstract && (
                 <div className="prose max-w-none mb-6">
                   <h2 className="text-xl font-semibold mb-4">Abstract</h2>
-                  <div dangerouslySetInnerHTML={{ __html: order.abstract }} />
+                  <div dangerouslySetInnerHTML={{ __html: rule.abstract }} />
                 </div>
               )}
 
               <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">AI Assistant</h2>
                 <div className="h-[500px]">
-                  <ExecutiveOrderAiChat
-                    orderId={order.id}
-                    orderTitle={order.title}
-                    orderNumber={order.remote_document_number}
-                    html_file_path={order.html_file_path}
-                    abstract={order.abstract}
+                  <AgencyRuleAiChat
+                    ruleId={rule.id}
+                    ruleTitle={rule.title}
+                    ruleNumber={rule.remote_document_number}
+                    html_file_path={rule.html_file_path}
+                    abstract={rule.abstract}
                     className="h-full"
                   />
                 </div>
@@ -192,12 +137,12 @@ export default function ExecutiveOrderDetailPage() {
         {activeTab === 'text' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Executive Order Text</h2>
+              <h2 className="text-xl font-semibold mb-4">Agency Rule Text</h2>
               <div className="h-[600px]">
-                {order.pdf_file_path ? (
-                  <PdfViewer storagePath={order.pdf_file_path} storageBucket="agency-docs" className="h-full" />
-                ) : order.pdf_url ? (
-                  <PdfViewer pdfUrl={order.pdf_url} className="h-full" />
+                {rule.pdf_file_path ? (
+                  <PdfViewer storagePath={rule.pdf_file_path} storageBucket="agency-docs" className="h-full" />
+                ) : rule.pdf_url ? (
+                  <PdfViewer pdfUrl={rule.pdf_url} className="h-full" />
                 ) : (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     No PDF available

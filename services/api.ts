@@ -1,10 +1,70 @@
 import { supabase } from '../lib/supabase';
 import { AgencyDocument, Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
 
+// Types for Court API
+export interface Judge {
+  id: string;
+  remote_id: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  suffix: string | null;
+  full_name: string;
+}
+
+export interface Court {
+  id: number;
+  name: string;
+  jurisdiction: string;
+  url: string;
+}
+
+export interface Opinion {
+  id: string;
+  type: string;
+  date_created: string;
+  pdf_file_path: string | null;
+  html_file_path: string | null;
+  text_file_path: string | null;
+  author: Judge;
+  joined_by: Judge[];
+}
+
+export interface Cluster {
+  id: string;
+  case_name: string;
+  case_name_short: string;
+  date_filed: string;
+  court_id: number;
+  docket_number: string;
+  court: Court;
+  opinions: Opinion[];
+}
+
+export interface ClusterDetail extends Cluster {
+  scdb_id?: string | null;
+  scdb_decision_direction?: string | null;
+  scdb_votes_majority?: number | null;
+  scdb_votes_minority?: number | null;
+}
+
+export interface OpinionsByType {
+  [type: string]: Opinion[];
+}
+
 // Storage API
-export const getStoragePublicUrl = async (bucketName: string, filePath: string): Promise<string> => {
-  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
-  return data.publicUrl;
+export const getStoragePublicUrl = (bucket: string, path: string): string | null => {
+  if (!path) return null;
+
+  try {
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(path);
+    return publicUrl;
+  } catch (error) {
+    console.error('Error getting public URL:', error);
+    return null;
+  }
 };
 
 // Bills API
@@ -603,5 +663,393 @@ export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]
   } catch (error) {
     console.error('Error in getAgencyRules:', error);
     throw error;
+  }
+};
+
+// Court Opinions API
+export interface ClusterOpinion {
+  id: string;
+  remote_id: string;
+  date: string;
+  type: string;
+  pdf_file_path: string;
+  html_file_path: string;
+  text_file_path: string;
+  author: Judge;
+  joined_by: Judge[];
+}
+
+export interface Cluster {
+  id: string;
+  remote_id: string;
+  court_id: number;
+  court: Court;
+  slug: string;
+  case_name: string;
+  case_name_short: string;
+  opinions: ClusterOpinion[];
+}
+
+export interface Court {
+  id: number;
+  name: string;
+  jurisdiction: string;
+  url: string;
+}
+
+export const getClusterOpinions = async (clusterId: string, params: any = {}): Promise<ClusterOpinion[]> => {
+  let query = supabase
+    .from('court_opinion')
+    .select(`
+      *,
+      author:judge(*),
+      joined_by:judge(*)
+    `)
+    .eq('cluster_id', clusterId);
+
+  // Filter by opinion type if provided
+  if (params.type) {
+    query = query.eq('type', params.type);
+  }
+
+  // Sort by date (newest first by default)
+  query = query.order('date', { ascending: params.oldest_first ? true : false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching cluster opinions:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const getClusterJoinedJudges = async (clusterId: string): Promise<Judge[]> => {
+  // Get all unique judges who have joined any opinion in this cluster
+  const { data: opinions, error: opinionsError } = await supabase
+    .from('court_opinion')
+    .select(`
+      joined_by:judge(*)
+    `)
+    .eq('cluster_id', clusterId);
+
+  if (opinionsError) {
+    console.error('Error fetching cluster joined judges:', opinionsError);
+    throw opinionsError;
+  }
+
+  // Extract unique judges from the joined_by arrays
+  const uniqueJudges = new Map<string, Judge>();
+  opinions?.forEach(opinion => {
+    opinion.joined_by?.forEach((judge: Judge) => {
+      if (judge && judge.id) {
+        uniqueJudges.set(judge.id, judge);
+      }
+    });
+  });
+
+  return Array.from(uniqueJudges.values());
+};
+
+export const getClusterOpinionsByType = async (clusterId: string): Promise<OpinionsByType> => {
+  try {
+    // First get all opinions for the cluster
+    const { data: opinions, error } = await supabase
+      .from('court_opinion')
+      .select(`
+        id,
+        type,
+        date,
+        pdf_file_path,
+        html_file_path,
+        text_file_path,
+        joined_by,
+        author:judge!author_id(*)
+      `)
+      .eq('cluster_id', clusterId);
+
+    if (error) {
+      console.error('Error fetching cluster opinions:', error);
+      return {};
+    }
+
+    if (!opinions?.length) return {};
+
+    // For each opinion, fetch the joined_by judges
+    const opinionsWithJudges = await Promise.all(opinions.map(async opinion => {
+      if (!opinion.joined_by?.length) {
+        return {
+          ...opinion,
+          date_created: opinion.date,
+          joined_by: []
+        };
+      }
+
+      // Fetch all judges that joined this opinion
+      const { data: judges, error: judgesError } = await supabase
+        .from('judge')
+        .select('*')
+        .in('id', opinion.joined_by);
+
+      if (judgesError) {
+        console.error('Error fetching joined judges:', judgesError);
+        return {
+          ...opinion,
+          date_created: opinion.date,
+          joined_by: []
+        };
+      }
+
+      return {
+        ...opinion,
+        date_created: opinion.date,
+        joined_by: judges || []
+      };
+    }));
+
+    // Group opinions by type
+    const opinionsByType = opinionsWithJudges.reduce((acc, opinion) => {
+      const type = opinion.type || 'unknown';
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(opinion);
+      return acc;
+    }, {} as OpinionsByType);
+
+    return opinionsByType;
+  } catch (error) {
+    console.error('Error in getClusterOpinionsByType:', error);
+    return {};
+  }
+};
+
+export const getCourtOpinions = async (params: any = {}) => {
+  let query = supabase
+    .from('court_opinion')
+    .select(`
+      *,
+      court:court(*),
+      author:judge(*),
+      cluster:cluster(*),
+      joined_by:judge(*)
+    `);
+
+  if (params.limit) {
+    query = query.limit(params.limit);
+  }
+
+  if (params.court_id) {
+    query = query.eq('court_id', params.court_id);
+  }
+
+  if (params.author_id) {
+    query = query.eq('author_id', params.author_id);
+  }
+
+  if (params.cluster_id) {
+    query = query.eq('cluster_id', params.cluster_id);
+  }
+
+  // Search by case name if provided
+  if (params.search) {
+    // Search in cluster case_name and case_name_short
+    query = query.or(`cluster.case_name.ilike.%${params.search}%,cluster.case_name_short.ilike.%${params.search}%`);
+  }
+
+  // Filter by date range if provided
+  if (params.start_date) {
+    query = query.gte('date', params.start_date);
+  }
+
+  if (params.end_date) {
+    query = query.lte('date', params.end_date);
+  }
+
+  // Sort by date (newest first by default)
+  query = query.order('date', { ascending: params.oldest_first ? true : false });
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+};
+
+export async function getCourtOpinionById(id: string) {
+  const { data, error } = await supabase
+    .from('court_opinion')
+    .select(`
+      *,
+      court:court(*),
+      author:judge(*),
+      cluster:cluster(*),
+      joined_by:judge(*)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching court opinion:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export const getClusters = async (params: string | { court_id?: number; search?: string; limit?: number; oldest_first?: boolean } = {}): Promise<Cluster[]> => {
+  try {
+    let query = supabase
+      .from('cluster')
+      .select(`
+        id,
+        remote_id,
+        case_name,
+        case_name_short,
+        court_id,
+        slug,
+        court:court(*),
+        opinions:court_opinion!cluster_id(
+          id,
+          type,
+          date,
+          pdf_file_path,
+          html_file_path,
+          text_file_path
+        )
+      `);
+
+    // If params is a string, treat it as a search query
+    if (typeof params === 'string') {
+      if (params) {
+        query = query.ilike('case_name', `%${params}%`);
+      }
+      query = query.eq('court_id', 1); // SCOTUS ID
+      query = query.limit(50);
+    } else {
+      // Handle object params
+      if (params.court_id) {
+        query = query.eq('court_id', params.court_id);
+      }
+      if (params.search) {
+        query = query.or(`case_name.ilike.%${params.search}%,case_name_short.ilike.%${params.search}%`);
+      }
+      if (params.limit) {
+        query = query.limit(params.limit);
+      }
+      // Sort by created_at since we can't reliably sort by related opinion dates
+      query = query.order('created_at', { ascending: params.oldest_first || false, nullsLast: true });
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching clusters:', error);
+      return [];
+    }
+
+    // Sort the results by the most recent opinion date in memory
+    const sortedData = [...(data || [])].sort((a, b) => {
+      const latestOpinionA = a.opinions?.reduce((latest, op) =>
+        !latest || (op.date && op.date > latest) ? op.date : latest, null);
+      const latestOpinionB = b.opinions?.reduce((latest, op) =>
+        !latest || (op.date && op.date > latest) ? op.date : latest, null);
+
+      if (!latestOpinionA && !latestOpinionB) return 0;
+      if (!latestOpinionA) return 1;
+      if (!latestOpinionB) return -1;
+
+      return params.oldest_first
+        ? latestOpinionA.localeCompare(latestOpinionB)
+        : latestOpinionB.localeCompare(latestOpinionA);
+    });
+
+    return sortedData;
+  } catch (error) {
+    console.error('Error in getClusters:', error);
+    return [];
+  }
+};
+
+export const getClusterDetail = async (id: string): Promise<ClusterDetail | null> => {
+  try {
+    // First get the cluster with its opinions
+    const { data, error } = await supabase
+      .from('cluster')
+      .select(`
+        id,
+        remote_id,
+        case_name,
+        case_name_short,
+        court_id,
+        slug,
+        created_at,
+        updated_at,
+        court:court(*),
+        opinions:court_opinion!cluster_id(
+          id,
+          type,
+          date,
+          pdf_file_path,
+          html_file_path,
+          text_file_path,
+          joined_by,
+          author:judge!author_id(*)
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching cluster detail:', error);
+      return null;
+    }
+
+    if (!data) return null;
+
+    // For each opinion, fetch the joined_by judges
+    const opinionsWithJudges = await Promise.all(data.opinions.map(async opinion => {
+      if (!opinion.joined_by?.length) {
+        return {
+          ...opinion,
+          date_created: opinion.date,
+          joined_by: []
+        };
+      }
+
+      // Fetch all judges that joined this opinion
+      const { data: judges, error: judgesError } = await supabase
+        .from('judge')
+        .select('*')
+        .in('id', opinion.joined_by);
+
+      if (judgesError) {
+        console.error('Error fetching joined judges:', judgesError);
+        return {
+          ...opinion,
+          date_created: opinion.date,
+          joined_by: []
+        };
+      }
+
+      return {
+        ...opinion,
+        date_created: opinion.date,
+        joined_by: judges || []
+      };
+    }));
+
+    // Since the SCDB fields don't exist in the database, we'll return null for them
+    return {
+      ...data,
+      opinions: opinionsWithJudges,
+      scdb_id: null,
+      scdb_decision_direction: null,
+      scdb_votes_majority: null,
+      scdb_votes_minority: null
+    };
+  } catch (error) {
+    console.error('Error in getClusterDetail:', error);
+    return null;
   }
 };

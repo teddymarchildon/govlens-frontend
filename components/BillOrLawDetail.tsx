@@ -41,7 +41,7 @@ interface BillOrLawDetailProps {
   isLaw?: boolean;
 }
 
-type TabType = 'sponsors' | 'actions' | 'learn';
+type TabType = 'sponsors' | 'actions' | 'text';
 
 export default function BillOrLawDetail({
   item,
@@ -144,14 +144,14 @@ export default function BillOrLawDetail({
           </button>
 
           <button
-            onClick={() => setActiveTab('learn')}
+            onClick={() => setActiveTab('text')}
             className={`py-4 px-1 inline-flex items-center border-b-2 ${
-              activeTab === 'learn'
+              activeTab === 'text'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
-            Learn More
+            Text
           </button>
         </nav>
       </div>
@@ -243,14 +243,13 @@ export default function BillOrLawDetail({
           </div>
         )}
 
-        {activeTab === 'learn' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Text Section */}
-            <div className="bg-white rounded-lg shadow p-6">
+        {activeTab === 'text' && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">{itemType.charAt(0).toUpperCase() + itemType.slice(1)} Text</h2>
               {latestText ? (
                 <div className="h-[600px] border rounded">
-                  {latestText.pdf_url ? (
+                  {latestText.pdf_file_path ? (
                     <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
                   ) : (
                     <div className="bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap overflow-auto h-full">
@@ -275,24 +274,6 @@ ${item.introduced_date ? new Date(item.introduced_date).toLocaleDateString('en-U
                 </div>
               ) : (
                 <p>No {itemType} texts available</p>
-              )}
-            </div>
-
-            {/* AI Chat Section */}
-            <div className="bg-white rounded-lg shadow">
-              {isLaw ? (
-                <LawAiChat
-                  lawId={item.id}
-                  lawTitle={title}
-                  lawText={latestText || undefined}
-                  className="h-[600px]"
-                />
-              ) : (
-                <BillAiChat
-                  bill={item}
-                  billText={latestText || undefined}
-                  className="h-[600px]"
-                />
               )}
             </div>
           </div>

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import React, { useEffect, useState } from 'react';
+import { use } from 'react';
 import { getCongressmanById, getCongressmanSponsoredBills, getCongressmanCosponsoredBills, getCongressmanTerms } from '../../../services/api';
 import BillCard from '../../../components/BillCard';
 import { CongressmanTerm } from '../../../types/types';
 import SaveButton from '../../../components/SaveButton';
-import CongressmanAiChat from '../../../components/CongressmanAiChat';
 import Link from 'next/link';
 
 interface PageProps {
@@ -14,7 +14,7 @@ interface PageProps {
   };
 }
 
-type TabType = 'bills' | 'terms' | 'statistics' | 'learn';
+type TabType = 'bills' | 'terms' | 'statistics';
 
 export default function CongressmanDetailPage({ params }: PageProps) {
   const congressmanId = use(params).id;
@@ -331,16 +331,6 @@ export default function CongressmanDetailPage({ params }: PageProps) {
             >
               Statistics
             </button>
-            <button
-              onClick={() => setActiveTab('learn')}
-              className={`${
-                activeTab === 'learn'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              Learn More
-            </button>
           </nav>
         </div>
 
@@ -616,12 +606,6 @@ export default function CongressmanDetailPage({ params }: PageProps) {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'learn' && (
-          <div className="space-y-8">
-            <CongressmanAiChat congressman={congressman} className="h-[600px]" />
           </div>
         )}
       </div>
