@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { Cluster, ClusterOpinion } from '../types/types';
 
-interface CourtOpinionCardProps {
+interface CourtCaseCardProps {
   cluster: Cluster;
 }
 
-export default function CourtOpinionCard({ cluster }: CourtOpinionCardProps) {
+export default function CourtCaseCard({ cluster }: CourtCaseCardProps) {
   if (!cluster) {
     return null;
   }
@@ -31,17 +31,13 @@ export default function CourtOpinionCard({ cluster }: CourtOpinionCardProps) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 h-full">
       <div className="p-4 h-full flex flex-col">
         <div className="flex justify-between items-start mb-2">
-          <span className="text-sm font-semibold text-gray-700 truncate max-w-[60%]">
-            {cluster.court?.name || 'Unknown Court'}
-          </span>
-
           <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
             {mostRecentDate}
           </span>
         </div>
 
         <Link
-          href={`/court-opinions/clusters/${cluster.id}`}
+          href={`/supreme-court-cases/${cluster.id}`}
           className="block mb-3 hover:text-blue-600 transition-colors"
         >
           <h3 className="text-base font-medium text-gray-900 line-clamp-2">
