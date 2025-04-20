@@ -8,6 +8,7 @@ import CongressmanCard from '../../components/CongressmanCard';
 import AgencyCard from '../../components/AgencyCard';
 import { SavedBill, SavedCongressman, SavedAgency } from '../../types/types';
 import Link from 'next/link';
+import UserPreferencesSection from '../../components/UserPreferencesSection';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -106,6 +107,8 @@ export default function ProfilePage() {
           <p><strong>Email:</strong> {user.email}</p>
         </div>
       </div>
+
+      <UserPreferencesSection />
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Saved Bills</h2>

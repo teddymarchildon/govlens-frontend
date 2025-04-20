@@ -179,3 +179,12 @@ export interface Cluster {
   case_name_short: string;
   opinions: ClusterOpinion[];
 }
+
+export interface UserPreferences {
+  id: string;
+  user_id: string;
+  states: string[];
+  policy_areas: string[];
+  created_at?: string;
+  updated_at?: string;
+}

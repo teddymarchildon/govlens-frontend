@@ -22,20 +22,16 @@ export default function SaveButton({ itemId, itemType, className = '' }: SaveBut
         return;
       }
 
-      console.log(`Checking if ${itemType} with ID ${itemId} is saved for user ${user.id}`);
       setIsLoading(true);
       try {
         if (itemType === 'congressman') {
           const saved = await isCongressmanSaved(user.id, itemId);
-          console.log(`Congressman saved status:`, saved);
           setIsSaved(saved);
         } else if (itemType === 'agency') {
           const saved = await isAgencySaved(user.id, itemId);
-          console.log(`Agency saved status:`, saved);
           setIsSaved(saved);
         } else {
           const saved = await isBillSaved(user.id, itemId);
-          console.log(`Bill saved status:`, saved);
           setIsSaved(saved);
         }
       } catch (error) {
@@ -55,38 +51,30 @@ export default function SaveButton({ itemId, itemType, className = '' }: SaveBut
       return;
     }
 
-    console.log(`Toggling save for ${itemType} with ID ${itemId} for user ${user.id}. Current status: ${isSaved ? 'Saved' : 'Not saved'}`);
     setIsLoading(true);
     try {
       if (itemType === 'congressman') {
         if (isSaved) {
-          console.log(`Unsaving congressman ${itemId}`);
           await unsaveCongressman(user.id, itemId);
         } else {
-          console.log(`Saving congressman ${itemId}`);
           await saveCongressman(user.id, itemId);
         }
       } else if (itemType === 'agency') {
         if (isSaved) {
-          console.log(`Unsaving agency ${itemId}`);
           await unsaveAgency(user.id, itemId);
         } else {
-          console.log(`Saving agency ${itemId}`);
           await saveAgency(user.id, itemId);
         }
       } else {
         if (isSaved) {
-          console.log(`Unsaving bill ${itemId}`);
           await unsaveBill(user.id, itemId);
         } else {
-          console.log(`Saving bill ${itemId}`);
           await saveBill(user.id, itemId);
         }
       }
       setIsSaved(!isSaved);
-      console.log(`Save status toggled to: ${!isSaved ? 'Saved' : 'Not saved'}`);
     } catch (error) {
-      console.error(`Error ${isSaved ? 'unsaving' : 'saving'} ${itemType}:`, error);
+      throw error
     } finally {
       setIsLoading(false);
     }

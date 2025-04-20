@@ -62,8 +62,7 @@ export const getStoragePublicUrl = (bucket: string, path: string): string | null
       .getPublicUrl(path);
     return publicUrl;
   } catch (error) {
-    console.error('Error getting public URL:', error);
-    return null;
+    throw error;
   }
 };
 
@@ -251,7 +250,6 @@ export const getCongressmanTerms = async (congressmanId: string) => {
 
 // Save/Unsave Congressmen
 export const saveCongressman = async (userId: string, congressmanId: string) => {
-  console.log(`Saving congressman: userId=${userId}, congressmanId=${congressmanId}`);
   try {
     const { data, error } = await supabase
       .from('saved_congressman')
@@ -261,20 +259,16 @@ export const saveCongressman = async (userId: string, congressmanId: string) => 
       .select();
 
     if (error) {
-      console.error('Error saving congressman:', error);
       throw error;
     }
 
-    console.log('Congressman saved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception saving congressman:', error);
     throw error;
   }
 };
 
 export const unsaveCongressman = async (userId: string, congressmanId: string) => {
-  console.log(`Unsaving congressman: userId=${userId}, congressmanId=${congressmanId}`);
   try {
     const { data, error } = await supabase
       .from('saved_congressman')
@@ -283,20 +277,16 @@ export const unsaveCongressman = async (userId: string, congressmanId: string) =
       .select();
 
     if (error) {
-      console.error('Error unsaving congressman:', error);
       throw error;
     }
 
-    console.log('Congressman unsaved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception unsaving congressman:', error);
     throw error;
   }
 };
 
 export const isCongressmanSaved = async (userId: string, congressmanId: string) => {
-  console.log(`Checking if congressman is saved: userId=${userId}, congressmanId=${congressmanId}`);
   try {
     const { data, error, count } = await supabase
       .from('saved_congressman')
@@ -304,22 +294,18 @@ export const isCongressmanSaved = async (userId: string, congressmanId: string) 
       .match({ user_id: userId, congressman_id: congressmanId });
 
     if (error) {
-      console.error('Error checking if congressman is saved:', error);
       throw error;
     }
 
     const isSaved = (count || 0) > 0;
-    console.log(`Congressman saved status: ${isSaved}`, data);
     return isSaved;
   } catch (error) {
-    console.error('Exception checking if congressman is saved:', error);
     return false;
   }
 };
 
 // Save/Unsave Bills
 export const saveBill = async (userId: string, billId: string) => {
-  console.log(`Saving bill: userId=${userId}, billId=${billId}`);
   try {
     const { data, error } = await supabase
       .from('saved_bill')
@@ -329,20 +315,16 @@ export const saveBill = async (userId: string, billId: string) => {
       .select();
 
     if (error) {
-      console.error('Error saving bill:', error);
       throw error;
     }
 
-    console.log('Bill saved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception saving bill:', error);
     throw error;
   }
 };
 
 export const unsaveBill = async (userId: string, billId: string) => {
-  console.log(`Unsaving bill: userId=${userId}, billId=${billId}`);
   try {
     const { data, error } = await supabase
       .from('saved_bill')
@@ -351,20 +333,16 @@ export const unsaveBill = async (userId: string, billId: string) => {
       .select();
 
     if (error) {
-      console.error('Error unsaving bill:', error);
       throw error;
     }
 
-    console.log('Bill unsaved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception unsaving bill:', error);
     throw error;
   }
 };
 
 export const isBillSaved = async (userId: string, billId: string) => {
-  console.log(`Checking if bill is saved: userId=${userId}, billId=${billId}`);
   try {
     const { data, error, count } = await supabase
       .from('saved_bill')
@@ -372,15 +350,12 @@ export const isBillSaved = async (userId: string, billId: string) => {
       .match({ user_id: userId, bill_id: billId });
 
     if (error) {
-      console.error('Error checking if bill is saved:', error);
       throw error;
     }
 
     const isSaved = (count || 0) > 0;
-    console.log(`Bill saved status: ${isSaved}`, data);
     return isSaved;
   } catch (error) {
-    console.error('Exception checking if bill is saved:', error);
     return false;
   }
 };
@@ -414,7 +389,6 @@ export async function getBillActions(billId: string) {
     .order('date', { ascending: false });
 
   if (error) {
-    console.error('Error fetching bill actions:', error);
     throw error;
   }
 
@@ -473,7 +447,6 @@ export const getChildAgencies = async (parentId: string) => {
 
 // Save/Unsave Agency
 export const saveAgency = async (userId: string, agencyId: string) => {
-  console.log(`Saving agency: userId=${userId}, agencyId=${agencyId}`);
   try {
     const { data, error } = await supabase
       .from('saved_agency')
@@ -483,20 +456,16 @@ export const saveAgency = async (userId: string, agencyId: string) => {
       .select();
 
     if (error) {
-      console.error('Error saving agency:', error);
       throw error;
     }
 
-    console.log('Agency saved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception saving agency:', error);
     throw error;
   }
 };
 
 export const unsaveAgency = async (userId: string, agencyId: string) => {
-  console.log(`Unsaving agency: userId=${userId}, agencyId=${agencyId}`);
   try {
     const { data, error } = await supabase
       .from('saved_agency')
@@ -505,20 +474,16 @@ export const unsaveAgency = async (userId: string, agencyId: string) => {
       .select();
 
     if (error) {
-      console.error('Error unsaving agency:', error);
       throw error;
     }
 
-    console.log('Agency unsaved successfully:', data);
     return data;
   } catch (error) {
-    console.error('Exception unsaving agency:', error);
     throw error;
   }
 };
 
 export const isAgencySaved = async (userId: string, agencyId: string) => {
-  console.log(`Checking if agency is saved: userId=${userId}, agencyId=${agencyId}`);
   try {
     const { data, error, count } = await supabase
       .from('saved_agency')
@@ -526,15 +491,12 @@ export const isAgencySaved = async (userId: string, agencyId: string) => {
       .match({ user_id: userId, agency_id: agencyId });
 
     if (error) {
-      console.error('Error checking if agency is saved:', error);
       throw error;
     }
 
     const isSaved = (count || 0) > 0;
-    console.log(`Agency saved status: ${isSaved}`, data);
     return isSaved;
   } catch (error) {
-    console.error('Exception checking if agency is saved:', error);
     return false;
   }
 };
@@ -558,7 +520,6 @@ export const getAgencyDocuments = async (agencyId: string): Promise<AgencyDocume
       .eq('agency_id', agencyId);
 
     if (agencyError) {
-      console.error('Error fetching agency document IDs:', agencyError);
       throw agencyError;
     }
 
@@ -577,13 +538,11 @@ export const getAgencyDocuments = async (agencyId: string): Promise<AgencyDocume
       .order('publication_date', { ascending: false });
 
     if (documentsError) {
-      console.error('Error fetching documents:', documentsError);
       throw documentsError;
     }
 
     return documents || [];
   } catch (error) {
-    console.error('Error in getAgencyDocuments:', error);
     throw error;
   }
 };
@@ -597,13 +556,11 @@ export const getTopLevelAgencies = async (): Promise<Agency[]> => {
       .order('name');
 
     if (error) {
-      console.error('Error fetching top-level agencies:', error);
       throw error;
     }
 
     return data || [];
   } catch (error) {
-    console.error('Error in getTopLevelAgencies:', error);
     throw error;
   }
 };
@@ -636,7 +593,6 @@ export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]
         .eq('agency_id', params.agencyId);
 
       if (agencyError) {
-        console.error('Error fetching agency document IDs:', agencyError);
         throw agencyError;
       }
 
@@ -652,7 +608,6 @@ export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching agency rules:', error);
       throw error;
     }
 
@@ -661,7 +616,6 @@ export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]
       agency: doc.agencies?.[0]?.agency
     })) || [];
   } catch (error) {
-    console.error('Error in getAgencyRules:', error);
     throw error;
   }
 };
@@ -718,7 +672,6 @@ export const getClusterOpinions = async (clusterId: string, params: any = {}): P
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching cluster opinions:', error);
     throw error;
   }
 
@@ -735,7 +688,6 @@ export const getClusterJoinedJudges = async (clusterId: string): Promise<Judge[]
     .eq('cluster_id', clusterId);
 
   if (opinionsError) {
-    console.error('Error fetching cluster joined judges:', opinionsError);
     throw opinionsError;
   }
 
@@ -770,7 +722,6 @@ export const getClusterOpinionsByType = async (clusterId: string): Promise<Opini
       .eq('cluster_id', clusterId);
 
     if (error) {
-      console.error('Error fetching cluster opinions:', error);
       return {};
     }
 
@@ -793,7 +744,6 @@ export const getClusterOpinionsByType = async (clusterId: string): Promise<Opini
         .in('id', opinion.joined_by);
 
       if (judgesError) {
-        console.error('Error fetching joined judges:', judgesError);
         return {
           ...opinion,
           date_created: opinion.date,
@@ -820,7 +770,6 @@ export const getClusterOpinionsByType = async (clusterId: string): Promise<Opini
 
     return opinionsByType;
   } catch (error) {
-    console.error('Error in getClusterOpinionsByType:', error);
     return {};
   }
 };
@@ -890,7 +839,6 @@ export async function getCourtOpinionById(id: string) {
     .single();
 
   if (error) {
-    console.error('Error fetching court opinion:', error);
     throw error;
   }
 
@@ -904,11 +852,11 @@ export const getClusters = async (params: string | { court_id?: number; search?:
       .select(`
         id,
         remote_id,
+        court_id,
+        court:court(*),
+        slug,
         case_name,
         case_name_short,
-        court_id,
-        slug,
-        court:court(*),
         opinions:court_opinion!cluster_id(
           id,
           type,
@@ -944,8 +892,7 @@ export const getClusters = async (params: string | { court_id?: number; search?:
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching clusters:', error);
-      return [];
+      throw error;
     }
 
     // Sort the results by the most recent opinion date in memory
@@ -966,8 +913,7 @@ export const getClusters = async (params: string | { court_id?: number; search?:
 
     return sortedData;
   } catch (error) {
-    console.error('Error in getClusters:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -1001,8 +947,7 @@ export const getClusterDetail = async (id: string): Promise<ClusterDetail | null
       .single();
 
     if (error) {
-      console.error('Error fetching cluster detail:', error);
-      return null;
+      throw error;
     }
 
     if (!data) return null;
@@ -1024,7 +969,6 @@ export const getClusterDetail = async (id: string): Promise<ClusterDetail | null
         .in('id', opinion.joined_by);
 
       if (judgesError) {
-        console.error('Error fetching joined judges:', judgesError);
         return {
           ...opinion,
           date_created: opinion.date,
@@ -1049,7 +993,70 @@ export const getClusterDetail = async (id: string): Promise<ClusterDetail | null
       scdb_votes_minority: null
     };
   } catch (error) {
-    console.error('Error in getClusterDetail:', error);
+    throw error;
+  }
+};
+
+// User Preferences API
+export const getUserPreferences = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      throw error;
+    }
+
+    // Return the first preference found, or null if none exist
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
     return null;
+  }
+};
+
+export const createUserPreferences = async (userId: string, preferences: { states?: string[], policy_areas?: string[] }) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .insert({
+        user_id: userId,
+        states: preferences.states || [],
+        policy_areas: preferences.policy_areas || []
+      })
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateUserPreferences = async (userId: string, preferences: { states?: string[], policy_areas?: string[] }) => {
+  try {
+    // First check if preferences exist
+    const existing = await getUserPreferences(userId);
+
+    if (existing) {
+      // If preferences exist, delete them first
+
+      const { error: deleteError } = await supabase
+        .from('user_preferences')
+        .delete()
+        .eq('id', existing.id);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+    }
+
+    return createUserPreferences(userId, preferences);
+  } catch (error) {
+    throw error;
   }
 };
