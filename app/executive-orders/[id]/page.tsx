@@ -7,6 +7,7 @@ import Link from 'next/link';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
 import ExecutiveOrderAiChat from '@/components/ExecutiveOrderAiChat';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface ExecutiveOrder {
   id: string;
@@ -90,21 +91,13 @@ export default function ExecutiveOrderDetailPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <nav className="mb-6 text-sm">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-blue-600 hover:underline">
-              Home
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li>
-            <Link href="/executive-orders" className="text-blue-600 hover:underline">
-              Executive Orders
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li className="text-gray-700 truncate max-w-xs">{order.title}</li>
-        </ol>
+        <Breadcrumbs
+          steps={[
+            { label: 'Home', href: '/' },
+            { label: 'Executive Orders', href: '/executive-orders' },
+            { label: order.title }
+          ]}
+        />
       </nav>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">

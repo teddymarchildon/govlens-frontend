@@ -103,17 +103,6 @@ export default function Sidebar() {
             </li>
             <li>
               <Link
-                href="/supreme-court"
-                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/supreme-court')}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                </svg>
-                Supreme Court Cases
-              </Link>
-            </li>
-            <li>
-              <Link
                 href="/bills"
                 className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/bills')}`}
               >
@@ -160,17 +149,6 @@ export default function Sidebar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Congress Members
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/supreme-court/judges"
-                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/supreme-court/judges')}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5v-2a4 4 0 013-3.87M17 8V7a5 5 0 00-10 0v1M12 17v.01" />
-                </svg>
-                Supreme Court Judges
               </Link>
             </li>
             <li>

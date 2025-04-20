@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/utils';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
 import AgencyRuleAiChat from '@/components/AgencyRuleAiChat';
+import Breadcrumbs from './Breadcrumbs';
 import { Agency } from '@/types/types';
 
 type TabType = 'details' | 'text';
@@ -33,23 +34,13 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-blue-600 hover:underline">
-              Home
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li>
-            <Link href="/agency-rules" className="text-blue-600 hover:underline">
-              Agency Rules
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li className="text-gray-700 truncate max-w-xs">{rule.title}</li>
-        </ol>
-      </nav>
+      <Breadcrumbs
+        steps={[
+          { label: 'Home', href: '/' },
+          { label: 'Agency Rules', href: '/agency-rules' },
+          { label: rule.title }
+        ]}
+      />
 
       {/* Header Information */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
