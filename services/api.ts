@@ -779,7 +779,6 @@ export const getCourtOpinions = async (params: any = {}) => {
     .from('court_opinion')
     .select(`
       *,
-      court:court(*),
       author:judge(*),
       cluster:cluster(*),
       joined_by:judge(*)
@@ -885,7 +884,7 @@ export const getClusters = async (params: string | { court_id?: number; search?:
       if (params.limit) {
         query = query.limit(params.limit);
       }
-      // Sort by created_at since we can't reliably sort by related opinion dates
+      // Sort results
       query = query.order('created_at', { ascending: params.oldest_first || false, nullsLast: true });
     }
 
@@ -1059,4 +1058,37 @@ export const updateUserPreferences = async (userId: string, preferences: { state
   } catch (error) {
     throw error;
   }
+};
+
+// Judges API
+export const getJudges = async (params: any = {}) => {
+  let query = supabase.from('judge').select('*');
+
+  if (params.limit) {
+    query = query.limit(params.limit);
+  }
+
+  // Search by name if provided
+  if (params.search) {
+    query = query.or(`first_name.ilike.%${params.search}%,last_name.ilike.%${params.search}%,full_name.ilike.%${params.search}%`);
+  }
+
+  // Sort by name (alphabetical by default)
+  query = query.order('last_name', { ascending: true });
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data;
+};
+
+export const getJudgeById = async (judgeId: string) => {
+  const { data, error } = await supabase
+    .from('judge')
+    .select('*')
+    .eq('id', judgeId)
+    .single();
+
+  if (error) throw error;
+  return data;
 };

@@ -11,7 +11,7 @@ export default function Sidebar() {
   const { user } = useAuth();
   const [savedItems, setSavedItems] = useState<Array<{
     id: string;
-    type: 'bill' | 'congressman' | 'agency';
+    type: 'bill' | 'congressman' | 'agency' | 'judge';
     title: string;
     itemId: string;
     timestamp?: string;
@@ -31,7 +31,7 @@ export default function Sidebar() {
         const [bills, congressmen, agencies] = await Promise.all([
           getSavedBills(user.id),
           getSavedCongressmen(user.id),
-          getSavedAgencies(user.id)
+          getSavedAgencies(user.id),
         ]);
 
         // Format bills
@@ -171,6 +171,17 @@ export default function Sidebar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 Federal Agencies
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/judges"
+                className={`flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-100 ${isActive('/judges')}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Supreme Court Judges
               </Link>
             </li>
           </ul>
