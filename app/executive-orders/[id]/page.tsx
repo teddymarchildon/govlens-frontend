@@ -14,6 +14,7 @@ interface ExecutiveOrder {
   title: string;
   remote_document_number: string;
   publication_date: string;
+  signing_date?: string;
   abstract: string;
   pdf_url: string;
   pdf_file_path?: string;
@@ -42,6 +43,7 @@ export default function ExecutiveOrderDetailPage() {
           title,
           remote_document_number,
           publication_date,
+          signing_date,
           abstract,
           pdf_url,
           pdf_file_path,
@@ -108,6 +110,11 @@ export default function ExecutiveOrderDetailPage() {
               <div className="text-sm text-gray-600 mb-2">
                 Document Number: {order.remote_document_number}
               </div>
+              {order.signing_date && (
+                <div className="text-sm text-gray-600 mb-2">
+                  Signed: {new Date(order.signing_date).toLocaleDateString()}
+                </div>
+              )}
               <div className="text-sm text-gray-600 mb-2">
                 Published: {new Date(order.publication_date).toLocaleDateString()}
               </div>

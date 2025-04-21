@@ -54,6 +54,7 @@ export default function ExecutiveOrdersPage() {
           id,
           title,
           remote_document_number,
+          signing_date,
           publication_date,
           agency:agency_agencydocument!agency_document_id(
             agency:agency(id, name)

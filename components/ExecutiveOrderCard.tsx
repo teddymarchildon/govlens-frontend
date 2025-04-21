@@ -6,7 +6,7 @@ interface ExecutiveOrder {
   id: string;
   title: string;
   remote_document_number: string;
-  publication_date: string;
+  signing_date?: string;
   agency: {
     id: string;
     name: string;
@@ -49,9 +49,9 @@ export default function ExecutiveOrderCard({ order }: ExecutiveOrderCardProps) {
             </div>
           )}
 
-          {order.publication_date && (
+          {order.signing_date && (
             <div className="text-xs text-gray-500">
-              <span className="font-medium">Published:</span> {new Date(order.publication_date).toLocaleDateString()}
+              <span className="font-medium">Signed:</span> {new Date(order.signing_date).toLocaleDateString()}
             </div>
           )}
         </div>
