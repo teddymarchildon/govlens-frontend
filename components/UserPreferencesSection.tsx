@@ -9,7 +9,7 @@ import { UserPreferences } from '../types/types';
 
 const UserPreferencesSection = () => {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [_preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedPolicyAreas, setSelectedPolicyAreas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);

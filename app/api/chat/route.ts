@@ -9,13 +9,12 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { question, documentPath, documentBucket, context } = await request.json();
+    const { question, documentPath, documentBucket } = await request.json();
 
     // For document-based chat
       const documentUrl = await getStoragePublicUrl(documentBucket, documentPath);
       const documentResponse = await fetch(documentUrl);
       const documentContent = await documentResponse.text();
-      console.log(documentUrl)
       const systemMessage: ChatCompletionMessageParam = {
         role: 'system',
         content: `You are a helpful assistant analyzing an executive order document. Here is the document content in an HTML format:\n\n${documentContent}`

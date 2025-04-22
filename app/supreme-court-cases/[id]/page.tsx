@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../../../lib/supabase';
-import { Cluster, ClusterOpinion, Judge } from '../../../types/types';
+import { Cluster } from '../../../types/types';
 
 export default function SupremeCourtCaseDetailPage() {
   const params = useParams();
@@ -31,9 +31,8 @@ export default function SupremeCourtCaseDetailPage() {
 
         if (error) throw error;
         setCluster(data);
-      } catch (error: any) {
-        console.error('Error fetching case:', error);
-        setError(error.message || 'Failed to load case');
+      } catch (error: unknown) {
+        setError(error instanceof Error ? error.message : 'Failed to load case');
       } finally {
         setLoading(false);
       }
@@ -79,13 +78,13 @@ export default function SupremeCourtCaseDetailPage() {
       'dissent': 4,
       'per curiam': 5
     };
-    
+
     const typeA = a.type?.toLowerCase() || '';
     const typeB = b.type?.toLowerCase() || '';
-    
+
     const orderA = typeOrder[typeA] !== undefined ? typeOrder[typeA] : 999;
     const orderB = typeOrder[typeB] !== undefined ? typeOrder[typeB] : 999;
-    
+
     return orderA - orderB;
   });
 
@@ -95,10 +94,10 @@ export default function SupremeCourtCaseDetailPage() {
     : null;
 
   const formattedDate = mostRecentDate
-    ? mostRecentDate.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    ? mostRecentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       })
     : 'Unknown date';
 
@@ -149,7 +148,7 @@ export default function SupremeCourtCaseDetailPage() {
 
           <div className="border-t border-gray-200 pt-6 mt-6">
             <h2 className="text-xl font-semibold mb-4">Opinions</h2>
-            
+
             {sortedOpinions.length > 0 ? (
               <div className="space-y-6">
                 {sortedOpinions.map((opinion) => (
@@ -171,7 +170,7 @@ export default function SupremeCourtCaseDetailPage() {
                         </span>
                       )}
                     </div>
-                    
+
                     {opinion.joined_by && opinion.joined_by.length > 0 && (
                       <div className="mb-3 text-sm text-gray-600">
                         <span className="font-medium">Joined by:</span>{' '}
@@ -179,7 +178,7 @@ export default function SupremeCourtCaseDetailPage() {
                           const judge = cluster.opinions
                             ?.flatMap(o => o.author ? [o.author] : [])
                             .find(j => j.id === judgeId);
-                          
+
                           return judge ? (
                             <span key={judgeId}>
                               {judge.full_name}
@@ -189,12 +188,12 @@ export default function SupremeCourtCaseDetailPage() {
                         })}
                       </div>
                     )}
-                    
+
                     <div className="flex space-x-3 mt-3">
                       {opinion.pdf_file_path && (
-                        <a 
-                          href={opinion.pdf_file_path} 
-                          target="_blank" 
+                        <a
+                          href={opinion.pdf_file_path}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         >
@@ -205,9 +204,9 @@ export default function SupremeCourtCaseDetailPage() {
                         </a>
                       )}
                       {opinion.html_file_path && (
-                        <a 
-                          href={opinion.html_file_path} 
-                          target="_blank" 
+                        <a
+                          href={opinion.html_file_path}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         >
@@ -218,9 +217,9 @@ export default function SupremeCourtCaseDetailPage() {
                         </a>
                       )}
                       {opinion.text_file_path && (
-                        <a 
-                          href={opinion.text_file_path} 
-                          target="_blank" 
+                        <a
+                          href={opinion.text_file_path}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                         >

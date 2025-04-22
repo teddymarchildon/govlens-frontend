@@ -7,6 +7,9 @@ export interface Bill {
   introduced_date?: string;
   policy_area?: string;
   bill_unique_id?: string;
+  law_enacted_date?: string;
+  sponsor?: Congressman;
+  cosponsors?: Congressman[];
 }
 
 export interface BillText {
@@ -126,9 +129,9 @@ export interface AgencyDocument {
 
 export interface Court {
   id: number;
-  name: string;
+  full_name: string;
   jurisdiction: string;
-  url: string;
+  short_name: string;
 }
 
 export interface Judge {

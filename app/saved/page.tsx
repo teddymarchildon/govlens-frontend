@@ -6,7 +6,6 @@ import { getSavedBills, getSavedCongressmen, getSavedAgencies, unsaveBill, unsav
 import Link from 'next/link';
 import BillCard from '../../components/BillCard';
 import AgencyCard from '../../components/AgencyCard';
-import { Bill, Congressman, Agency } from '../../types/types';
 
 export default function SavedItemsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -180,7 +179,7 @@ export default function SavedItemsPage() {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <p className="text-lg text-gray-600 mb-4">You haven't saved any bills yet.</p>
+                  <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any bills yet.</p>
                   <Link href="/bills" className="text-blue-600 hover:underline">
                     Browse bills
                   </Link>
@@ -229,7 +228,7 @@ export default function SavedItemsPage() {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <p className="text-lg text-gray-600 mb-4">You haven't saved any congressmen yet.</p>
+                  <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any congressmen yet.</p>
                   <Link href="/congressmen" className="text-blue-600 hover:underline">
                     Browse congressmen
                   </Link>
@@ -265,7 +264,7 @@ export default function SavedItemsPage() {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <p className="text-lg text-gray-600 mb-4">You haven't saved any agencies yet.</p>
+                  <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any agencies yet.</p>
                   <Link href="/agencies" className="text-blue-600 hover:underline">
                     Browse agencies
                   </Link>

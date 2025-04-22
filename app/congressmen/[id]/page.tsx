@@ -5,9 +5,8 @@ import { use } from 'react';
 import { getCongressmanById, getCongressmanSponsoredBills, getCongressmanCosponsoredBills, getCongressmanTerms } from '../../../services/api';
 import BillCard from '../../../components/BillCard';
 import Breadcrumbs from '../../../components/Breadcrumbs';
-import { CongressmanTerm } from '../../../types/types';
+import { Bill, Congressman, CongressmanTerm } from '../../../types/types';
 import SaveButton from '../../../components/SaveButton';
-import Link from 'next/link';
 
 interface PageProps {
   params: {
@@ -19,9 +18,9 @@ type TabType = 'bills' | 'terms' | 'statistics';
 
 export default function CongressmanDetailPage({ params }: PageProps) {
   const congressmanId = use(params).id;
-  const [congressman, setCongressman] = useState<any>(null);
-  const [sponsoredBills, setSponsoredBills] = useState<any[]>([]);
-  const [cosponsoredBills, setCosponsoredBills] = useState<any[]>([]);
+  const [congressman, setCongressman] = useState<Congressman | null>(null);
+  const [sponsoredBills, setSponsoredBills] = useState<Bill[]>([]);
+  const [cosponsoredBills, setCosponsoredBills] = useState<Bill[]>([]);
   const [terms, setTerms] = useState<CongressmanTerm[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('bills');

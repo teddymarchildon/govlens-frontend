@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { Agency } from '../types/types';
-import SaveButton from './SaveButton';
 
 interface AgencyCardProps {
   agency: Agency;
-  onSave: (itemId: string, itemType: string) => void;
 }
 
-export default function AgencyCard({ agency, onSave }: AgencyCardProps) {
+export default function AgencyCard({ agency }: AgencyCardProps) {
   return (
     <Link href={`/agencies/${agency.id}`} className="block">
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -34,13 +32,6 @@ export default function AgencyCard({ agency, onSave }: AgencyCardProps) {
                   </Link>
                 </p>
               )}
-            </div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <SaveButton
-                itemId={agency.id}
-                itemType="agency"
-                onSave={onSave}
-              />
             </div>
           </div>
         </div>

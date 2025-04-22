@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import LawCard from '@/components/LawCard';
-import Link from 'next/link';
 import { Congressman } from '@/types/types';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '@/components/CongressmanSearchSelect';
 
@@ -75,7 +74,7 @@ export default function LawsPage() {
             .select('*')
             .eq('id', currentSponsorId)
             .single();
-            
+
           if (error) throw error;
           if (data) {
             setSelectedSponsor(data);
@@ -85,7 +84,7 @@ export default function LawsPage() {
         }
       }
     };
-    
+
     fetchSponsor();
   }, [currentSponsorId, selectedSponsor]);
 
@@ -171,7 +170,7 @@ export default function LawsPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    
+
     // Update URL query params
     const params = new URLSearchParams(searchParams.toString());
     if (e.target.value) {
@@ -179,13 +178,13 @@ export default function LawsPage() {
     } else {
       params.delete('search');
     }
-    
+
     router.push(`/laws?${params.toString()}`);
   };
 
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
-    
+
     // Update URL query params
     const params = new URLSearchParams(searchParams.toString());
     if (congressman) {
@@ -193,7 +192,7 @@ export default function LawsPage() {
     } else {
       params.delete('sponsor_id');
     }
-    
+
     router.push(`/laws?${params.toString()}`);
   };
 
@@ -201,12 +200,12 @@ export default function LawsPage() {
     setSelectedPolicyArea('');
     setSearchQuery('');
     setSelectedSponsor(null);
-    
+
     // Clear the congressman search input
     if (congressmanSearchRef.current) {
       congressmanSearchRef.current.clear();
     }
-    
+
     router.push('/laws');
   };
 
@@ -260,7 +259,7 @@ export default function LawsPage() {
               </select>
             </div>
           </div>
-          
+
           <div>
             <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Search Titles
@@ -276,12 +275,12 @@ export default function LawsPage() {
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Sponsored By
             </label>
-            <CongressmanSearchSelect 
+            <CongressmanSearchSelect
               ref={congressmanSearchRef}
               onSelect={handleSponsorSelect}
               placeholder="Search for a congressman..."

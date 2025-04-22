@@ -1,56 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { AgencyDocument, Bill, Congressman, SavedBill, SavedCongressman } from '../types/types';
-
-// Types for Court API
-export interface Judge {
-  id: string;
-  remote_id: string;
-  first_name: string;
-  middle_name: string | null;
-  last_name: string;
-  suffix: string | null;
-  full_name: string;
-}
-
-export interface Court {
-  id: number;
-  name: string;
-  jurisdiction: string;
-  url: string;
-}
-
-export interface Opinion {
-  id: string;
-  type: string;
-  date_created: string;
-  pdf_file_path: string | null;
-  html_file_path: string | null;
-  text_file_path: string | null;
-  author: Judge;
-  joined_by: Judge[];
-}
-
-export interface Cluster {
-  id: string;
-  case_name: string;
-  case_name_short: string;
-  date_filed: string;
-  court_id: number;
-  docket_number: string;
-  court: Court;
-  opinions: Opinion[];
-}
-
-export interface ClusterDetail extends Cluster {
-  scdb_id?: string | null;
-  scdb_decision_direction?: string | null;
-  scdb_votes_majority?: number | null;
-  scdb_votes_minority?: number | null;
-}
-
-export interface OpinionsByType {
-  [type: string]: Opinion[];
-}
+import { Agency, AgencyDocument, Bill, Cluster, ClusterOpinion, Congressman, Judge } from '../types/types';
 
 // Storage API
 export const getStoragePublicUrl = (bucket: string, path: string): string | null => {
@@ -565,7 +514,7 @@ export const getTopLevelAgencies = async (): Promise<Agency[]> => {
   }
 };
 
-export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]> => {
+export const getAgencyRules = async (params: { agencyId?: string; limit?: number } = {}): Promise<AgencyDocument[]> => {
   try {
     // First, get all agency documents that are of type 'Rule'
     let query = supabase
@@ -620,38 +569,7 @@ export const getAgencyRules = async (params: any = {}): Promise<AgencyDocument[]
   }
 };
 
-// Court Opinions API
-export interface ClusterOpinion {
-  id: string;
-  remote_id: string;
-  date: string;
-  type: string;
-  pdf_file_path: string;
-  html_file_path: string;
-  text_file_path: string;
-  author: Judge;
-  joined_by: Judge[];
-}
-
-export interface Cluster {
-  id: string;
-  remote_id: string;
-  court_id: number;
-  court: Court;
-  slug: string;
-  case_name: string;
-  case_name_short: string;
-  opinions: ClusterOpinion[];
-}
-
-export interface Court {
-  id: number;
-  name: string;
-  jurisdiction: string;
-  url: string;
-}
-
-export const getClusterOpinions = async (clusterId: string, params: any = {}): Promise<ClusterOpinion[]> => {
+export const getClusterOpinions = async (clusterId: string, params: { type?: string; oldest_first?: boolean } = {}): Promise<ClusterOpinion[]> => {
   let query = supabase
     .from('court_opinion')
     .select(`
@@ -704,77 +622,7 @@ export const getClusterJoinedJudges = async (clusterId: string): Promise<Judge[]
   return Array.from(uniqueJudges.values());
 };
 
-export const getClusterOpinionsByType = async (clusterId: string): Promise<OpinionsByType> => {
-  try {
-    // First get all opinions for the cluster
-    const { data: opinions, error } = await supabase
-      .from('court_opinion')
-      .select(`
-        id,
-        type,
-        date,
-        pdf_file_path,
-        html_file_path,
-        text_file_path,
-        joined_by,
-        author:judge!author_id(*)
-      `)
-      .eq('cluster_id', clusterId);
-
-    if (error) {
-      return {};
-    }
-
-    if (!opinions?.length) return {};
-
-    // For each opinion, fetch the joined_by judges
-    const opinionsWithJudges = await Promise.all(opinions.map(async opinion => {
-      if (!opinion.joined_by?.length) {
-        return {
-          ...opinion,
-          date_created: opinion.date,
-          joined_by: []
-        };
-      }
-
-      // Fetch all judges that joined this opinion
-      const { data: judges, error: judgesError } = await supabase
-        .from('judge')
-        .select('*')
-        .in('id', opinion.joined_by);
-
-      if (judgesError) {
-        return {
-          ...opinion,
-          date_created: opinion.date,
-          joined_by: []
-        };
-      }
-
-      return {
-        ...opinion,
-        date_created: opinion.date,
-        joined_by: judges || []
-      };
-    }));
-
-    // Group opinions by type
-    const opinionsByType = opinionsWithJudges.reduce((acc, opinion) => {
-      const type = opinion.type || 'unknown';
-      if (!acc[type]) {
-        acc[type] = [];
-      }
-      acc[type].push(opinion);
-      return acc;
-    }, {} as OpinionsByType);
-
-    return opinionsByType;
-  } catch (error) {
-    return {};
-  }
-};
-
-export const getCourtOpinions = async (params: any = {}) => {
+export const getCourtOpinions = async (params: { limit?: number; court_id?: number; author_id?: string; cluster_id?: string; search?: string; oldest_first?: boolean; start_date?: string; end_date?: string } = {}) => {
   let query = supabase
     .from('court_opinion')
     .select(`
@@ -916,86 +764,6 @@ export const getClusters = async (params: string | { court_id?: number; search?:
   }
 };
 
-export const getClusterDetail = async (id: string): Promise<ClusterDetail | null> => {
-  try {
-    // First get the cluster with its opinions
-    const { data, error } = await supabase
-      .from('cluster')
-      .select(`
-        id,
-        remote_id,
-        case_name,
-        case_name_short,
-        court_id,
-        slug,
-        created_at,
-        updated_at,
-        court:court(*),
-        opinions:court_opinion!cluster_id(
-          id,
-          type,
-          date,
-          pdf_file_path,
-          html_file_path,
-          text_file_path,
-          joined_by,
-          author:judge!author_id(*)
-        )
-      `)
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data) return null;
-
-    // For each opinion, fetch the joined_by judges
-    const opinionsWithJudges = await Promise.all(data.opinions.map(async opinion => {
-      if (!opinion.joined_by?.length) {
-        return {
-          ...opinion,
-          date_created: opinion.date,
-          joined_by: []
-        };
-      }
-
-      // Fetch all judges that joined this opinion
-      const { data: judges, error: judgesError } = await supabase
-        .from('judge')
-        .select('*')
-        .in('id', opinion.joined_by);
-
-      if (judgesError) {
-        return {
-          ...opinion,
-          date_created: opinion.date,
-          joined_by: []
-        };
-      }
-
-      return {
-        ...opinion,
-        date_created: opinion.date,
-        joined_by: judges || []
-      };
-    }));
-
-    // Since the SCDB fields don't exist in the database, we'll return null for them
-    return {
-      ...data,
-      opinions: opinionsWithJudges,
-      scdb_id: null,
-      scdb_decision_direction: null,
-      scdb_votes_majority: null,
-      scdb_votes_minority: null
-    };
-  } catch (error) {
-    throw error;
-  }
-};
-
 // User Preferences API
 export const getUserPreferences = async (userId: string) => {
   try {
@@ -1061,7 +829,7 @@ export const updateUserPreferences = async (userId: string, preferences: { state
 };
 
 // Judges API
-export const getJudges = async (params: any = {}) => {
+export const getJudges = async (params: { limit?: number; search?: string } = {}) => {
   let query = supabase.from('judge').select('*');
 
   if (params.limit) {

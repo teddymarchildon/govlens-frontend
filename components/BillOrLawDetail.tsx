@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import SaveButton from './SaveButton';
 import PdfViewer from './PdfViewer';
-import BillAiChat from './BillAiChat';
-import LawAiChat from './LawAiChat';
 import Breadcrumbs from './Breadcrumbs';
 import { BillText, Congressman } from '@/types/types';
 

@@ -13,11 +13,9 @@ interface ExecutiveOrderAiChatProps {
 }
 
 const ExecutiveOrderAiChat: React.FC<ExecutiveOrderAiChatProps> = ({
-  orderId,
   orderTitle,
   orderNumber,
   html_file_path,
-  abstract,
   className
 }) => {
   return (

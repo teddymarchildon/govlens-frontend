@@ -1,20 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Header() {
-  const pathname = usePathname();
   const { user, signOut, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const isActive = (path: string) => {
-    return pathname === path ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-gray-900';
-  };
 
   const handleSignOut = async () => {
     try {
