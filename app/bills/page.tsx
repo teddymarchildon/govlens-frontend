@@ -228,7 +228,8 @@ export default function BillsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Legislative Bills</h1>
+      <h1 className="text-3xl font-bold mb-2">Legislative Bills</h1>
+      <p className="text-gray-600 text-sm mb-6">Inspect proposed bills by Congress before they are signed into law.</p>
 
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>

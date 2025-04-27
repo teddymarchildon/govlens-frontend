@@ -155,7 +155,8 @@ export default function ExecutiveOrdersPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Executive Orders</h1>
+        <h1 className="text-3xl font-bold mb-2">Executive Orders</h1>
+        <p className="text-gray-600 text-sm mb-6">Executive orders signed by the president. These are not voted on by congress but rather immediately enacted upon signing.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">

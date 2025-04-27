@@ -7,6 +7,7 @@ import PdfViewer from '@/components/PdfViewer';
 import AgencyRuleAiChat from '@/components/AgencyRuleAiChat';
 import Breadcrumbs from './Breadcrumbs';
 import { Agency } from '@/types/types';
+import Link from 'next/link';
 
 type TabType = 'details' | 'text';
 
@@ -55,7 +56,7 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
               </div>
               {rule.agency && (
                 <div className="text-sm text-gray-600">
-                  Agency: {rule.agency.name}
+                  Agency: <Link href={`/agencies/${rule.agency.id}`} className="text-blue-600 hover:underline">{rule.agency.name}</Link>
                 </div>
               )}
             </div>

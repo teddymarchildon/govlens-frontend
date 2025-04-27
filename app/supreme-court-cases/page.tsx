@@ -152,7 +152,8 @@ export default function SupremeCourtCasesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Supreme Court Cases</h1>
+      <h1 className="text-3xl font-bold mb-2">Supreme Court Cases</h1>
+      <p className="text-gray-600 text-sm mb-6">Inspect supreme court cases, opinions by judges, and how the case result affects the law.</p>
 
       <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

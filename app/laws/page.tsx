@@ -129,7 +129,7 @@ export default function LawsPage() {
         if (startDate) {
           baseQuery = baseQuery.gte('law_enacted_date', startDate);
         }
-        
+
         if (endDate) {
           baseQuery = baseQuery.lte('law_enacted_date', endDate);
         }
@@ -288,7 +288,8 @@ export default function LawsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Federal Laws</h1>
+      <h1 className="text-3xl font-bold mb-2">Federal Laws</h1>
+      <p className="text-gray-600 text-sm mb-6">Inspect federal bills signed into law.</p>
 
       <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -341,7 +342,7 @@ export default function LawsPage() {
               initialValue={selectedSponsor}
             />
           </div>
-          
+
           <div>
             <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Enacted Date Range

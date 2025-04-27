@@ -3,15 +3,11 @@
 import { useEffect, useState } from 'react';
 import { getBillById, getBillTexts, getBillSponsors, getBillCosponsors, getBillActions } from '../../../services/api';
 import BillOrLawDetail from '@/components/BillOrLawDetail';
+import { useParams } from 'next/navigation';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function BillDetailPage({ params }: PageProps) {
-  const billId = params.id;
+export default function BillDetailPage() {
+  const params = useParams();
+  const billId = params.id as string;
   const [bill, setBill] = useState<any>(null);
   const [texts, setTexts] = useState<any[]>([]);
   const [sponsors, setSponsors] = useState<any[]>([]);

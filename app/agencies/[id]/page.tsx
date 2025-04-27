@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { getAgencyById, getChildAgencies } from '../../../services/api';
+import { getAgencyById, getChildAgencies, getAgencyDocuments } from '../../../services/api';
 import { Agency } from '../../../types/types';
 import AgencyCard from '../../../components/AgencyCard';
 import SaveButton from '../../../components/SaveButton';
@@ -16,9 +16,10 @@ export default function AgencyDetailPage() {
 
   const [agency, setAgency] = useState<Agency | null>(null);
   const [childAgencies, setChildAgencies] = useState<Agency[]>([]);
+  const [agencyRulesCount, setAgencyRulesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'subagencies' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<'subagencies' | 'rules'>('subagencies');
 
   useEffect(() => {
     const fetchAgencyData = async () => {
@@ -30,6 +31,10 @@ export default function AgencyDetailPage() {
         // Fetch child agencies
         const childAgenciesData = await getChildAgencies(agencyId);
         setChildAgencies(childAgenciesData);
+
+        // Fetch agency documents for the count
+        const documentsData = await getAgencyDocuments(agencyId);
+        setAgencyRulesCount(documentsData.length);
       } catch (err) {
         console.error('Failed to fetch agency details:', err);
         setError('Failed to load agency details. Please try again later.');
@@ -92,10 +97,10 @@ export default function AgencyDetailPage() {
         ]}
       />
 
-      {/* Agency Header */}
+      {/* Agency Header with Description */}
       <div className="bg-white shadow rounded-lg mb-6 overflow-hidden">
         <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {agency.name}
@@ -104,28 +109,37 @@ export default function AgencyDetailPage() {
                 )}
               </h1>
               {agency.parent && (
-                <p className="mt-1 text-sm text-gray-500">
-                  Part of: <Link href={`/agencies/${agency.parent.id}`} className="text-blue-600 hover:underline">{agency.parent.name}</Link>
+                <p className="mt-2 text-gray-600">
+                  <span className="font-medium">Part of:</span>{' '}
+                  <Link href={`/agencies/${agency.parent.id}`} className="text-blue-600 hover:underline">
+                    {agency.parent.name}
+                  </Link>
                 </p>
               )}
             </div>
-            <div className="mt-4 md:mt-0">
-              <div className="flex items-center space-x-3">
-                <SaveButton itemId={agency.id} itemType="agency" />
-                <a
-                  href={agency.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Visit Official Website
-                  <svg className="ml-2 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                  </svg>
-                </a>
-              </div>
+            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <SaveButton itemId={agencyId} itemType="agency" />
+              <a
+                href={agency.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Visit Website
+                <svg className="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </a>
             </div>
+          </div>
+
+          {/* Agency Description */}
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            {agency.description ? (
+              <p className="text-gray-700 whitespace-pre-line">{agency.description}</p>
+            ) : (
+              <p className="text-gray-500 italic">No description available for this agency.</p>
+            )}
           </div>
         </div>
       </div>
@@ -134,16 +148,6 @@ export default function AgencyDetailPage() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'overview'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Overview
-            </button>
             <button
               onClick={() => setActiveTab('subagencies')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -158,30 +162,22 @@ export default function AgencyDetailPage() {
               </span>
             </button>
             <button
-              onClick={() => setActiveTab('documents')}
+              onClick={() => setActiveTab('rules')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'documents'
+                activeTab === 'rules'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Documents
+              Rules
+              <span className="ml-2 py-0.5 px-2 text-xs rounded-full bg-gray-100">
+                {agencyRulesCount}
+              </span>
             </button>
           </nav>
         </div>
 
         <div className="p-6">
-          {activeTab === 'overview' && (
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Agency</h2>
-              {agency.description ? (
-                <p className="text-gray-700 whitespace-pre-line">{agency.description}</p>
-              ) : (
-                <p className="text-gray-500 italic">No description available for this agency.</p>
-              )}
-            </div>
-          )}
-
           {activeTab === 'subagencies' && (
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Sub-Agencies</h2>
@@ -205,9 +201,9 @@ export default function AgencyDetailPage() {
             </div>
           )}
 
-          {activeTab === 'documents' && (
+          {activeTab === 'rules' && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Rules</h2>
               <AgencyDocuments agencyId={agencyId} />
             </div>
           )}

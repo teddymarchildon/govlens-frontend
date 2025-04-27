@@ -111,13 +111,10 @@ export default function AgencyRulesPage() {
     setEndDate('');
     setSortOrder('desc');
   };
-
-  // Collect unique rule types for dropdown
-  const ruleTypes = Array.from(new Set(rules.map(r => r.subtype).filter(Boolean)));
-
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Agency Rules</h1>
+      <h1 className="text-3xl font-bold mb-2">Agency Rules</h1>
+      <p className="text-gray-600 text-sm mb-6">Inspect rules signed by federal agencies. These are not voted on by congress and rather agreed upon by each agency.</p>
       <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="agency-filter" className="block text-sm font-medium text-gray-700 mb-2">
@@ -136,22 +133,6 @@ export default function AgencyRulesPage() {
           </select>
         </div>
         <div>
-          <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Rule Type
-          </label>
-          <select
-            id="type-filter"
-            value={ruleType}
-            onChange={handleRuleTypeChange}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="">All Types</option>
-            {ruleTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-        </div>
-        <div>
           <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
             Search Titles
           </label>
@@ -165,7 +146,7 @@ export default function AgencyRulesPage() {
           />
         </div>
       </div>
-      
+
       <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
