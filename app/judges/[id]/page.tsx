@@ -11,11 +11,10 @@ import { getStoragePublicUrl, getCourtOpinions } from '@/services/api';
 export default function JudgeDetailPage() {
   const params = useParams();
   const judgeId = params.id as string;
-  
+
   const [judge, setJudge] = useState<Judge | null>(null);
   const [opinions, setOpinions] = useState<CourtOpinion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     const fetchJudgeDetails = async () => {
@@ -27,16 +26,16 @@ export default function JudgeDetailPage() {
           .select('*')
           .eq('id', judgeId)
           .single();
-          
+
         if (judgeError) throw judgeError;
         setJudge(judgeData);
-        
+
         // Fetch opinions authored by this judge using the API service
         const opinionData = await getCourtOpinions({
           author_id: judgeId,
           limit: 10
         });
-        
+
         setOpinions(opinionData || []);
       } catch (error) {
         console.error('Error fetching judge details:', error);
@@ -44,7 +43,7 @@ export default function JudgeDetailPage() {
         setLoading(false);
       }
     };
-    
+
     if (judgeId) {
       fetchJudgeDetails();
     }
@@ -82,7 +81,7 @@ export default function JudgeDetailPage() {
           ← Back to Judges
         </Link>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex justify-between items-start mb-4">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -90,13 +89,11 @@ export default function JudgeDetailPage() {
             {judge.suffix && ` ${judge.suffix}`}
           </h1>
           <SaveButton
-            type="judge"
+            itemType='judge'
             itemId={judge.id}
-            isSaved={saved}
-            onSaveChange={setSaved}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <h2 className="text-xl font-semibold mb-3 text-gray-700">Personal Information</h2>
@@ -126,7 +123,7 @@ export default function JudgeDetailPage() {
           </div>
         </div>
       </div>
-      
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-4">Recent Opinions</h2>
         {opinions.length > 0 ? (

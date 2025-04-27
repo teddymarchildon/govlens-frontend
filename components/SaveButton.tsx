@@ -6,7 +6,7 @@ import { saveCongressman, unsaveCongressman, isCongressmanSaved, saveBill, unsav
 
 interface SaveButtonProps {
   itemId: string;
-  itemType: 'congressman' | 'bill' | 'agency';
+  itemType: 'congressman' | 'bill' | 'agency' | 'judge';
   className?: string;
 }
 

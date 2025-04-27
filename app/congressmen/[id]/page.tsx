@@ -1,23 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { use } from 'react';
+import { useParams } from 'next/navigation';
 import { getCongressmanById, getCongressmanSponsoredBills, getCongressmanCosponsoredBills, getCongressmanTerms } from '../../../services/api';
 import BillCard from '../../../components/BillCard';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 import { Bill, Congressman, CongressmanTerm } from '../../../types/types';
 import SaveButton from '../../../components/SaveButton';
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
 type TabType = 'bills' | 'terms' | 'statistics';
 
-export default function CongressmanDetailPage({ params }: PageProps) {
-  const congressmanId = use(params).id;
+export default function CongressmanDetailPage() {
+  const params = useParams()
+  const congressmanId = params.id
   const [congressman, setCongressman] = useState<Congressman | null>(null);
   const [sponsoredBills, setSponsoredBills] = useState<Bill[]>([]);
   const [cosponsoredBills, setCosponsoredBills] = useState<Bill[]>([]);

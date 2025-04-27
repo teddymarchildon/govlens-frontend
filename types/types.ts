@@ -30,9 +30,13 @@ export interface Law {
   type: string;
   number: string;
   title: string;
-  enacted_date?: string;
-  unique_id: string;
-  policy_area?: string;
+  policy_area: string;
+  introduced_date: string;
+  law_enacted_date: string;
+  law_number: string;
+  law_type: string;
+  law_unique_id: string;
+  law_title: string;
 }
 
 export interface LawText {

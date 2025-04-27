@@ -27,7 +27,8 @@ interface ExecutiveOrder {
 type TabType = 'details' | 'text';
 
 export default function ExecutiveOrderDetailPage() {
-  const { id } = useParams();
+  const params = useParams()
+  const executiveOrderId = params.id
   const [order, setOrder] = useState<ExecutiveOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('details');
@@ -51,7 +52,7 @@ export default function ExecutiveOrderDetailPage() {
             agency:agency(id, name)
           )
         `)
-        .eq('id', id)
+        .eq('id', executiveOrderId)
         .eq('subtype', 'Executive Order')
         .single();
 
@@ -71,7 +72,7 @@ export default function ExecutiveOrderDetailPage() {
     };
 
     fetchOrder();
-  }, [id]);
+  }, [executiveOrderId]);
 
   if (loading) {
     return (

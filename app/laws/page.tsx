@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import LawCard from '@/components/LawCard';
-import { Congressman } from '@/types/types';
+import { Congressman, Law } from '@/types/types';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '@/components/CongressmanSearchSelect';
 
 // Define policy areas based on the backend model
@@ -28,25 +28,6 @@ const POLICY_AREAS = [
   'Transportation and Public Works',
   'Water Resources Development'
 ];
-
-// Updated Law type to match the bills table structure
-interface Law {
-  id: string;
-  congress: number;
-  type: string;
-  number: string;
-  title: string;
-  policy_area: string;
-  introduced_date: string;
-  law_enacted_date: string;
-  law_number: string;
-  law_type: string;
-  law_unique_id: string;
-  law_title: string;
-  sponsor: {
-    congressman: Congressman;
-  };
-}
 
 export default function LawsPage() {
   const router = useRouter();
@@ -339,7 +320,6 @@ export default function LawsPage() {
               onSelect={handleSponsorSelect}
               placeholder="Search for a congressman..."
               className="w-full"
-              initialValue={selectedSponsor}
             />
           </div>
 
