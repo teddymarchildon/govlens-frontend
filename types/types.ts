@@ -125,6 +125,7 @@ export interface AgencyDocument {
   xml_file_path: string;
   abstract: string;
   remote_document_number: string;
+  signing_date?: string;
 }
 
 export interface Court {

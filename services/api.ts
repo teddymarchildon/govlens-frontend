@@ -514,7 +514,15 @@ export const getTopLevelAgencies = async (): Promise<Agency[]> => {
   }
 };
 
-export const getAgencyRules = async (params: { agencyId?: string; limit?: number } = {}): Promise<AgencyDocument[]> => {
+export const getAgencyRules = async (params: { 
+  agencyId?: string; 
+  limit?: number; 
+  type?: string; 
+  search?: string; 
+  start_date?: string; 
+  end_date?: string;
+  sort_order?: 'asc' | 'desc';
+} = {}): Promise<AgencyDocument[]> => {
   try {
     // First, get all agency documents that are of type 'Rule'
     let query = supabase
@@ -526,11 +534,30 @@ export const getAgencyRules = async (params: { agencyId?: string; limit?: number
         )
       `)
       .eq('type', 'Rule')
-      .order('publication_date', { ascending: false });
+      .order('publication_date', { ascending: params.sort_order === 'asc' });
 
     // Apply limit if provided
     if (params.limit) {
       query = query.limit(params.limit);
+    }
+
+    // Filter by type if provided
+    if (params.type) {
+      query = query.eq('subtype', params.type);
+    }
+
+    // Search by title if provided
+    if (params.search) {
+      query = query.ilike('title', `%${params.search}%`);
+    }
+
+    // Apply date range filter if provided
+    if (params.start_date) {
+      query = query.gte('publication_date', params.start_date);
+    }
+
+    if (params.end_date) {
+      query = query.lte('publication_date', params.end_date);
     }
 
     // Filter by agency if provided

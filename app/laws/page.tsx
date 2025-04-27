@@ -54,6 +54,9 @@ export default function LawsPage() {
   const currentPolicyArea = searchParams.get('policy_area');
   const currentSearchQuery = searchParams.get('search') || '';
   const currentSponsorId = searchParams.get('sponsor_id');
+  const currentStartDate = searchParams.get('start_date') || '';
+  const currentEndDate = searchParams.get('end_date') || '';
+  const currentSortOrder = searchParams.get('sort_order') || 'desc';
 
   const [recentLaws, setRecentLaws] = useState<Law[]>([]);
   const [popularLaws, setPopularLaws] = useState<Law[]>([]);
@@ -62,6 +65,9 @@ export default function LawsPage() {
   const [selectedPolicyArea, setSelectedPolicyArea] = useState(currentPolicyArea || '');
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
   const [selectedSponsor, setSelectedSponsor] = useState<Congressman | null>(null);
+  const [startDate, setStartDate] = useState(currentStartDate);
+  const [endDate, setEndDate] = useState(currentEndDate);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
   const congressmanSearchRef = useRef<CongressmanSearchSelectRef>(null);
 
   // Fetch sponsor details if sponsor_id is in URL
@@ -102,7 +108,7 @@ export default function LawsPage() {
             )
           `)
           .not('law_enacted_date', 'is', null)
-          .order('law_enacted_date', { ascending: false });
+          .order('law_enacted_date', { ascending: sortOrder === 'asc' });
 
         // Apply policy area filter if selected
         if (selectedPolicyArea) {
@@ -117,6 +123,15 @@ export default function LawsPage() {
         // Apply sponsor filter if we have a selected sponsor
         if (selectedSponsor) {
           baseQuery = baseQuery.eq('sponsor.congressman_id', selectedSponsor.id);
+        }
+
+        // Apply date range filter if provided
+        if (startDate) {
+          baseQuery = baseQuery.gte('law_enacted_date', startDate);
+        }
+        
+        if (endDate) {
+          baseQuery = baseQuery.lte('law_enacted_date', endDate);
         }
 
         // Fetch recent laws (most recent 10)
@@ -151,7 +166,7 @@ export default function LawsPage() {
     };
 
     fetchLaws();
-  }, [selectedPolicyArea, searchQuery, selectedSponsor]);
+  }, [selectedPolicyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder]);
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -182,6 +197,44 @@ export default function LawsPage() {
     router.push(`/laws?${params.toString()}`);
   };
 
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+
+    // Update URL query params
+    const params = new URLSearchParams(searchParams.toString());
+    if (e.target.value) {
+      params.set('start_date', e.target.value);
+    } else {
+      params.delete('start_date');
+    }
+
+    router.push(`/laws?${params.toString()}`);
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const endDate = e.target.value;
+    setEndDate(endDate);
+
+    // Update URL query params
+    const params = new URLSearchParams(searchParams.toString());
+    if (endDate) {
+      params.set('end_date', endDate);
+    } else {
+      params.delete('end_date');
+    }
+    router.push(`/laws?${params.toString()}`);
+  };
+
+  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSortOrder = e.target.value as 'asc' | 'desc';
+    setSortOrder(newSortOrder);
+
+    // Update URL query params
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort_order', newSortOrder);
+    router.push(`/laws?${params.toString()}`);
+  };
+
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
 
@@ -200,12 +253,12 @@ export default function LawsPage() {
     setSelectedPolicyArea('');
     setSearchQuery('');
     setSelectedSponsor(null);
-
-    // Clear the congressman search input
+    setStartDate('');
+    setEndDate('');
+    setSortOrder('desc');
     if (congressmanSearchRef.current) {
       congressmanSearchRef.current.clear();
     }
-
     router.push('/laws');
   };
 
@@ -288,25 +341,85 @@ export default function LawsPage() {
               initialValue={selectedSponsor}
             />
           </div>
+          
+          <div>
+            <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
+              Enacted Date Range
+            </label>
+            <div className="flex space-x-2">
+              <div className="flex-1">
+                <input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Start date"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={handleEndDateChange}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="End date"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="sort-order" className="block text-sm font-medium text-gray-700 mb-2">
+              Sort by Enacted Date
+            </label>
+            <div className="flex">
+              <select
+                id="sort-order"
+                value={sortOrder}
+                onChange={handleSortOrderChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {(selectedPolicyArea || searchQuery || selectedSponsor) && (
-        <div className="mb-4 flex items-center">
+      {(selectedPolicyArea || searchQuery || selectedSponsor || startDate || endDate || sortOrder !== 'desc') && (
+        <div className="mb-4 flex items-center flex-wrap">
           <div className="text-sm text-gray-600 mr-2">Active filters:</div>
           {selectedPolicyArea && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
               Policy: {selectedPolicyArea}
             </span>
           )}
           {searchQuery && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2 mb-2">
               Search: {searchQuery}
             </span>
           )}
           {selectedSponsor && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
               Sponsor: {selectedSponsor.full_name}
+            </span>
+          )}
+          {startDate && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
+              From: {new Date(startDate).toLocaleDateString()}
+            </span>
+          )}
+          {endDate && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
+              To: {new Date(endDate).toLocaleDateString()}
+            </span>
+          )}
+          {sortOrder !== 'desc' && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2 mb-2">
+              Sort: {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
             </span>
           )}
           <button
