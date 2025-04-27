@@ -36,16 +36,6 @@ export default function AgenciesPage() {
     fetchAgencies();
   }, [parentAgenciesOnly]);
 
-  const handleSave = async (itemId: string, itemType: string) => {
-    try {
-      await saveItem(itemId, itemType);
-      // You might want to update the UI to reflect the saved state
-    } catch (err) {
-      console.error('Failed to save item:', err);
-      // You might want to show a toast or alert here
-    }
-  };
-
   const filteredAgencies = agencies.filter(agency =>
     agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (agency.short_name && agency.short_name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -79,7 +69,7 @@ export default function AgenciesPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        
+
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -99,7 +89,6 @@ export default function AgenciesPage() {
           <AgencyCard
             key={agency.id}
             agency={agency}
-            onSave={handleSave}
           />
         ))}
       </div>

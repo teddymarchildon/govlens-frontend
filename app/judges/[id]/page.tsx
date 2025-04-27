@@ -140,41 +140,9 @@ export default function JudgeDetailPage() {
                 </div>
                 {opinion.court && (
                   <p className="text-sm text-gray-600 mt-1">
-                    {opinion.court.name}
+                    {opinion.court.full_name}
                   </p>
                 )}
-                <div className="mt-3 flex space-x-3">
-                  {opinion.pdf_file_path && (
-                    <a
-                      href={getStoragePublicUrl('court-documents', opinion.pdf_file_path)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      View PDF
-                    </a>
-                  )}
-                  {opinion.html_file_path && (
-                    <a
-                      href={getStoragePublicUrl('court-documents', opinion.html_file_path)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      View HTML
-                    </a>
-                  )}
-                  {opinion.text_file_path && (
-                    <a
-                      href={getStoragePublicUrl('court-documents', opinion.text_file_path)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      View Text
-                    </a>
-                  )}
-                </div>
               </div>
             ))}
           </div>

@@ -102,7 +102,7 @@ export default function ExecutiveOrdersPage() {
         agency: order.agency?.[0]?.agency || null
       })) || [];
 
-      setOrders(transformedData);
+      setOrders(transformedData as unknown as ExecutiveOrder[]);
       setLoading(false);
     };
 

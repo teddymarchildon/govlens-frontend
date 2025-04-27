@@ -70,7 +70,7 @@ export default function SupremeCourtCasesPage() {
         if (data && data.length > 0) {
           const years = new Set<string>();
           data.forEach(cluster => {
-            cluster.opinions.forEach(opinion => {
+            cluster.opinions.forEach((opinion: { date: string | number | Date; }) => {
               if (opinion.date) {
                 const year = new Date(opinion.date).getFullYear().toString();
                 years.add(year);

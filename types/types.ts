@@ -37,6 +37,7 @@ export interface Law {
   law_type: string;
   law_unique_id: string;
   law_title: string;
+  sponsor: Congressman;
 }
 
 export interface LawText {
@@ -163,6 +164,7 @@ export interface CourtOpinion {
   updated_at?: string;
   court?: Court;
   author?: Judge;
+  cluster?: Cluster;
 }
 
 export interface ClusterOpinion {
@@ -186,6 +188,7 @@ export interface Cluster {
   case_name: string;
   case_name_short: string;
   opinions: ClusterOpinion[];
+  date_filed: string;
 }
 
 export interface UserPreferences {

@@ -115,27 +115,31 @@ export default function LawsPage() {
           baseQuery = baseQuery.lte('law_enacted_date', endDate);
         }
 
-        // Fetch recent laws (most recent 10)
-        const { data: recentData, error: recentError } = await baseQuery
-          .limit(10);
+        const { data, error } = await baseQuery;
 
-        if (recentError) throw recentError;
-        setRecentLaws(recentData || []);
+        if (error) throw error;
 
-        // Fetch popular laws (for now, just using the same sorting)
-        // In the future, this would use a popularity score
-        const { data: popularData, error: popularError } = await baseQuery
-          .limit(10);
+        if (data) {
+          // Transform the data to match the Law interface
+          const transformedData = data.map((item) => {
+            // Extract the congressman from the nested sponsor structure
+            const sponsorData = item.sponsor && item.sponsor[0]?.congressman ? item.sponsor[0].congressman : null;
+            
+            return {
+              ...item,
+              sponsor: sponsorData // Replace the nested structure with the direct congressman object
+            };
+          });
 
-        if (popularError) throw popularError;
-        setPopularLaws(popularData || []);
+          // Set all laws
+          setAllLaws(transformedData);
 
-        // Fetch all laws (limited to 50 for performance)
-        const { data: allData, error: allError } = await baseQuery
-          .limit(50);
+          // Set recent laws (most recent 10)
+          setRecentLaws(transformedData.slice(0, 10));
 
-        if (allError) throw allError;
-        setAllLaws(allData || []);
+          // Set popular laws (for now, just a different subset)
+          setPopularLaws(transformedData.slice(5, 15));
+        }
       } catch (error) {
         console.error('Error fetching laws:', error);
         setRecentLaws([]);

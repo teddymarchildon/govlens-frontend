@@ -237,7 +237,7 @@ export const unsaveCongressman = async (userId: string, congressmanId: string) =
 
 export const isCongressmanSaved = async (userId: string, congressmanId: string) => {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('saved_congressman')
       .select('*', { count: 'exact' })
       .match({ user_id: userId, congressman_id: congressmanId });
@@ -293,7 +293,7 @@ export const unsaveBill = async (userId: string, billId: string) => {
 
 export const isBillSaved = async (userId: string, billId: string) => {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('saved_bill')
       .select('*', { count: 'exact' })
       .match({ user_id: userId, bill_id: billId });
@@ -514,12 +514,12 @@ export const getTopLevelAgencies = async (): Promise<Agency[]> => {
   }
 };
 
-export const getAgencyRules = async (params: { 
-  agencyId?: string; 
-  limit?: number; 
-  type?: string; 
-  search?: string; 
-  start_date?: string; 
+export const getAgencyRules = async (params: {
+  agencyId?: string;
+  limit?: number;
+  type?: string;
+  search?: string;
+  start_date?: string;
   end_date?: string;
   sort_order?: 'asc' | 'desc';
 } = {}): Promise<AgencyDocument[]> => {
@@ -719,7 +719,7 @@ export async function getCourtOpinionById(id: string) {
   return data;
 }
 
-export const getClusters = async (params: string | { court_id?: number; search?: string; limit?: number; oldest_first?: boolean } = {}): Promise<Cluster[]> => {
+export const getClusters = async (params: string | { court_id?: number; search?: string; limit?: number; oldest_first?: boolean } = {}) => {
   try {
     let query = supabase
       .from('cluster')
@@ -759,8 +759,6 @@ export const getClusters = async (params: string | { court_id?: number; search?:
       if (params.limit) {
         query = query.limit(params.limit);
       }
-      // Sort results
-      query = query.order('created_at', { ascending: params.oldest_first || false, nullsLast: true });
     }
 
     const { data, error } = await query;
@@ -768,24 +766,7 @@ export const getClusters = async (params: string | { court_id?: number; search?:
     if (error) {
       throw error;
     }
-
-    // Sort the results by the most recent opinion date in memory
-    const sortedData = [...(data || [])].sort((a, b) => {
-      const latestOpinionA = a.opinions?.reduce((latest, op) =>
-        !latest || (op.date && op.date > latest) ? op.date : latest, null);
-      const latestOpinionB = b.opinions?.reduce((latest, op) =>
-        !latest || (op.date && op.date > latest) ? op.date : latest, null);
-
-      if (!latestOpinionA && !latestOpinionB) return 0;
-      if (!latestOpinionA) return 1;
-      if (!latestOpinionB) return -1;
-
-      return params.oldest_first
-        ? latestOpinionA.localeCompare(latestOpinionB)
-        : latestOpinionB.localeCompare(latestOpinionA);
-    });
-
-    return sortedData;
+    return data;
   } catch (error) {
     throw error;
   }

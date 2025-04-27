@@ -2,26 +2,7 @@
 
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
-import { Congressman } from '@/types/types';
-
-// Updated Law interface to match the bills table structure with sponsor
-interface Law {
-  id: string;
-  congress: number;
-  type: string;
-  number: string;
-  title: string;
-  policy_area: string;
-  introduced_date: string;
-  law_enacted_date: string;
-  law_number: string;
-  law_type: string;
-  law_unique_id: string;
-  law_title: string;
-  sponsor: {
-    congressman: Congressman;
-  }[];
-}
+import { Law } from '@/types/types';
 
 interface LawCardProps {
   law: Law;
@@ -29,7 +10,7 @@ interface LawCardProps {
 
 export default function LawCard({ law }: LawCardProps) {
   // Get the sponsor from the law object
-  const sponsor = law.sponsor && law.sponsor.length > 0 ? law.sponsor[0].congressman : null;
+  const sponsor = law.sponsor
 
   // Format law identifier (e.g., P.L. 117-5)
   const lawIdentifier = `${law.law_type || 'P.L.'} ${law.law_number}`;

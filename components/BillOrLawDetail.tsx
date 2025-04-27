@@ -237,22 +237,7 @@ export default function BillOrLawDetail({
                     <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
                   ) : (
                     <div className="bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap overflow-auto h-full">
-                      {`[Congressional Bills ${item.congress}th Congress]
-[From the U.S. Government Publishing Office]
-[${item.type.toUpperCase()}. ${item.number} Introduced in ${item.chamber || 'Congress'}]
-
-<DOC>
-
-${item.congress}th CONGRESS
-1st Session
-${item.type.toUpperCase()}. ${item.number}
-
-${item.title}
-
-IN THE ${item.chamber?.toUpperCase() || 'CONGRESS OF THE UNITED STATES'}
-
-${item.introduced_date ? new Date(item.introduced_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
-`}
+                      {item.introduced_date ? new Date(item.introduced_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
                     </div>
                   )}
                 </div>

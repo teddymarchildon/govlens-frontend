@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
-import ExecutiveOrderAiChat from '@/components/ExecutiveOrderAiChat';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface ExecutiveOrder {
@@ -67,7 +66,7 @@ export default function ExecutiveOrderDetailPage() {
         agency: data.agency?.[0]?.agency || null
       } : null;
 
-      setOrder(transformedData);
+      setOrder(transformedData as ExecutiveOrder | null);
       setLoading(false);
     };
 
@@ -171,20 +170,6 @@ export default function ExecutiveOrderDetailPage() {
                   <div dangerouslySetInnerHTML={{ __html: order.abstract }} />
                 </div>
               )}
-
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">AI Assistant</h2>
-                <div className="h-[500px]">
-                  <ExecutiveOrderAiChat
-                    orderId={order.id}
-                    orderTitle={order.title}
-                    orderNumber={order.remote_document_number}
-                    html_file_path={order.html_file_path}
-                    abstract={order.abstract}
-                    className="h-full"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         )}

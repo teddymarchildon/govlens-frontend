@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { formatDate } from '@/lib/utils';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
-import AgencyRuleAiChat from '@/components/AgencyRuleAiChat';
 import Breadcrumbs from './Breadcrumbs';
 import { Agency } from '@/types/types';
 import Link from 'next/link';
@@ -107,20 +106,6 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
                   <div dangerouslySetInnerHTML={{ __html: rule.abstract }} />
                 </div>
               )}
-
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">AI Assistant</h2>
-                <div className="h-[500px]">
-                  <AgencyRuleAiChat
-                    ruleId={rule.id}
-                    ruleTitle={rule.title}
-                    ruleNumber={rule.remote_document_number}
-                    html_file_path={rule.html_file_path}
-                    abstract={rule.abstract}
-                    className="h-full"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         )}
