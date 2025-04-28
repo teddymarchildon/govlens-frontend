@@ -119,6 +119,23 @@ export const getCongressmen = async (params: any = {}) => {
     query = query.ilike('full_name', `%${params.search}%`);
   }
 
+  // Filter for current congressmen if requested
+  if (params.current === true) {
+    // Get the IDs of current congressmen (those with null end_year in their most recent term)
+    const { data: currentCongressmenIds, error: currentError } = await supabase
+      .from('congressman_term')
+      .select('congressman_id')
+      .is('end_year', null);
+
+    if (currentError) throw currentError;
+
+    // If we have current congressmen IDs, filter the main query
+    if (currentCongressmenIds && currentCongressmenIds.length > 0) {
+      const ids = currentCongressmenIds.map(item => item.congressman_id);
+      query = query.in('id', ids);
+    }
+  }
+
   const { data, error } = await query;
 
   if (error) throw error;

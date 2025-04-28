@@ -13,6 +13,7 @@ export default function CongressmenPage() {
   const [chamber, setChamber] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [states, setStates] = useState<string[]>([]);
+  const [currentOnly, setCurrentOnly] = useState(true); // Default to true for showing only current congressmen
 
   // Define party options
   const parties = ['Democrat', 'Republican', 'Independent'];
@@ -37,6 +38,8 @@ export default function CongressmenPage() {
         if (searchTerm) {
           params.search = searchTerm;
         }
+        // Add current filter parameter
+        params.current = currentOnly;
 
         const data = await getCongressmen(params);
         setCongressmen(data);
@@ -57,13 +60,14 @@ export default function CongressmenPage() {
     };
 
     fetchCongressmen();
-  }, [party, state, chamber, searchTerm]);
+  }, [party, state, chamber, searchTerm, currentOnly]); // Added currentOnly to dependency array
 
   const clearFilters = () => {
     setParty('');
     setState('');
     setChamber('');
     setSearchTerm('');
+    setCurrentOnly(true); // Reset to default (true)
   };
 
   return (
@@ -143,9 +147,22 @@ export default function CongressmenPage() {
             </select>
           </div>
         </div>
+
+        <div className="mt-4 flex items-center">
+          <input
+            type="checkbox"
+            id="currentOnly"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            checked={currentOnly}
+            onChange={(e) => setCurrentOnly(e.target.checked)}
+          />
+          <label htmlFor="currentOnly" className="ml-2 block text-sm text-gray-900">
+            Show current members only
+          </label>
+        </div>
       </div>
 
-      {(party || state || chamber) && (
+      {(party || state || chamber || !currentOnly) && (
         <div className="mb-4 flex items-center">
           <div className="text-sm text-gray-600 mr-2">Active filters:</div>
           {party && (
@@ -161,6 +178,11 @@ export default function CongressmenPage() {
           {chamber && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
               Chamber: {chamber}
+            </span>
+          )}
+          {!currentOnly && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
+              Including former members
             </span>
           )}
           <button

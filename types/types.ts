@@ -8,8 +8,8 @@ export interface Bill {
   policy_area?: string;
   bill_unique_id?: string;
   law_enacted_date?: string;
-  sponsor?: Congressman;
-  cosponsors?: Congressman[];
+  sponsor?: { congressman: Congressman }
+  cosponsors?: ({ congressman: Congressman }[])
 }
 
 export interface BillText {

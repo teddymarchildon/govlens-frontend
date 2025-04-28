@@ -30,14 +30,14 @@ export default function CongressmanDetailPage() {
     const sponsoredWithOtherParty = sponsoredBills.filter(bill => {
       const cosponsors = bill.cosponsors || [];
       return cosponsors.some((cosponsor: any) =>
-        cosponsor.party.toLowerCase() !== congressman?.party.toLowerCase()
+        (cosponsor.congressman?.party || cosponsor.party)?.toLowerCase() !== congressman?.party.toLowerCase()
       );
     }).length;
 
     // 2. Bills they cosponsored where the sponsor was from the other party
     const cosponsoredOtherParty = cosponsoredBills.filter(bill => {
-      const sponsor = bill.sponsor;
-      return sponsor && sponsor.party.toLowerCase() !== congressman?.party.toLowerCase();
+      const sponsor = bill.sponsor?.congressman;
+      return sponsor && (sponsor?.party)?.toLowerCase() !== congressman?.party.toLowerCase();
     }).length;
 
     const totalCrossPartyBills = sponsoredWithOtherParty + cosponsoredOtherParty;
@@ -61,9 +61,9 @@ export default function CongressmanDetailPage() {
       if (bill.law_enacted_date) acc[area].becameLaw++;
 
       // Check for cross-party collaboration
-      const isCrossParty = bill.sponsor?.party.toLowerCase() !== congressman?.party.toLowerCase() ||
+      const isCrossParty = (bill.sponsor?.congressman?.party || bill.sponsor?.congressman?.party)?.toLowerCase() !== congressman?.party.toLowerCase() ||
         (bill.cosponsors || []).some((cosponsor: any) =>
-          cosponsor.party.toLowerCase() !== congressman?.party.toLowerCase()
+          (cosponsor.congressman?.party || cosponsor.party)?.toLowerCase() !== congressman?.party.toLowerCase()
         );
       if (isCrossParty) acc[area].crossParty++;
 
@@ -83,7 +83,7 @@ export default function CongressmanDetailPage() {
       }
       acc[year].total++;
       if (bill.law_enacted_date) acc[year].becameLaw++;
-      if (bill.sponsor?.id === congressman?.id) {
+      if (bill.sponsor?.congressman?.id === congressman?.id) {
         acc[year].sponsored++;
       } else {
         acc[year].cosponsored++;
@@ -96,14 +96,14 @@ export default function CongressmanDetailPage() {
       const collaborators = new Set();
 
       // Check sponsor
-      if (bill.sponsor && bill.sponsor.party.toLowerCase() !== congressman?.party.toLowerCase()) {
-        collaborators.add(bill.sponsor.id);
+      if (bill.sponsor && (bill.sponsor.congressman?.party || bill.sponsor.congressman?.party)?.toLowerCase() !== congressman?.party.toLowerCase()) {
+        collaborators.add(bill.sponsor.congressman?.id || bill.sponsor.congressman?.id);
       }
 
       // Check cosponsors
       (bill.cosponsors || []).forEach((cosponsor: any) => {
-        if (cosponsor.party.toLowerCase() !== congressman?.party.toLowerCase()) {
-          collaborators.add(cosponsor.id);
+        if ((cosponsor.congressman?.party || cosponsor.party)?.toLowerCase() !== congressman?.party.toLowerCase()) {
+          collaborators.add(cosponsor.congressman?.id || cosponsor.id);
         }
       });
 
