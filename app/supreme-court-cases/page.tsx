@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Cluster, Court } from '../../types/types';
+import { Cluster } from '../../types/types';
 import CourtCaseCard from '../../components/CourtCaseCard';
 
 function SupremeCourtCasesContent() {
