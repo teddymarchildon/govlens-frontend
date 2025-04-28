@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import JudgeCard from '@/components/JudgeCard';
 import { Judge } from '@/types/types';
 
-export default function JudgesPage() {
+function JudgesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearchQuery = searchParams.get('search') || '';
@@ -129,5 +129,15 @@ export default function JudgesPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function JudgesPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <JudgesContent />
+    </Suspense>
   );
 }

@@ -50,7 +50,7 @@ const CongressmanSearchSelect = forwardRef<CongressmanSearchSelectRef, Congressm
           if (error) throw error;
           const found = data[0];
           if (found) {
-            setSelected(found);
+            setSelected({ id: found.id, full_name: found.full_name, party: found.party, state: found.state} as Congressman);
           }
         } catch (error) {
           console.error('Error fetching selected congressman:', error);
@@ -81,7 +81,7 @@ const CongressmanSearchSelect = forwardRef<CongressmanSearchSelectRef, Congressm
           .ilike('full_name', `%${search}%`)
           .limit(10);
         if (error) throw error;
-        setCongressmen(data);
+        setCongressmen(data as Congressman[]);
       } catch (error) {
         console.error('Error searching congressmen:', error);
         setCongressmen([]);

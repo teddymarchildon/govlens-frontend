@@ -131,6 +131,7 @@ export interface AgencyDocument {
   abstract: string;
   remote_document_number: string;
   signing_date?: string;
+  subtype?: string;
 }
 
 export interface Court {

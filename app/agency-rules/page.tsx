@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import AgencyRuleCard from '../../components/AgencyRuleCard';
 import { getTopLevelAgencies, getAgencyRules } from '../../services/api';
 import { Agency, AgencyDocument } from '../../types/types';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function AgencyRulesPage() {
+function AgencyRulesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentAgencyId = searchParams.get('agency_id') || '';
@@ -113,12 +113,12 @@ export default function AgencyRulesPage() {
   };
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Agency Rules</h1>
-      <p className="text-gray-600 text-sm mb-6">Inspect rules signed by federal agencies. These are not voted on by congress and rather agreed upon by each agency.</p>
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <h1 className="text-3xl font-bold mb-8">Agency Rules</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div>
           <label htmlFor="agency-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Agency
+            Filter by Agency
           </label>
           <select
             id="agency-filter"
@@ -128,31 +128,51 @@ export default function AgencyRulesPage() {
           >
             <option value="">All Agencies</option>
             {agencies.map((agency) => (
-              <option key={agency.id} value={agency.id}>{agency.name}</option>
+              <option key={agency.id} value={agency.id}>
+                {agency.name}
+              </option>
             ))}
           </select>
         </div>
+
+        <div>
+          <label htmlFor="rule-type-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Rule Type
+          </label>
+          <select
+            id="rule-type-filter"
+            value={ruleType}
+            onChange={handleRuleTypeChange}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All Rule Types</option>
+            <option value="Proposed Rule">Proposed Rule</option>
+            <option value="Final Rule">Final Rule</option>
+            <option value="Notice">Notice</option>
+          </select>
+        </div>
+
         <div>
           <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Search Titles
+            Search Rules
           </label>
           <input
             id="search-filter"
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
-            placeholder="Search rule titles..."
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Search by title..."
           />
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
-          <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Signing Date Range
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Date Signed
           </label>
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex-1">
               <input
                 id="start-date"
@@ -256,5 +276,15 @@ export default function AgencyRulesPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function AgencyRulesPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <AgencyRulesContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import BillCard from '../components/BillCard';
@@ -29,7 +29,7 @@ const POLICY_AREAS = [
   'Water Resources Development'
 ];
 
-export default function HomePage() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPolicyArea = searchParams.get('policy_area');
@@ -209,5 +209,15 @@ export default function HomePage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

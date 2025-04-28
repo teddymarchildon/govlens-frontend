@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import LawCard from '@/components/LawCard';
@@ -29,7 +29,7 @@ const POLICY_AREAS = [
   'Water Resources Development'
 ];
 
-export default function LawsPage() {
+function LawsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPolicyArea = searchParams.get('policy_area');
@@ -115,36 +115,33 @@ export default function LawsPage() {
           baseQuery = baseQuery.lte('law_enacted_date', endDate);
         }
 
+        // Execute the query
         const { data, error } = await baseQuery;
-
         if (error) throw error;
 
-        if (data) {
-          // Transform the data to match the Law interface
-          const transformedData = data.map((item) => {
-            // Extract the congressman from the nested sponsor structure
-            const sponsorData = item.sponsor && item.sponsor[0]?.congressman ? item.sponsor[0].congressman : null;
-            
-            return {
-              ...item,
-              sponsor: sponsorData // Replace the nested structure with the direct congressman object
-            };
-          });
+        // Transform the data to match our Law interface
+        const laws = data?.map((law: any) => ({
+          ...law,
+          sponsor: law.sponsor?.[0]?.congressman || null
+        })) || [];
 
-          // Set all laws
-          setAllLaws(transformedData);
+        // Set all laws
+        setAllLaws(laws);
 
-          // Set recent laws (most recent 10)
-          setRecentLaws(transformedData.slice(0, 10));
+        // Set recent laws (last 10)
+        const recent = [...laws].sort((a, b) => 
+          new Date(b.law_enacted_date).getTime() - new Date(a.law_enacted_date).getTime()
+        ).slice(0, 10);
+        setRecentLaws(recent);
 
-          // Set popular laws (for now, just a different subset)
-          setPopularLaws(transformedData.slice(5, 15));
-        }
+        // Set popular laws (random 10 for now, later could be based on views or saves)
+        const shuffled = [...laws].sort(() => 0.5 - Math.random());
+        setPopularLaws(shuffled.slice(0, 10));
       } catch (error) {
         console.error('Error fetching laws:', error);
+        setAllLaws([]);
         setRecentLaws([]);
         setPopularLaws([]);
-        setAllLaws([]);
       } finally {
         setLoading(false);
       }
@@ -153,85 +150,53 @@ export default function LawsPage() {
     fetchLaws();
   }, [selectedPolicyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder]);
 
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (selectedPolicyArea) params.set('policy_area', selectedPolicyArea);
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedSponsor) params.set('sponsor_id', selectedSponsor.id.toString());
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+    if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
+    
+    const newUrl = params.toString() ? `?${params.toString()}` : '';
+    router.push(`/laws${newUrl}`, { scroll: false });
+  }, [selectedPolicyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder, router]);
+
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedPolicyArea(value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set('policy_area', value);
-    } else {
-      params.delete('policy_area');
-    }
-
-    router.push(`/laws?${params.toString()}`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set('search', e.target.value);
-    } else {
-      params.delete('search');
-    }
-
-    router.push(`/laws?${params.toString()}`);
+    const value = e.target.value;
+    setSearchQuery(value);
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(e.target.value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set('start_date', e.target.value);
-    } else {
-      params.delete('start_date');
-    }
-
-    router.push(`/laws?${params.toString()}`);
+    const value = e.target.value;
+    setStartDate(value);
   };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const endDate = e.target.value;
-    setEndDate(endDate);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (endDate) {
-      params.set('end_date', endDate);
-    } else {
-      params.delete('end_date');
-    }
-    router.push(`/laws?${params.toString()}`);
+    const value = e.target.value;
+    setEndDate(value);
   };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSortOrder = e.target.value as 'asc' | 'desc';
-    setSortOrder(newSortOrder);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sort_order', newSortOrder);
-    router.push(`/laws?${params.toString()}`);
+    const value = e.target.value as 'asc' | 'desc';
+    setSortOrder(value);
   };
 
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (congressman) {
-      params.set('sponsor_id', congressman.id);
-    } else {
-      params.delete('sponsor_id');
+    
+    // If congressman is null, we're clearing the selection
+    if (!congressman && congressmanSearchRef.current) {
+      congressmanSearchRef.current.clear();
     }
-
-    router.push(`/laws?${params.toString()}`);
   };
 
   const clearFilters = () => {
@@ -241,92 +206,80 @@ export default function LawsPage() {
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
+    
+    // Clear the congressman search component
     if (congressmanSearchRef.current) {
       congressmanSearchRef.current.clear();
     }
-    router.push('/laws');
   };
 
   // Component for a horizontally scrollable section of laws
-  const LawSection = ({ title, laws }: { title: string; laws: Law[] }) => (
-    <div className="mb-12">
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
-      {laws.length > 0 ? (
-        <div className="overflow-x-auto pb-4">
-          <div className="flex space-x-6" style={{ minWidth: 'max-content' }}>
-            {laws.map((law) => (
-              <div key={law.id} className="w-80 flex-shrink-0">
-                <LawCard law={law} />
-              </div>
-            ))}
-          </div>
+  const LawSection = ({ title, laws }: { title: string; laws: Law[] }) => {
+    if (!laws || laws.length === 0) return null;
+    
+    return (
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold mb-4">{title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {laws.map((law) => (
+            <LawCard key={law.id} law={law} />
+          ))}
         </div>
-      ) : (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <p className="text-yellow-700">
-            No laws found. Try adjusting your filters or check back later.
-          </p>
-        </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Federal Laws</h1>
-      <p className="text-gray-600 text-sm mb-6">Inspect federal bills signed into law.</p>
+      <h1 className="text-3xl font-bold mb-8">Laws</h1>
 
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
-            <label htmlFor="policy-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Policy Area
+            <label htmlFor="policy-area" className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Policy Area
             </label>
-            <div className="flex">
-              <select
-                id="policy-filter"
-                value={selectedPolicyArea}
-                onChange={handlePolicyAreaChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">All Policy Areas</option>
-                {POLICY_AREAS.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              id="policy-area"
+              value={selectedPolicyArea}
+              onChange={handlePolicyAreaChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Policy Areas</option>
+              {POLICY_AREAS.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
-            <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Search Titles
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+              Search Laws
             </label>
-            <div className="flex">
-              <input
-                id="search-filter"
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search law titles..."
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+            <input
+              id="search"
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Search by title..."
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sponsored By
+              Filter by Sponsor
             </label>
             <CongressmanSearchSelect
               ref={congressmanSearchRef}
               onSelect={handleSponsorSelect}
-              placeholder="Search for a congressman..."
-              className="w-full"
             />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Enacted Date Range
@@ -428,5 +381,15 @@ export default function LawsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function LawsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <LawsContent />
+    </Suspense>
   );
 }

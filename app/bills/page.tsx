@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from '../../lib/supabase';
 import BillCard from '../../components/BillCard';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../../components/CongressmanSearchSelect';
 import { Bill, Congressman } from '../../types/types';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function BillsPage() {
+function BillsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPolicyArea = searchParams.get('policy_area') || '';
@@ -112,182 +112,147 @@ export default function BillsPage() {
         setBills(data || []);
 
         // Extract unique policy areas
-        const areas = data.reduce((acc: string[], bill: Bill) => {
-          if (bill.policy_area && !acc.includes(bill.policy_area)) {
-            acc.push(bill.policy_area);
-          }
-          return acc;
-        }, []);
-        setPolicyAreas(areas.sort());
+        const { data: policyAreaData, error: policyAreaError } = await supabase
+          .from('bill')
+          .select('policy_area')
+          .not('policy_area', 'is', null);
+
+        if (policyAreaError) throw policyAreaError;
+
+        if (policyAreaData) {
+          const uniquePolicyAreas = Array.from(
+            new Set(policyAreaData.map(item => item.policy_area).filter(Boolean))
+          ).sort();
+          setPolicyAreas(uniquePolicyAreas);
+        }
       } catch (error) {
         console.error('Error fetching bills:', error);
-        setBills([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBills();
-  }, [policyArea, selectedSponsor, searchQuery, startDate, endDate, sortOrder]);
+  }, [policyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder]);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (policyArea) params.set('policy_area', policyArea);
+    if (searchQuery) params.set('search', searchQuery);
+    if (selectedSponsor) params.set('sponsor_id', selectedSponsor.id.toString());
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+    if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
+
+    const newUrl = params.toString() ? `?${params.toString()}` : '';
+    router.push(`/bills${newUrl}`, { scroll: false });
+  }, [policyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder, router]);
 
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
 
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (congressman) {
-      params.set('sponsor_id', congressman.id);
-    } else {
-      params.delete('sponsor_id');
+    // If congressman is null, we're clearing the selection
+    if (!congressman && congressmanSearchRef.current) {
+      congressmanSearchRef.current.clear();
     }
-
-    router.push(`/bills?${params.toString()}`);
   };
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setPolicyArea(value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set('policy_area', value);
-    } else {
-      params.delete('policy_area');
-    }
-
-    router.push(`/bills?${params.toString()}`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set('search', e.target.value);
-    } else {
-      params.delete('search');
-    }
-
-    router.push(`/bills?${params.toString()}`);
+    const value = e.target.value;
+    setSearchQuery(value);
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(e.target.value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set('start_date', e.target.value);
-    } else {
-      params.delete('start_date');
-    }
-
-    router.push(`/bills?${params.toString()}`);
+    const value = e.target.value;
+    setStartDate(value);
   };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEndDate(e.target.value);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set('end_date', e.target.value);
-    } else {
-      params.delete('end_date');
-    }
-
-    router.push(`/bills?${params.toString()}`);
+    const value = e.target.value;
+    setEndDate(value);
   };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSortOrder = e.target.value as 'asc' | 'desc';
-    setSortOrder(newSortOrder);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sort_order', newSortOrder);
-    router.push(`/bills?${params.toString()}`);
+    const value = e.target.value as 'asc' | 'desc';
+    setSortOrder(value);
   };
 
   const clearFilters = () => {
     setPolicyArea('');
-    setSelectedSponsor(null);
     setSearchQuery('');
+    setSelectedSponsor(null);
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
-    // Clear the congressman search input
+
+    // Clear the congressman search component
     if (congressmanSearchRef.current) {
       congressmanSearchRef.current.clear();
     }
-
-    router.push('/bills');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Legislative Bills</h1>
-      <p className="text-gray-600 text-sm mb-6">Inspect proposed bills by Congress before they are signed into law.</p>
+      <h1 className="text-3xl font-bold mb-8">Bills</h1>
 
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div>
-          <label htmlFor="policy-filter" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="policy-area" className="block text-sm font-medium text-gray-700 mb-2">
             Filter by Policy Area
           </label>
-          <div className="flex">
-            <select
-              id="policy-filter"
-              value={policyArea}
-              onChange={handlePolicyAreaChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Policy Areas</option>
-              {policyAreas.map((area) => (
-                <option key={area} value={area}>
-                  {area}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            id="policy-area"
+            value={policyArea}
+            onChange={handlePolicyAreaChange}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All Policy Areas</option>
+            {policyAreas.map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Introduced By
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+            Search Bills
           </label>
-          <CongressmanSearchSelect
-            ref={congressmanSearchRef}
-            onSelect={handleSponsorSelect}
-            placeholder="Search for a congressman..."
-            className="w-full"
+          <input
+            id="search"
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Search by title..."
           />
         </div>
 
         <div>
-          <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Search Titles
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Sponsor
           </label>
-          <div className="flex">
-            <input
-              id="search-filter"
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search bill titles..."
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+          <CongressmanSearchSelect
+            ref={congressmanSearchRef}
+            onSelect={handleSponsorSelect}
+          />
         </div>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
-          <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
-            Introduced Date Range
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Date Introduced
           </label>
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex-1">
               <input
                 id="start-date"
@@ -394,5 +359,15 @@ export default function BillsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function BillsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <BillsPageContent />
+    </Suspense>
   );
 }

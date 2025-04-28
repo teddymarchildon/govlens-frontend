@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Agency, AgencyDocument, Bill, Cluster, ClusterOpinion, Congressman, Judge } from '../types/types';
+import { Agency, AgencyDocument, Bill, ClusterOpinion, Congressman, Judge } from '../types/types';
 
 // Storage API
 export const getStoragePublicUrl = (bucket: string, path: string): string | null => {
@@ -155,9 +155,11 @@ export const getCongressmanSponsoredBills = async (congressmanId: string): Promi
 
   if (error) throw error;
   return data.map(item => ({
-    ...item.bill,
-    sponsor: item.bill.sponsor[0],
-    cosponsors: item.bill.cosponsors
+      ...item.bill,
+      // @ts-ignore - Supabase returns nested structure that TypeScript can't infer
+      sponsor: item.bill.sponsor[0]?.congressman || null,
+      // @ts-ignore - Supabase returns nested structure that TypeScript can't infer
+      cosponsors: item.bill.cosponsors?.map((c: any) => c.congressman) || []
   })) as unknown as Bill[];
 };
 
@@ -181,7 +183,9 @@ export const getCongressmanCosponsoredBills = async (congressmanId: string): Pro
   if (error) throw error;
   return data.map(item => ({
     ...item.bill,
+    // @ts-expect-error - Supabase returns nested structure that TypeScript can't infer
     sponsor: item.bill.sponsor[0],
+    // @ts-expect-error - Handling nested Supabase response structure
     cosponsors: item.bill.cosponsors
   })) as unknown as Bill[];
 };

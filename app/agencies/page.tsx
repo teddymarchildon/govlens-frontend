@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Agency } from '@/types/types';
 import { getTopLevelAgencies, getAgencies } from '@/services/api';
 import AgencyCard from '@/components/AgencyCard';
-import { saveItem } from '@/services/supabase';
 
 export default function AgenciesPage() {
   const [agencies, setAgencies] = useState<Agency[]>([]);

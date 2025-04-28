@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import ExecutiveOrderCard from '@/components/ExecutiveOrderCard';
@@ -17,7 +17,7 @@ interface ExecutiveOrder {
   } | null;
 }
 
-export default function ExecutiveOrdersPage() {
+function ExecutiveOrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearchQuery = searchParams.get('q') || '';
@@ -149,37 +149,37 @@ export default function ExecutiveOrdersPage() {
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
-    router.push('/executive-orders');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Executive Orders</h1>
+
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Executive Orders</h1>
-        <p className="text-gray-600 text-sm mb-6">Executive orders signed by the president. These are not voted on by congress but rather immediately enacted upon signing.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
             <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Search
+              Search Executive Orders
             </label>
             <input
               id="search-filter"
               type="text"
-              placeholder="Search by title or document number..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search by title or document number..."
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
+
           <div>
             <label htmlFor="agency-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Agency
+              Filter by Agency
             </label>
             <select
               id="agency-filter"
               value={selectedAgency}
               onChange={handleAgencyChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="">All Agencies</option>
               {agencies.map((agency) => (
@@ -191,12 +191,12 @@ export default function ExecutiveOrdersPage() {
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Publication Date Range
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Publication Date
             </label>
-            <div className="flex space-x-2">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex-1">
                 <input
                   id="start-date"
@@ -295,5 +295,15 @@ export default function ExecutiveOrdersPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ExecutiveOrdersPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <ExecutiveOrdersContent />
+    </Suspense>
   );
 }

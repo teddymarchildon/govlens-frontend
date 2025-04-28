@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Cluster, Court } from '../../types/types';
 import CourtCaseCard from '../../components/CourtCaseCard';
 
-export default function SupremeCourtCasesPage() {
+function SupremeCourtCasesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearchQuery = searchParams.get('search') || '';
@@ -275,5 +275,15 @@ export default function SupremeCourtCasesPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function SupremeCourtCasesPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64">
+      <div className="text-xl">Loading...</div>
+    </div>}>
+      <SupremeCourtCasesContent />
+    </Suspense>
   );
 }
