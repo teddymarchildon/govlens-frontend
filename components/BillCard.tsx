@@ -11,7 +11,7 @@ interface BillCardProps {
 
 export default function BillCard({ bill }: BillCardProps) {
   const [sponsor, setSponsor] = useState<Congressman | null>(null);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // Format bill identifier (e.g., HR. 2139)
   const billIdentifier = `${bill.type.toUpperCase()}. ${bill.number}`;

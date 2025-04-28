@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Cluster } from '../../types/types';
+import { Cluster, Judge } from '../../types/types';
 import CourtCaseCard from '../../components/CourtCaseCard';
 
 function SupremeCourtCasesContent() {
@@ -13,6 +13,7 @@ function SupremeCourtCasesContent() {
   const currentStartDate = searchParams.get('start_date') || '';
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
+  const currentJudgeId = searchParams.get('judge_id') || '';
 
   const [clusters, setClusters] = useState<Cluster[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +21,34 @@ function SupremeCourtCasesContent() {
   const [startDate, setStartDate] = useState(currentStartDate);
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
+  const [judgeId, setJudgeId] = useState(currentJudgeId);
+  const [judges, setJudges] = useState<Judge[]>([]);
+  const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
+
+  // Fetch judges for the dropdown
+  useEffect(() => {
+    const fetchJudges = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('judge')
+          .select('*')
+          .order('full_name');
+        
+        if (error) throw error;
+        setJudges(data || []);
+
+        // If a judge ID is selected, find the judge details
+        if (judgeId) {
+          const selectedJudge = data?.find(judge => judge.id === judgeId) || null;
+          setSelectedJudge(selectedJudge);
+        }
+      } catch (error) {
+        console.error('Error fetching judges:', error);
+      }
+    };
+
+    fetchJudges();
+  }, [judgeId]);
 
   // Fetch clusters
   useEffect(() => {
@@ -54,6 +83,36 @@ function SupremeCourtCasesContent() {
           query = query.lte('date_filed', endDate);
         }
 
+        // Filter by judge if selected
+        if (judgeId) {
+          // Use Foreign Table Filters to filter by judge
+          query = supabase
+            .from('cluster')
+            .select(`
+              *,
+              court (*),
+              opinions:court_opinion!inner (
+                *,
+                author:judge!inner (*)
+              )
+            `)
+            .eq('court.remote_id', 'scotus')
+            .eq('opinions.author.id', judgeId);
+
+          // Re-apply other filters
+          if (searchQuery) {
+            query = query.or(`case_name.ilike.%${searchQuery}%,case_name_short.ilike.%${searchQuery}%`);
+          }
+          
+          if (startDate) {
+            query = query.gte('date_filed', startDate);
+          }
+          
+          if (endDate) {
+            query = query.lte('date_filed', endDate);
+          }
+        }
+
         // Order by date_filed
         query = query.order('date_filed', { ascending: sortOrder === 'asc' });
 
@@ -65,20 +124,6 @@ function SupremeCourtCasesContent() {
         if (error) throw error;
 
         setClusters(data || []);
-
-        // Extract unique years from the data for the year filter
-        if (data && data.length > 0) {
-          const years = new Set<string>();
-          data.forEach(cluster => {
-            cluster.opinions.forEach((opinion: { date: string | number | Date; }) => {
-              if (opinion.date) {
-                const year = new Date(opinion.date).getFullYear().toString();
-                years.add(year);
-              }
-            });
-          });
-          // Removed setAvailableYears
-        }
       } catch (error) {
         console.error('Error fetching clusters:', error);
         setClusters([]);
@@ -88,7 +133,7 @@ function SupremeCourtCasesContent() {
     };
 
     fetchClusters();
-  }, [searchQuery, startDate, endDate, sortOrder]);
+  }, [searchQuery, startDate, endDate, sortOrder, judgeId]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -133,12 +178,26 @@ function SupremeCourtCasesContent() {
   };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSortOrder = e.target.value as 'asc' | 'desc';
-    setSortOrder(newSortOrder);
-
+    const order = e.target.value as 'asc' | 'desc';
+    setSortOrder(order);
+    
     // Update URL query params
     const params = new URLSearchParams(searchParams.toString());
-    params.set('sort_order', newSortOrder);
+    params.set('sort_order', order);
+    router.push(`/supreme-court-cases?${params.toString()}`);
+  };
+
+  const handleJudgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedJudgeId = e.target.value;
+    setJudgeId(selectedJudgeId);
+    
+    // Update URL query params
+    const params = new URLSearchParams(searchParams.toString());
+    if (selectedJudgeId) {
+      params.set('judge_id', selectedJudgeId);
+    } else {
+      params.delete('judge_id');
+    }
     router.push(`/supreme-court-cases?${params.toString()}`);
   };
 
@@ -147,35 +206,53 @@ function SupremeCourtCasesContent() {
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
+    setJudgeId('');
+    setSelectedJudge(null);
     router.push('/supreme-court-cases');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Supreme Court Cases</h1>
-      <p className="text-gray-600 text-sm mb-6">Inspect supreme court cases, opinions by judges, and how the case result affects the law.</p>
-
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <h1 className="text-3xl font-bold mb-6">Supreme Court Cases</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
             Search Cases
           </label>
-          <div className="flex">
-            <input
-              id="search-filter"
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search case names..."
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+          <input
+            id="search"
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Search by case name"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="judge-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            Filter by Judge
+          </label>
+          <select
+            id="judge-filter"
+            value={judgeId}
+            onChange={handleJudgeChange}
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="">All Judges</option>
+            {judges.map((judge) => (
+              <option key={judge.id} value={judge.id}>
+                {judge.full_name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
-
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="date-range" className="block text-sm font-medium text-gray-700 mb-2">
             Date Filed Range
           </label>
           <div className="flex space-x-2">
@@ -220,26 +297,31 @@ function SupremeCourtCasesContent() {
         </div>
       </div>
 
-      {(searchQuery || startDate || endDate || sortOrder !== 'desc') && (
-        <div className="mb-4 flex items-center">
+      {(searchQuery || startDate || endDate || sortOrder !== 'desc' || judgeId) && (
+        <div className="mb-4 flex items-center flex-wrap">
           <div className="text-sm text-gray-600 mr-2">Active filters:</div>
           {searchQuery && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
               Search: {searchQuery}
             </span>
           )}
+          {judgeId && selectedJudge && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
+              Judge: {selectedJudge.full_name}
+            </span>
+          )}
           {startDate && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
               From: {new Date(startDate).toLocaleDateString()}
             </span>
           )}
           {endDate && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
               To: {new Date(endDate).toLocaleDateString()}
             </span>
           )}
           {sortOrder !== 'desc' && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2 mb-2">
               Sort: {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
             </span>
           )}
