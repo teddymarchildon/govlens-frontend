@@ -889,3 +889,94 @@ export const getJudgeById = async (judgeId: string) => {
   if (error) throw error;
   return data;
 };
+
+// Global Search
+export const globalSearch = async (query: string, limit = 5) => {
+  if (!query || query.trim() === '') return { bills: [], congressmen: [], agencies: [], cases: [], judges: [], agencyDocuments: [] };
+  
+  const searchTerm = query.trim();
+  
+  // Run parallel searches across different entities
+  const [bills, congressmen, agencies, clusters, judges, agencyDocs] = await Promise.all([
+    // Bills search
+    supabase.from('bill')
+      .select('id, title, congress, number, type, bill_unique_id')
+      .or(`title.ilike.%${searchTerm}%,bill_unique_id.ilike.%${searchTerm}%`)
+      .limit(limit),
+      
+    // Congressmen search
+    supabase.from('congressman')
+      .select('id, full_name, party, state, chamber, bioguide_id')
+      .or(`full_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`)
+      .limit(limit),
+      
+    // Agencies search
+    supabase.from('agency')
+      .select('id, name, short_name')
+      .or(`name.ilike.%${searchTerm}%,short_name.ilike.%${searchTerm}%`)
+      .limit(limit),
+      
+    // Court cases search
+    supabase.from('cluster')
+      .select('id, case_name, case_name_short')
+      .or(`case_name.ilike.%${searchTerm}%,case_name_short.ilike.%${searchTerm}%`)
+      .limit(limit),
+      
+    // Judges search
+    supabase.from('judge')
+      .select('id, full_name')
+      .or(`full_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`)
+      .limit(limit),
+      
+    // Agency documents search
+    supabase.from('agency_document')
+      .select('id, title, type')
+      .or(`title.ilike.%${searchTerm}%,abstract.ilike.%${searchTerm}%`)
+      .limit(limit)
+  ]);
+  
+  // Format and combine results
+  return {
+    bills: bills.data?.map(bill => ({ 
+      ...bill, 
+      type: 'bill',
+      url: `/bills/${bill.id}`,
+      displayText: bill.title
+    })) || [],
+    
+    congressmen: congressmen.data?.map(congressman => ({
+      ...congressman,
+      type: 'congressman',
+      url: `/congressmen/${congressman.id}`,
+      displayText: `${congressman.full_name} (${congressman.party}-${congressman.state})`
+    })) || [],
+    
+    agencies: agencies.data?.map(agency => ({
+      ...agency,
+      type: 'agency',
+      url: `/agencies/${agency.id}`,
+      displayText: agency.name
+    })) || [],
+    
+    cases: clusters.data?.map(cluster => ({
+      ...cluster,
+      type: 'case',
+      url: `/supreme-court-cases/${cluster.id}`,
+      displayText: cluster.case_name
+    })) || [],
+    
+    judges: judges.data?.map(judge => ({
+      ...judge,
+      type: 'judge',
+      url: `/judges/${judge.id}`,
+      displayText: judge.full_name
+    })) || [],
+    
+    agencyDocuments: agencyDocs.data?.map(doc => ({
+      ...doc,
+      type: 'agency-rule',
+      url: `/agency-rules/${doc.id}`,
+      displayText: doc.title
+    })) || []
+  };
+};

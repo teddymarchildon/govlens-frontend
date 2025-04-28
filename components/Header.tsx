@@ -3,12 +3,25 @@
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
+import SearchResults from './SearchResults';
+import useSearch from '../hooks/useSearch';
 
 export default function Header() {
   const { user, signOut, loading } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Use our custom search hook
+  const { 
+    searchQuery, 
+    results, 
+    isLoading, 
+    showResults, 
+    handleSearchChange, 
+    clearSearch, 
+    closeResults 
+  } = useSearch();
 
   const handleSignOut = async () => {
     try {
@@ -33,6 +46,21 @@ export default function Header() {
     };
   }, []);
 
+  // Handle keyboard navigation for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Close search results on Escape key
+      if (e.key === 'Escape' && showResults) {
+        closeResults();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showResults, closeResults]);
+
   return (
     <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-10">
       <div className="container mx-auto px-4">
@@ -45,19 +73,44 @@ export default function Header() {
           </div>
 
           <div className="flex items-center">
-            <div className="relative mr-4">
+            <div className="relative mr-4" ref={searchContainerRef}>
               <input
                 type="text"
                 placeholder="Search the government..."
                 className="w-64 bg-gray-100 border border-gray-300 rounded-md py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
+                aria-label="Search"
+                aria-expanded={showResults}
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
               </div>
+              
+              {/* Clear search button */}
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  aria-label="Clear search"
+                >
+                  <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Search Results Dropdown */}
+              {showResults && (
+                <SearchResults
+                  results={results}
+                  isLoading={isLoading}
+                  onClose={closeResults}
+                  searchQuery={searchQuery}
+                />
+              )}
             </div>
 
             {!loading && !user && (
