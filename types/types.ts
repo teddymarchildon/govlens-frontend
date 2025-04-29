@@ -76,6 +76,7 @@ export interface CongressmanTerm {
   state: string;
   district?: string;
   chamber: string;
+  congress: number;
 }
 
 export interface SavedBill {

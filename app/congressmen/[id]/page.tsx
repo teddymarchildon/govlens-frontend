@@ -368,15 +368,6 @@ export default function CongressmanDetailPage() {
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {formatTermPosition(term)}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              term.party === 'Republican' ? 'bg-red-100 text-red-800' :
-                              term.party === 'Democrat' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {term.party}
-                            </span>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -405,9 +396,9 @@ export default function CongressmanDetailPage() {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-sm text-gray-500">Became Law</div>
-                      <div className="text-2xl font-bold">{stats.totalBecameLaw}</div>
+                      <div className="text-2xl font-bold">{(stats.sponsoredBecameLaw + stats.cosponsoredBecameLaw)}</div>
                       <div className="text-xs text-gray-500">
-                        {stats.totalBills > 0 ? Math.round((stats.totalBecameLaw / stats.totalBills) * 100) : 0}% success rate
+                        {stats.totalBills > 0 ? Math.round(((stats.sponsoredBecameLaw + stats.cosponsoredBecameLaw) / stats.totalBills) * 100) : 0}% success rate
                       </div>
                     </div>
                   </div>
@@ -443,7 +434,7 @@ export default function CongressmanDetailPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(stats.otherPartyCollaborators)
+                          {Object.entries(stats.avgOtherPartyCollaborators)
                             .sort(([, countA]: [string, any], [, countB]: [string, any]) => countB - countA)
                             .slice(0, 5)
                             .map(([name, data]: [string, any]) => (
