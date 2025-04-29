@@ -14,11 +14,12 @@ interface OnboardingUserPreferences extends UserPreferences {
 type OnboardingContextType = {
   currentStep: number;
   totalSteps: number;
-  userPreferences: OnboardingUserPreferences;
   isLoading: boolean;
+  userPreferences: OnboardingUserPreferences;
   goToNextStep: () => void;
   goToPreviousStep: () => void;
   updatePreference: (key: keyof OnboardingUserPreferences, value: any) => void;
+  savePreferences: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   skipOnboarding: () => Promise<void>;
 };
@@ -39,7 +40,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
-  
+
   const totalSteps = 2; // Total number of onboarding steps (states and policy areas)
 
   // Check if user has already completed onboarding
@@ -68,7 +69,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
             ...prev,
             onboarding_completed: true
           }));
-          
+
           if (window.location.pathname.includes('/onboarding')) {
             router.push('/');
           }
@@ -125,29 +126,45 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePreference = (key: keyof OnboardingUserPreferences, value: any) => {
-    setUserPreferences(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setUserPreferences(prev => {
+      const newPreferences = {
+        ...prev,
+        [key]: value
+      };
+      return newPreferences;
+    });
   };
 
   const savePreferences = async () => {
     if (!user) return;
 
     try {
+      // Get the latest state directly to avoid stale closure values
+      const currentPreferences = { ...userPreferences };
+
+      // Create deep copies of the arrays to avoid reference issues
+      const states = Array.isArray(currentPreferences.states)
+        ? [...currentPreferences.states]
+        : [];
+
+      const policy_areas = Array.isArray(currentPreferences.policy_areas)
+        ? [...currentPreferences.policy_areas]
+        : [];
+
       const { error } = await supabase
         .from('user_preferences')
         .upsert({
           user_id: user.id,
-          states: userPreferences.states,
-          policy_areas: userPreferences.policy_areas
+          states,
+          policy_areas
         }, {
           onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     } catch (error) {
-      console.error('Error saving preferences:', error);
       throw error;
     }
   };
@@ -167,7 +184,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error updating user usage:', error);
       throw error;
     }
   };
@@ -175,12 +191,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = async () => {
     setIsLoading(true);
     try {
-      await savePreferences();
+      // Mark onboarding as seen
       await markOnboardingAsSeen();
+
+      // Update local state
       updatePreference('onboarding_completed', true);
+
       router.push('/');
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -189,13 +208,16 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const skipOnboarding = async () => {
     setIsLoading(true);
     try {
-      // Save with empty preferences
-      await savePreferences();
+      // Mark onboarding as seen
       await markOnboardingAsSeen();
+
+      // Update local state
       updatePreference('onboarding_completed', true);
+
+      // Navigate to dashboard
       router.push('/');
     } catch (error) {
-      console.error('Error skipping onboarding:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -206,11 +228,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       value={{
         currentStep,
         totalSteps,
-        userPreferences,
         isLoading,
+        userPreferences,
         goToNextStep,
         goToPreviousStep,
         updatePreference,
+        savePreferences,
         completeOnboarding,
         skipOnboarding
       }}
