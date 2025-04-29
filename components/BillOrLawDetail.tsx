@@ -75,8 +75,8 @@ export default function BillOrLawDetail({
           <span className="text-gray-600">{item.policy_area || 'Uncategorized'}</span>
           {!isLaw && <SaveButton itemId={item.id} itemType="bill" />}
         </div>
-        <h1 className="text-3xl font-bold mb-2">{title}</h1>
-        <h2 className="text-xl mb-4">{number}</h2>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">{title}</h1>
+        <h2 className="text-lg md:text-xl mb-4">{number}</h2>
 
         <div className="mb-6">
           <div className="text-sm mb-1">
@@ -89,18 +89,18 @@ export default function BillOrLawDetail({
       </div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8" aria-label="Tabs">
+      <div className="border-b border-gray-200 mb-6 overflow-x-auto">
+        <nav className="flex space-x-4 md:space-x-8 whitespace-nowrap" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('sponsors')}
-            className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
+            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
               activeTab === 'sponsors'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
             Sponsors
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               activeTab === 'sponsors'
                 ? 'bg-blue-100 text-blue-600'
                 : 'bg-gray-100 text-gray-900'
@@ -111,14 +111,14 @@ export default function BillOrLawDetail({
 
           <button
             onClick={() => setActiveTab('actions')}
-            className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
+            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
               activeTab === 'actions'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
             Actions
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
               activeTab === 'actions'
                 ? 'bg-blue-100 text-blue-600'
                 : 'bg-gray-100 text-gray-900'
@@ -129,7 +129,7 @@ export default function BillOrLawDetail({
 
           <button
             onClick={() => setActiveTab('text')}
-            className={`py-4 px-1 inline-flex items-center border-b-2 ${
+            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
               activeTab === 'text'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -141,22 +141,22 @@ export default function BillOrLawDetail({
       </div>
 
       {/* Tab Content */}
-      <div className="space-y-6">
+      <div className="mb-8">
         {activeTab === 'sponsors' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-8">
             <div>
               <h2 className="text-xl font-semibold mb-4">Sponsors ({sponsors?.length || 0})</h2>
               {sponsors && sponsors.length > 0 ? (
-                <div className="bg-white rounded-lg shadow p-4">
+                <div className="bg-white rounded-lg shadow p-4 max-h-[600px] overflow-y-auto">
                   {sponsors.map((sponsor) => (
-                    <div key={sponsor.id} className="mb-2">
+                    <div key={sponsor.id} className="mb-4 last:mb-0">
                       <Link
                         href={`/congressmen/${sponsor.id}`}
                         className="font-medium hover:underline"
                       >
                         {sponsor.full_name}
                       </Link>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-sm text-gray-600">
                         {sponsor.party}-{sponsor.state}{sponsor.chamber === 'House' ? `, District ${sponsor.district || 'N/A'}` : ''}
                       </div>
                     </div>
@@ -196,7 +196,7 @@ export default function BillOrLawDetail({
 
         {activeTab === 'actions' && (
           <div className="bg-white rounded-lg shadow">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <h2 className="text-xl font-semibold mb-4">{itemType.charAt(0).toUpperCase() + itemType.slice(1)} Actions</h2>
               {actions && actions.length > 0 ? (
                 <div className="space-y-4">
@@ -229,10 +229,10 @@ export default function BillOrLawDetail({
 
         {activeTab === 'text' && (
           <div className="bg-white rounded-lg shadow">
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               <h2 className="text-xl font-semibold mb-4">{itemType.charAt(0).toUpperCase() + itemType.slice(1)} Text</h2>
               {latestText ? (
-                <div className="h-[600px] border rounded">
+                <div className="h-[400px] md:h-[600px] border rounded">
                   {latestText.pdf_file_path ? (
                     <PdfViewer storagePath={latestText.pdf_file_path} storageBucket="bill-pdfs" className="h-full" />
                   ) : (

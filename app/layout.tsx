@@ -13,8 +13,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'GovLens - Legislative Research Platform',
+  title: 'GovLens - Straight to the source',
   description: 'Track bills, congressmen, and legislative activities',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({
@@ -29,7 +30,7 @@ export default function RootLayout({
           <div className="min-h-screen bg-gray-50">
             <Header />
             <Sidebar />
-            <main className="ml-64 pt-16 p-6">
+            <main className="md:ml-64 pt-16 md:pt-16 p-4 md:p-6">
               {children}
             </main>
           </div>

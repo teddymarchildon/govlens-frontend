@@ -42,12 +42,12 @@ export default function BillCard({ bill }: BillCardProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
-      <div className="p-4 h-full flex flex-col">
-        <div className="flex justify-between items-start mb-2">
+      <div className="p-3 md:p-4 h-full flex flex-col">
+        <div className="flex flex-wrap justify-between items-start mb-2 gap-2">
           <span className="text-sm font-semibold text-gray-700">{billIdentifier}</span>
 
           {bill.policy_area && (
-            <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800 truncate max-w-[150px]">
               {bill.policy_area}
             </span>
           )}
@@ -57,7 +57,7 @@ export default function BillCard({ bill }: BillCardProps) {
           href={`/bills/${bill.id}`}
           className="block mb-3 hover:text-blue-600 transition-colors"
         >
-          <h3 className="text-base font-medium text-gray-900 line-clamp-2">
+          <h3 className="text-sm md:text-base font-medium text-gray-900 line-clamp-2">
             {bill.title}
           </h3>
         </Link>
@@ -72,7 +72,7 @@ export default function BillCard({ bill }: BillCardProps) {
               >
                 {sponsor.full_name}
               </Link>
-              <span className="text-gray-500 ml-1">
+              <span className="text-gray-500 ml-1 break-words">
                 ({sponsor.party}-{sponsor.state})
               </span>
             </div>

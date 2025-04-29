@@ -59,8 +59,7 @@ export default function SearchResults({ results, isLoading, onClose, searchQuery
   return (
     <div
       ref={resultsRef}
-      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-[80vh] overflow-y-auto"
-      style={{ width: '350px' }}
+      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-[80vh] overflow-y-auto w-full md:w-[350px]"
     >
       {isLoading ? (
         <div className="p-4 text-center">
