@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '../components/Header';
@@ -15,7 +15,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'GovLens - Straight to the source',
   description: 'Track bills, congressmen, and legislative activities',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
