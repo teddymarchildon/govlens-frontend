@@ -10,6 +10,8 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
+  hasCompletedOnboarding: boolean;
+  checkOnboardingStatus: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
+
+  const checkOnboardingStatus = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      // Check user_usage table for saw_onboarding_flow_at
+      const { data, error } = await supabase
+        .from('user_usage')
+        .select('saw_onboarding_flow_at')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+        console.error('Error checking onboarding status:', error);
+        return false;
+      }
+      
+      // User has completed onboarding if saw_onboarding_flow_at is not null
+      const completed = !!(data && data.saw_onboarding_flow_at);
+      setHasCompletedOnboarding(completed);
+      return completed;
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Check for active session on mount
@@ -29,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (data?.session) {
         setUser(data.session.user);
+        // Check onboarding status when user is set
+        await checkOnboardingStatus();
       }
       
       setLoading(false);
@@ -41,6 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user);
+          
+          // Check onboarding status when auth state changes
+          if (event === 'SIGNED_IN') {
+            await checkOnboardingStatus();
+          }
         } else {
           setUser(null);
         }
@@ -58,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) throw error;
+    
+    // Check onboarding status after sign in
+    await checkOnboardingStatus();
   };
 
   const signUp = async (email: string, password: string) => {
@@ -65,6 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (error) throw error;
+    
+    // New users haven't completed onboarding
+    setHasCompletedOnboarding(false);
   };
 
   const signOut = async () => {
@@ -75,7 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut, signUp }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      signIn, 
+      signOut, 
+      signUp, 
+      hasCompletedOnboarding,
+      checkOnboardingStatus
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
@@ -11,7 +11,29 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, hasCompletedOnboarding, user, checkOnboardingStatus } = useAuth();
+
+  // Check if user has completed onboarding when they're authenticated
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      if (user) {
+        // Re-check onboarding status to ensure it's up to date
+        const completed = await checkOnboardingStatus();
+        
+        if (!completed) {
+          // Redirect to onboarding if saw_onboarding_flow_at is null
+          router.push('/onboarding');
+        } else {
+          // Otherwise redirect to profile
+          router.push('/profile');
+        }
+      }
+    };
+    
+    if (user) {
+      checkAndRedirect();
+    }
+  }, [user, hasCompletedOnboarding, checkOnboardingStatus, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +42,7 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push('/profile');
+      // The redirect will be handled by the useEffect
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
     } finally {

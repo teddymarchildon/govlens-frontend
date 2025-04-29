@@ -28,7 +28,8 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password);
-      router.push('/profile');
+      // Redirect to onboarding instead of profile
+      router.push('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');
     } finally {
