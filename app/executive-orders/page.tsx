@@ -2,20 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import ExecutiveOrderCard from '@/components/ExecutiveOrderCard';
-
-interface ExecutiveOrder {
-  id: string;
-  title: string;
-  remote_document_number: string;
-  publication_date: string;
-  signing_date: string;
-  agency: {
-    id: string;
-    name: string;
-  } | null;
-}
+import { supabase } from '../../lib/supabase';
+import ExecutiveOrderCard from '../../components/ExecutiveOrderCard';
+import { AgencyDocument } from '../../types/types';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import LoadingIndicator from '../../components/ui/LoadingIndicator';
 
 function ExecutiveOrdersContent() {
   const router = useRouter();
@@ -26,7 +17,7 @@ function ExecutiveOrdersContent() {
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
 
-  const [orders, setOrders] = useState<ExecutiveOrder[]>([]);
+  const [orders, setOrders] = useState<AgencyDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
   const [selectedAgency, setSelectedAgency] = useState(currentAgency);
@@ -34,6 +25,7 @@ function ExecutiveOrdersContent() {
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
   const [agencies, setAgencies] = useState<Array<{ id: string; name: string }>>([]);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     const fetchAgencies = async () => {
@@ -53,9 +45,16 @@ function ExecutiveOrdersContent() {
     fetchAgencies();
   }, []);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
+  const fetchOrders = async (page: number) => {
+    if (page === 1) {
+      setOrders([]);
+    }
+
+    try {
+      // Calculate range for pagination
+      const from = (page - 1) * 50;
+      const to = from + 49;
+
       let query = supabase
         .from('agency_document')
         .select(`
@@ -69,7 +68,8 @@ function ExecutiveOrdersContent() {
           )
         `)
         .eq('subtype', 'Executive Order')
-        .order('signing_date', { ascending: sortOrder === 'asc' });
+        .order('signing_date', { ascending: sortOrder === 'asc' })
+        .range(from, to);
 
       if (searchQuery) {
         // Search across multiple fields
@@ -93,7 +93,7 @@ function ExecutiveOrdersContent() {
 
       if (error) {
         console.error('Error fetching executive orders:', error);
-        return;
+        return false;
       }
 
       // Transform the data to match our interface
@@ -102,15 +102,37 @@ function ExecutiveOrdersContent() {
         agency: order.agency?.[0]?.agency || null
       })) || [];
 
-      setOrders(transformedData as unknown as ExecutiveOrder[]);
+      // Update orders state
+      if (page === 1) {
+        setOrders(transformedData as unknown as AgencyDocument[]);
+      } else {
+        setOrders(prevOrders => [...prevOrders, ...(transformedData as unknown as AgencyDocument[])]);
+      }
+
+      // Return whether there are more items to load
+      return transformedData.length === 50;
+    } catch (error) {
+      console.error('Error fetching executive orders:', error);
+      return false;
+    } finally {
       setLoading(false);
-    };
+      setInitialLoadComplete(true);
+    }
+  };
 
-    fetchOrders();
-  }, [searchQuery, selectedAgency, startDate, endDate, sortOrder]);
+  // Set up infinite scrolling
+  const { loading: loadingMore, sentinelRef, reset: resetScroll } = useInfiniteScroll(
+    fetchOrders,
+    { enabled: initialLoadComplete }
+  );
 
-  // Update URL with filters
+  // Reset scroll and fetch initial data when filters change
   useEffect(() => {
+    setLoading(true);
+    resetScroll();
+    fetchOrders(1);
+
+    // Update URL with filters
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
     if (selectedAgency) params.set('agency', selectedAgency);
@@ -249,7 +271,7 @@ function ExecutiveOrdersContent() {
             )}
             {selectedAgency && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
-                Agency: {agencies.find(a => a.id === selectedAgency)?.name || 'Selected'}
+                Agency: {agencies.find(a => a.id === selectedAgency)?.name || selectedAgency}
               </span>
             )}
             {startDate && (
@@ -277,22 +299,34 @@ function ExecutiveOrdersContent() {
         )}
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">Loading...</div>
-      ) : orders.length === 0 ? (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <p className="text-yellow-700">
-            No executive orders found. Try adjusting your filters or check back later.
-          </p>
+      {loading && orders.length === 0 ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-xl">Loading...</div>
         </div>
       ) : (
         <>
           <p className="mb-4">Showing {orders.length} executive orders</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {orders.map((order) => (
-              <ExecutiveOrderCard key={order.id} order={order} />
-            ))}
-          </div>
+          {orders.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {orders.map((order) => (
+                  <ExecutiveOrderCard key={order.id} order={order} />
+                ))}
+              </div>
+
+              {/* Sentinel element for infinite scrolling */}
+              <div ref={sentinelRef} className="h-4 mt-4"></div>
+
+              {/* Loading indicator for more items */}
+              {loadingMore && <LoadingIndicator size="medium" />}
+            </>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <p className="text-yellow-700">
+                No executive orders found matching your filters. Try adjusting your search criteria.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

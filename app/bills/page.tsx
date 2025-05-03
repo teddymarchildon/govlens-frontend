@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import BillCard from '../../components/BillCard';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../../components/CongressmanSearchSelect';
 import { Bill, Congressman } from '../../types/types';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import LoadingIndicator from '../../components/ui/LoadingIndicator';
 
 function BillsPageContent() {
   const router = useRouter();
@@ -27,6 +29,7 @@ function BillsPageContent() {
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
   const congressmanSearchRef = useRef<CongressmanSearchSelectRef>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Fetch sponsor details if sponsor_id is in URL
   useEffect(() => {
@@ -52,66 +55,90 @@ function BillsPageContent() {
     fetchSponsor();
   }, [currentSponsorId, selectedSponsor]);
 
-  useEffect(() => {
-    const fetchBills = async () => {
-      setLoading(true);
-      try {
-        let query = supabase.from('bill').select('*');
+  const fetchBills = async (page: number) => {
+    if (page === 1) {
+      setBills([]);
+    }
+    
+    try {
+      // Calculate range for pagination
+      const from = (page - 1) * 50;
+      const to = from + 49;
+      
+      let query = supabase.from('bill').select('*')
+        .range(from, to);
 
-        // Apply policy area filter if selected
-        if (policyArea) {
-          query = query.eq('policy_area', policyArea);
-        }
+      // Apply policy area filter if selected
+      if (policyArea) {
+        query = query.eq('policy_area', policyArea);
+      }
 
-        // Apply search filter if provided
-        if (searchQuery) {
-          query = query.ilike('title', `%${searchQuery}%`);
-        }
+      // Apply search filter if provided
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`);
+      }
 
-        // Apply sponsor filter if selected
-        if (selectedSponsor) {
-          // First get the bill IDs sponsored by this congressman
-          const { data: sponsoredBills, error: sponsorError } = await supabase
-            .from('sponsored_bills')
-            .select('bill_id')
-            .eq('congressman_id', selectedSponsor.id);
+      // Apply sponsor filter if selected
+      if (selectedSponsor) {
+        // First get the bill IDs sponsored by this congressman
+        const { data: sponsoredBills, error: sponsorError } = await supabase
+          .from('sponsored_bills')
+          .select('bill_id')
+          .eq('congressman_id', selectedSponsor.id);
 
-          if (sponsorError) throw sponsorError;
+        if (sponsorError) throw sponsorError;
 
-          // If there are sponsored bills, filter the query
-          if (sponsoredBills && sponsoredBills.length > 0) {
-            const billIds = sponsoredBills.map(item => item.bill_id);
-            query = query.in('id', billIds);
-          } else {
-            // If no bills are sponsored by this congressman, return empty array
+        // If there are sponsored bills, filter the query
+        if (sponsoredBills && sponsoredBills.length > 0) {
+          const billIds = sponsoredBills.map(item => item.bill_id);
+          query = query.in('id', billIds);
+        } else {
+          // If no bills are sponsored by this congressman, return empty array
+          setLoading(false);
+          if (page === 1) {
             setBills([]);
-            setLoading(false);
-            return;
           }
+          return false;
         }
+      }
 
-        // Apply date range filter if provided
-        if (startDate) {
-          query = query.gte('introduced_date', startDate);
-        }
+      // Apply date range filter if provided
+      if (startDate) {
+        query = query.gte('introduced_date', startDate);
+      }
 
-        if (endDate) {
-          query = query.lte('introduced_date', endDate);
-        }
+      if (endDate) {
+        query = query.lte('introduced_date', endDate);
+      }
 
-        // Apply sorting
-        query = query.order('introduced_date', { ascending: sortOrder === 'asc' });
+      // Apply sorting
+      query = query.order('introduced_date', { ascending: sortOrder === 'asc' });
 
-        // Limit the number of results
-        query = query.limit(50);
+      // Execute the query
+      const { data, error } = await query;
+      if (error) throw error;
 
-        // Execute the query
-        const { data, error } = await query;
-        if (error) throw error;
-
+      if (page === 1) {
         setBills(data || []);
+      } else {
+        setBills(prevBills => [...prevBills, ...(data || [])]);
+      }
 
-        // Extract unique policy areas
+      // Return whether there are more items to load
+      return (data || []).length === 50;
+    } catch (error) {
+      console.error('Error fetching bills:', error);
+      return false;
+    } finally {
+      setLoading(false);
+      setInitialLoadComplete(true);
+    }
+  };
+
+  // Extract unique policy areas
+  useEffect(() => {
+    const fetchPolicyAreas = async () => {
+      try {
         const { data: policyAreaData, error: policyAreaError } = await supabase
           .from('bill')
           .select('policy_area')
@@ -126,17 +153,26 @@ function BillsPageContent() {
           setPolicyAreas(uniquePolicyAreas);
         }
       } catch (error) {
-        console.error('Error fetching bills:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching policy areas:', error);
       }
     };
 
-    fetchBills();
-  }, [policyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder]);
+    fetchPolicyAreas();
+  }, []);
 
-  // Update URL when filters change
+  // Set up infinite scrolling
+  const { loading: loadingMore, sentinelRef, reset: resetScroll } = useInfiniteScroll(
+    fetchBills,
+    { enabled: initialLoadComplete }
+  );
+
+  // Reset scroll and fetch initial data when filters change
   useEffect(() => {
+    setLoading(true);
+    resetScroll();
+    fetchBills(1);
+    
+    // Update URL when filters change
     const params = new URLSearchParams();
 
     if (policyArea) params.set('policy_area', policyArea);
@@ -337,7 +373,7 @@ function BillsPageContent() {
         </div>
       )}
 
-      {loading ? (
+      {loading && bills.length === 0 ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-xl">Loading...</div>
         </div>
@@ -345,11 +381,19 @@ function BillsPageContent() {
         <>
           <p className="mb-4">Showing {bills.length} bills</p>
           {bills.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bills.map((bill) => (
-                <BillCard key={bill.id} bill={bill} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {bills.map((bill) => (
+                  <BillCard key={bill.id} bill={bill} />
+                ))}
+              </div>
+              
+              {/* Sentinel element for infinite scrolling */}
+              <div ref={sentinelRef} className="h-4 mt-4"></div>
+              
+              {/* Loading indicator for more items */}
+              {loadingMore && <LoadingIndicator size="medium" />}
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <p className="text-yellow-700">

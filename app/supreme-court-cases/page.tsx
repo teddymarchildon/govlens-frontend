@@ -1,29 +1,35 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Cluster, Judge } from '../../types/types';
+import { supabase } from '../../lib/supabase';
 import CourtCaseCard from '../../components/CourtCaseCard';
+import { Cluster, Judge } from '../../types/types';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import LoadingIndicator from '../../components/ui/LoadingIndicator';
 
 function SupremeCourtCasesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // Get query parameters
   const currentSearchQuery = searchParams.get('search') || '';
+  const currentJudgeId = searchParams.get('judge_id') || '';
   const currentStartDate = searchParams.get('start_date') || '';
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
-  const currentJudgeId = searchParams.get('judge_id') || '';
-
+  
+  // State variables
   const [clusters, setClusters] = useState<Cluster[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
+  const [judgeId, setJudgeId] = useState(currentJudgeId);
+  const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
   const [startDate, setStartDate] = useState(currentStartDate);
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
-  const [judgeId, setJudgeId] = useState(currentJudgeId);
-  const [judges, setJudges] = useState<Judge[]>([]);
-  const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Fetch judges for the dropdown
   useEffect(() => {
@@ -36,169 +42,148 @@ function SupremeCourtCasesContent() {
         
         if (error) throw error;
         setJudges(data || []);
-
-        // If a judge ID is selected, find the judge details
-        if (judgeId) {
-          const selectedJudge = data?.find(judge => judge.id === judgeId) || null;
-          setSelectedJudge(selectedJudge);
+        
+        // If a judge ID is in the URL, find the corresponding judge
+        if (currentJudgeId) {
+          const judge = data?.find(j => j.id.toString() === currentJudgeId) || null;
+          setSelectedJudge(judge);
         }
       } catch (error) {
         console.error('Error fetching judges:', error);
       }
     };
-
+    
     fetchJudges();
-  }, [judgeId]);
+  }, [currentJudgeId]);
 
-  // Fetch clusters
-  useEffect(() => {
-    const fetchClusters = async () => {
-      setLoading(true);
-      try {
-        let query = supabase
-          .from('cluster')
-          .select(`
+  const fetchClusters = async (page: number) => {
+    if (page === 1) {
+      setClusters([]);
+    }
+    
+    try {
+      // Calculate range for pagination
+      const from = (page - 1) * 50;
+      const to = from + 49;
+      
+      let query = supabase
+        .from('cluster')
+        .select(`
+          *,
+          court (*),
+          opinions:court_opinion (
             *,
-            court (*),
-            opinions:court_opinion (
-              *,
-              author:judge (*)
-            )
-          `);
-
-        // Filter for Supreme Court cases
-        query = query.eq('court.remote_id', 'scotus');
-
-        // Apply search filter if provided
-        if (searchQuery) {
-          query = query.or(`case_name.ilike.%${searchQuery}%,case_name_short.ilike.%${searchQuery}%`);
-        }
-
-        // Apply date range filter if provided
-        if (startDate) {
-          query = query.gte('date_filed', startDate);
-        }
-
-        if (endDate) {
-          query = query.lte('date_filed', endDate);
-        }
-
-        // Filter by judge if selected
-        if (judgeId) {
-          // Use Foreign Table Filters to filter by judge
-          query = supabase
-            .from('cluster')
-            .select(`
-              *,
-              court (*),
-              opinions:court_opinion!inner (
-                *,
-                author:judge!inner (*)
-              )
-            `)
-            .eq('court.remote_id', 'scotus')
-            .eq('opinions.author.id', judgeId);
-
-          // Re-apply other filters
-          if (searchQuery) {
-            query = query.or(`case_name.ilike.%${searchQuery}%,case_name_short.ilike.%${searchQuery}%`);
-          }
-          
-          if (startDate) {
-            query = query.gte('date_filed', startDate);
-          }
-          
-          if (endDate) {
-            query = query.lte('date_filed', endDate);
-          }
-        }
-
-        // Order by date_filed
-        query = query.order('date_filed', { ascending: sortOrder === 'asc' });
-
-        // Limit the number of results
-        query = query.limit(50);
-
-        // Execute the query
-        const { data, error } = await query;
-        if (error) throw error;
-
-        setClusters(data || []);
-      } catch (error) {
-        console.error('Error fetching clusters:', error);
-        setClusters([]);
-      } finally {
-        setLoading(false);
+            author:judge (*)
+          )
+        `)
+        .eq('court.remote_id', 'scotus')
+        .order('date_filed', { ascending: sortOrder === 'asc' })
+        .range(from, to);
+      
+      // Apply search filter if provided
+      if (searchQuery) {
+        query = query.or(`case_name.ilike.%${searchQuery}%,case_name_short.ilike.%${searchQuery}%`);
       }
-    };
+      
+      // Apply judge filter if selected
+      if (judgeId) {
+        // First get the case IDs associated with this judge
+        const { data: judgeCases, error: judgeError } = await supabase
+          .from('cluster')
+          .select('id')
+          .eq('opinions.author.id', judgeId);
+        
+        if (judgeError) throw judgeError;
+        
+        // If there are cases with this judge, filter the query
+        if (judgeCases && judgeCases.length > 0) {
+          const caseIds = judgeCases.map(item => item.id);
+          query = query.in('id', caseIds);
+        } else {
+          // If no cases are associated with this judge, return empty array
+          setLoading(false);
+          if (page === 1) {
+            setClusters([]);
+          }
+          return false;
+        }
+      }
+      
+      // Apply date range filter if provided
+      if (startDate) {
+        query = query.gte('date_filed', startDate);
+      }
+      
+      if (endDate) {
+        query = query.lte('date_filed', endDate);
+      }
+      
+      // Execute the query
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      // Update clusters state
+      if (page === 1) {
+        setClusters(data || []);
+      } else {
+        setClusters(prevClusters => [...prevClusters, ...(data || [])]);
+      }
+      
+      // Return whether there are more items to load
+      return data?.length === 50;
+    } catch (error) {
+      console.error('Error fetching clusters:', error);
+      return false;
+    } finally {
+      setLoading(false);
+      setInitialLoadComplete(true);
+    }
+  };
 
-    fetchClusters();
-  }, [searchQuery, startDate, endDate, sortOrder, judgeId]);
+  // Set up infinite scrolling
+  const { loading: loadingMore, sentinelRef, reset: resetScroll } = useInfiniteScroll(
+    fetchClusters,
+    { enabled: initialLoadComplete }
+  );
+
+  // Reset scroll and fetch initial data when filters change
+  useEffect(() => {
+    setLoading(true);
+    resetScroll();
+    fetchClusters(1);
+    
+    // Update URL query params
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (judgeId) params.set('judge_id', judgeId);
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+    if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
+    
+    const queryString = params.toString();
+    router.push(`/supreme-court-cases${queryString ? `?${queryString}` : ''}`);
+  }, [searchQuery, judgeId, startDate, endDate, sortOrder, router]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (query) {
-      params.set('search', query);
-    } else {
-      params.delete('search');
-    }
-    router.push(`/supreme-court-cases?${params.toString()}`);
+    setSearchQuery(e.target.value);
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const startDate = e.target.value;
-    setStartDate(startDate);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (startDate) {
-      params.set('start_date', startDate);
-    } else {
-      params.delete('start_date');
-    }
-    router.push(`/supreme-court-cases?${params.toString()}`);
+    setStartDate(e.target.value);
   };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const endDate = e.target.value;
-    setEndDate(endDate);
-
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (endDate) {
-      params.set('end_date', endDate);
-    } else {
-      params.delete('end_date');
-    }
-    router.push(`/supreme-court-cases?${params.toString()}`);
+    setEndDate(e.target.value);
   };
 
   const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const order = e.target.value as 'asc' | 'desc';
-    setSortOrder(order);
-    
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('sort_order', order);
-    router.push(`/supreme-court-cases?${params.toString()}`);
+    setSortOrder(e.target.value as 'asc' | 'desc');
   };
 
   const handleJudgeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setJudgeId(e.target.value);
     const selectedJudgeId = e.target.value;
-    setJudgeId(selectedJudgeId);
-    
-    // Update URL query params
-    const params = new URLSearchParams(searchParams.toString());
-    if (selectedJudgeId) {
-      params.set('judge_id', selectedJudgeId);
-    } else {
-      params.delete('judge_id');
-    }
-    router.push(`/supreme-court-cases?${params.toString()}`);
+    setSelectedJudge(judges.find(j => j.id.toString() === selectedJudgeId) || null);
   };
 
   const clearFilters = () => {
@@ -208,7 +193,6 @@ function SupremeCourtCasesContent() {
     setSortOrder('desc');
     setJudgeId('');
     setSelectedJudge(null);
-    router.push('/supreme-court-cases');
   };
 
   return (
@@ -250,7 +234,7 @@ function SupremeCourtCasesContent() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label htmlFor="date-range" className="block text-sm font-medium text-gray-700 mb-2">
             Date Filed Range
@@ -301,12 +285,12 @@ function SupremeCourtCasesContent() {
         <div className="mb-4 flex items-center flex-wrap">
           <div className="text-sm text-gray-600 mr-2">Active filters:</div>
           {searchQuery && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
               Search: {searchQuery}
             </span>
           )}
-          {judgeId && selectedJudge && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
+          {selectedJudge && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
               Judge: {selectedJudge.full_name}
             </span>
           )}
@@ -334,7 +318,7 @@ function SupremeCourtCasesContent() {
         </div>
       )}
 
-      {loading ? (
+      {loading && clusters.length === 0 ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-xl">Loading...</div>
         </div>
@@ -342,11 +326,19 @@ function SupremeCourtCasesContent() {
         <>
           <p className="mb-4">Showing {clusters.length} cases</p>
           {clusters.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {clusters.map((cluster) => (
-                <CourtCaseCard key={cluster.id} cluster={cluster} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {clusters.map((cluster) => (
+                  <CourtCaseCard key={cluster.id} cluster={cluster} />
+                ))}
+              </div>
+              
+              {/* Sentinel element for infinite scrolling */}
+              <div ref={sentinelRef} className="h-4 mt-4"></div>
+              
+              {/* Loading indicator for more items */}
+              {loadingMore && <LoadingIndicator size="medium" />}
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <p className="text-yellow-700">

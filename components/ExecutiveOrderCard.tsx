@@ -1,20 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-
-interface ExecutiveOrder {
-  id: string;
-  title: string;
-  remote_document_number: string;
-  signing_date?: string;
-  agency: {
-    id: string;
-    name: string;
-  } | null;
-}
+import { AgencyDocument, Agency } from '../types/types';
 
 interface ExecutiveOrderCardProps {
-  order: ExecutiveOrder;
+  order: AgencyDocument & {
+    agency?: Agency | null;
+  };
 }
 
 export default function ExecutiveOrderCard({ order }: ExecutiveOrderCardProps) {

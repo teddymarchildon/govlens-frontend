@@ -2,32 +2,13 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import LawCard from '@/components/LawCard';
-import { Congressman, Law } from '@/types/types';
-import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '@/components/CongressmanSearchSelect';
-
-// Define policy areas based on the backend model
-const POLICY_AREAS = [
-  'Agriculture',
-  'Armed Forces and National Security',
-  'Civil Rights and Liberties, Minority Issues',
-  'Economics and Public Finance',
-  'Education',
-  'Environment',
-  'Government Operations and Politics',
-  'Health',
-  'International Affairs',
-  'Labor and Employment',
-  'Law',
-  'Native Americans',
-  'Public Lands and Natural Resources',
-  'Science, Technology, Communications',
-  'Social Welfare',
-  'Taxation',
-  'Transportation and Public Works',
-  'Water Resources Development'
-];
+import { supabase } from '../../lib/supabase';
+import LawCard from '../../components/LawCard';
+import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../../components/CongressmanSearchSelect';
+import { Law, Congressman } from '../../types/types';
+import { POLICY_AREAS } from '../../constants/policyAreas';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import LoadingIndicator from '../../components/ui/LoadingIndicator';
 
 function LawsContent() {
   const router = useRouter();
@@ -48,6 +29,7 @@ function LawsContent() {
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
   const congressmanSearchRef = useRef<CongressmanSearchSelectRef>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Fetch sponsor details if sponsor_id is in URL
   useEffect(() => {
@@ -73,71 +55,94 @@ function LawsContent() {
     fetchSponsor();
   }, [currentSponsorId, selectedSponsor]);
 
-  useEffect(() => {
-    const fetchLaws = async () => {
-      setLoading(true);
-      try {
-        // Base query for laws from bills table, where law_enacted_date is not null
-        let baseQuery = supabase
-          .from('bill')
-          .select(`
-            *,
-            sponsor:sponsored_bills(
-              congressman:congressman(*)
-            )
-          `)
-          .not('law_enacted_date', 'is', null)
-          .order('law_enacted_date', { ascending: sortOrder === 'asc' });
+  const fetchLaws = async (page: number) => {
+    if (page === 1) {
+      setLaws([]);
+    }
+    
+    try {
+      // Calculate range for pagination
+      const from = (page - 1) * 50;
+      const to = from + 49;
+      
+      // Base query for laws from bills table, where law_enacted_date is not null
+      let baseQuery = supabase
+        .from('bill')
+        .select(`
+          *,
+          sponsor:sponsored_bills(
+            congressman:congressman(*)
+          )
+        `)
+        .not('law_enacted_date', 'is', null)
+        .order('law_enacted_date', { ascending: sortOrder === 'asc' })
+        .range(from, to);
 
-        // Apply policy area filter if selected
-        if (selectedPolicyArea) {
-          baseQuery = baseQuery.eq('policy_area', selectedPolicyArea);
-        }
-
-        // Apply search filter if provided
-        if (searchQuery) {
-          baseQuery = baseQuery.or(`title.ilike.%${searchQuery}%,law_title.ilike.%${searchQuery}%`);
-        }
-
-        // Apply sponsor filter if we have a selected sponsor
-        if (selectedSponsor) {
-          baseQuery = baseQuery.eq('sponsor.congressman_id', selectedSponsor.id);
-        }
-
-        // Apply date range filter if provided
-        if (startDate) {
-          baseQuery = baseQuery.gte('law_enacted_date', startDate);
-        }
-
-        if (endDate) {
-          baseQuery = baseQuery.lte('law_enacted_date', endDate);
-        }
-
-        // Execute the query
-        const { data, error } = await baseQuery;
-        if (error) throw error;
-
-        // Transform the data to match our Law interface
-        const laws = data?.map((law: any) => ({
-          ...law,
-          sponsor: law.sponsor?.[0]?.congressman || null
-        })) || [];
-
-        // Set laws
-        setLaws(laws);
-      } catch (error) {
-        console.error('Error fetching laws:', error);
-        setLaws([]);
-      } finally {
-        setLoading(false);
+      // Apply policy area filter if selected
+      if (selectedPolicyArea) {
+        baseQuery = baseQuery.eq('policy_area', selectedPolicyArea);
       }
-    };
 
-    fetchLaws();
-  }, [selectedPolicyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder]);
+      // Apply search filter if provided
+      if (searchQuery) {
+        baseQuery = baseQuery.or(`title.ilike.%${searchQuery}%,law_title.ilike.%${searchQuery}%`);
+      }
 
-  // Update URL when filters change
+      // Apply sponsor filter if we have a selected sponsor
+      if (selectedSponsor) {
+        baseQuery = baseQuery.eq('sponsor.congressman_id', selectedSponsor.id);
+      }
+
+      // Apply date range filter if provided
+      if (startDate) {
+        baseQuery = baseQuery.gte('law_enacted_date', startDate);
+      }
+
+      if (endDate) {
+        baseQuery = baseQuery.lte('law_enacted_date', endDate);
+      }
+
+      // Execute the query
+      const { data, error } = await baseQuery;
+      if (error) throw error;
+
+      // Transform the data to match our Law interface
+      const fetchedLaws = data?.map((law: any) => ({
+        ...law,
+        sponsor: law.sponsor?.[0]?.congressman || null
+      })) || [];
+
+      // Update laws state
+      if (page === 1) {
+        setLaws(fetchedLaws);
+      } else {
+        setLaws(prevLaws => [...prevLaws, ...fetchedLaws]);
+      }
+
+      // Return whether there are more items to load
+      return fetchedLaws.length === 50;
+    } catch (error) {
+      console.error('Error fetching laws:', error);
+      return false;
+    } finally {
+      setLoading(false);
+      setInitialLoadComplete(true);
+    }
+  };
+
+  // Set up infinite scrolling
+  const { loading: loadingMore, sentinelRef, reset: resetScroll } = useInfiniteScroll(
+    fetchLaws,
+    { enabled: initialLoadComplete }
+  );
+
+  // Reset scroll and fetch initial data when filters change
   useEffect(() => {
+    setLoading(true);
+    resetScroll();
+    fetchLaws(1);
+    
+    // Update URL when filters change
     const params = new URLSearchParams();
     
     if (selectedPolicyArea) params.set('policy_area', selectedPolicyArea);
@@ -340,7 +345,7 @@ function LawsContent() {
         </div>
       )}
 
-      {loading ? (
+      {loading && laws.length === 0 ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-xl">Loading...</div>
         </div>
@@ -348,11 +353,19 @@ function LawsContent() {
         <>
           <p className="mb-4">Showing {laws.length} laws</p>
           {laws.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {laws.map((law) => (
-                <LawCard key={law.id} law={law} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {laws.map((law) => (
+                  <LawCard key={law.id} law={law} />
+                ))}
+              </div>
+              
+              {/* Sentinel element for infinite scrolling */}
+              <div ref={sentinelRef} className="h-4 mt-4"></div>
+              
+              {/* Loading indicator for more items */}
+              {loadingMore && <LoadingIndicator size="medium" />}
+            </>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <p className="text-yellow-700">
