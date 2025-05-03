@@ -157,7 +157,7 @@ function ExecutiveOrdersContent() {
       <p className="text-gray-600 text-sm mb-6">Explore presidential executive orders that direct federal agencies and interpret constitutional powers of the executive branch.</p>
 
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div>
             <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Search Executive Orders

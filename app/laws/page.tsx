@@ -39,9 +39,7 @@ function LawsContent() {
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
 
-  const [recentLaws, setRecentLaws] = useState<Law[]>([]);
-  const [popularLaws, setPopularLaws] = useState<Law[]>([]);
-  const [allLaws, setAllLaws] = useState<Law[]>([]);
+  const [laws, setLaws] = useState<Law[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPolicyArea, setSelectedPolicyArea] = useState(currentPolicyArea || '');
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
@@ -125,23 +123,11 @@ function LawsContent() {
           sponsor: law.sponsor?.[0]?.congressman || null
         })) || [];
 
-        // Set all laws
-        setAllLaws(laws);
-
-        // Set recent laws (last 10)
-        const recent = [...laws].sort((a, b) => 
-          new Date(b.law_enacted_date).getTime() - new Date(a.law_enacted_date).getTime()
-        ).slice(0, 10);
-        setRecentLaws(recent);
-
-        // Set popular laws (random 10 for now, later could be based on views or saves)
-        const shuffled = [...laws].sort(() => 0.5 - Math.random());
-        setPopularLaws(shuffled.slice(0, 10));
+        // Set laws
+        setLaws(laws);
       } catch (error) {
         console.error('Error fetching laws:', error);
-        setAllLaws([]);
-        setRecentLaws([]);
-        setPopularLaws([]);
+        setLaws([]);
       } finally {
         setLoading(false);
       }
@@ -213,29 +199,13 @@ function LawsContent() {
     }
   };
 
-  // Component for a horizontally scrollable section of laws
-  const LawSection = ({ title, laws }: { title: string; laws: Law[] }) => {
-    if (!laws || laws.length === 0) return null;
-    
-    return (
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">{title}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {laws.map((law) => (
-            <LawCard key={law.id} law={law} />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Laws</h1>
       <p className="text-gray-600 text-sm mb-6">Explore enacted laws that originated from congressional bills, organized by policy area and date.</p>
 
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div>
             <label htmlFor="policy-area" className="block text-sm font-medium text-gray-700 mb-2">
               Filter by Policy Area
@@ -285,7 +255,7 @@ function LawsContent() {
             <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Enacted Date Range
             </label>
-            <div className="flex space-x-2">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex-1">
                 <input
                   id="start-date"
@@ -376,9 +346,20 @@ function LawsContent() {
         </div>
       ) : (
         <>
-          <LawSection title="Recently Enacted Laws" laws={recentLaws} />
-          <LawSection title="Popular Laws" laws={popularLaws} />
-          <LawSection title="All Laws" laws={allLaws} />
+          <p className="mb-4">Showing {laws.length} laws</p>
+          {laws.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {laws.map((law) => (
+                <LawCard key={law.id} law={law} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <p className="text-yellow-700">
+                No laws found matching your filters. Try adjusting your search criteria.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

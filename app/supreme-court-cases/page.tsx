@@ -215,7 +215,7 @@ function SupremeCourtCasesContent() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Supreme Court Cases</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div>
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
             Search Cases
@@ -255,7 +255,7 @@ function SupremeCourtCasesContent() {
           <label htmlFor="date-range" className="block text-sm font-medium text-gray-700 mb-2">
             Date Filed Range
           </label>
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex-1">
               <input
                 id="start-date"
