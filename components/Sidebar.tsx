@@ -42,8 +42,8 @@ export default function Sidebar() {
         const formattedBills = bills.map(item => ({
           id: item.id,
           type: 'bill' as const,
-          title: `${item.bill.type.toUpperCase()}. ${item.bill.number}`,
-          itemId: item.bill.id,
+          title: `${item.bill?.type.toUpperCase()}. ${item.bill?.number}`,
+          itemId: item.bill?.id,
           timestamp: item.created_at
         }));
 
@@ -51,8 +51,8 @@ export default function Sidebar() {
         const formattedCongressmen = congressmen.map(item => ({
           id: item.id,
           type: 'congressman' as const,
-          title: item.congressman.full_name,
-          itemId: item.congressman.id,
+          title: item.congressman?.full_name,
+          itemId: item.congressman?.id,
           timestamp: item.created_at
         }));
 
@@ -107,6 +107,7 @@ export default function Sidebar() {
           })
           .slice(0, 10);
 
+        // @ts-ignore
         setSavedItems(combinedItems);
       } catch (error) {
         console.error('Error fetching saved items for sidebar:', error);

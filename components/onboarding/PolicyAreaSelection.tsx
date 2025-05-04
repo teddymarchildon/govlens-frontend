@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { POLICY_AREAS } from '../../constants/onboarding';
 

@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Judge, CourtOpinion } from '@/types/types';
 import SaveButton from '@/components/SaveButton';
 import Link from 'next/link';
-import { getStoragePublicUrl, getCourtOpinions } from '@/services/api';
+import { getCourtOpinions } from '@/services/api';
 
 export default function JudgeDetailPage() {
   const params = useParams();

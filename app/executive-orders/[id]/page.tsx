@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import SaveButton from '@/components/SaveButton';
 
 interface ExecutiveOrder {
   id: string;
@@ -123,6 +123,7 @@ export default function ExecutiveOrderDetailPage() {
                 </div>
               )}
             </div>
+            <SaveButton itemId={order.id} itemType="agencyDocument" />
           </div>
         </div>
       </div>

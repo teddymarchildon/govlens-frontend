@@ -84,6 +84,7 @@ export interface SavedBill {
   bill_id: string;
   user_id: string;
   bill?: Bill;
+  created_at?: string;
 }
 
 export interface SavedCongressman {
@@ -91,6 +92,7 @@ export interface SavedCongressman {
   congressman_id: string;
   user_id: string;
   congressman?: Congressman;
+  created_at?: string;
 }
 
 export interface User {
@@ -116,6 +118,7 @@ export interface SavedAgency {
   agency_id: string;
   user_id: string;
   agency?: Agency;
+  created_at?: string;
 }
 
 export interface AgencyDocument {
@@ -197,6 +200,7 @@ export interface SavedJudge {
   judge_id: string;
   user_id: string;
   judge?: Judge;
+  created_at?: string;
 }
 
 export interface SavedCluster {
@@ -204,6 +208,7 @@ export interface SavedCluster {
   cluster_id: string;
   user_id: string;
   cluster?: Cluster;
+  created_at?: string;
 }
 
 export interface SavedAgencyDocument {
@@ -211,6 +216,7 @@ export interface SavedAgencyDocument {
   agency_document_id: string;
   user_id: string;
   agency_document?: AgencyDocument;
+  created_at?: string;
 }
 
 export interface SaveItemType {
