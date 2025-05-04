@@ -12,8 +12,8 @@ export default function Sidebar() {
   const [savedItems, setSavedItems] = useState<Array<{
     id: string;
     type: 'bill' | 'congressman' | 'agency' | 'judge' | 'cluster' | 'agencyDocument';
-    title: string;
-    itemId: string;
+    title: string | undefined;
+    itemId: string | undefined;
     timestamp?: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
@@ -106,8 +106,6 @@ export default function Sidebar() {
             return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
           })
           .slice(0, 10);
-
-        // @ts-ignore
         setSavedItems(combinedItems);
       } catch (error) {
         console.error('Error fetching saved items for sidebar:', error);
