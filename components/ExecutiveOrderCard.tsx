@@ -6,6 +6,7 @@ import { AgencyDocument, Agency } from '../types/types';
 interface ExecutiveOrderCardProps {
   order: AgencyDocument & {
     agency?: Agency | null;
+    president?: string | null;
   };
 }
 
@@ -38,6 +39,13 @@ export default function ExecutiveOrderCard({ order }: ExecutiveOrderCardProps) {
               >
                 {order.agency.name}
               </Link>
+            </div>
+          )}
+
+          {order.president && (
+            <div className="text-xs text-gray-700">
+              <span className="font-medium">President:</span>{' '}
+              <span>{order.president}</span>
             </div>
           )}
 

@@ -16,6 +16,7 @@ function ExecutiveOrdersContent() {
   const currentStartDate = searchParams.get('start_date') || '';
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
+  const currentPresident = searchParams.get('president') || '';
 
   const [orders, setOrders] = useState<AgencyDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,8 @@ function ExecutiveOrdersContent() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
   const [agencies, setAgencies] = useState<Array<{ id: string; name: string }>>([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [presidents, setPresidents] = useState<string[]>([]);
+  const [selectedPresident, setSelectedPresident] = useState(currentPresident);
 
   useEffect(() => {
     const fetchAgencies = async () => {
@@ -45,7 +48,30 @@ function ExecutiveOrdersContent() {
     fetchAgencies();
   }, []);
 
+  useEffect(() => {
+    const fetchPresidents = async () => {
+      const { data, error } = await supabase
+        .from('agency_document')
+        .select('president')
+        .eq('subtype', 'Executive Order')
+        .not('president', 'is', null)
+        .order('president');
+
+      if (error) {
+        console.error('Error fetching presidents:', error);
+        return;
+      }
+
+      // Extract unique presidents
+      const uniquePresidents = [...new Set(data.map(item => item.president).filter(Boolean))];
+      setPresidents(uniquePresidents);
+    };
+
+    fetchPresidents();
+  }, []);
+
   const fetchOrders = async (page: number) => {
+    console.log('Fetching orders...')
     if (page === 1) {
       setOrders([]);
     }
@@ -63,6 +89,7 @@ function ExecutiveOrdersContent() {
           remote_document_number,
           signing_date,
           publication_date,
+          president,
           agency:agency_agencydocument!agency_document_id(
             agency:agency(id, name)
           )
@@ -78,6 +105,10 @@ function ExecutiveOrdersContent() {
 
       if (selectedAgency) {
         query = query.eq('agency_agencydocument.agency_id', selectedAgency);
+      }
+
+      if (selectedPresident) {
+        query = query.eq('president', selectedPresident);
       }
 
       // Apply date range filter if provided
@@ -126,24 +157,35 @@ function ExecutiveOrdersContent() {
     { enabled: initialLoadComplete }
   );
 
-  // Reset scroll and fetch initial data when filters change
+  // Initial data load
   useEffect(() => {
     setLoading(true);
-    resetScroll();
     fetchOrders(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Update URL with filters
-    const params = new URLSearchParams();
-    if (searchQuery) params.set('q', searchQuery);
-    if (selectedAgency) params.set('agency', selectedAgency);
-    if (startDate) params.set('start_date', startDate);
-    if (endDate) params.set('end_date', endDate);
-    if (sortOrder === 'asc') params.set('sort_order', sortOrder);
+  // Update URL and fetch data when filters change
+  useEffect(() => {
+    if (initialLoadComplete) {
+      const params = new URLSearchParams();
 
-    const queryString = params.toString();
-    const url = queryString ? `?${queryString}` : '';
-    router.push(`/executive-orders${url}`, { scroll: false });
-  }, [searchQuery, selectedAgency, startDate, endDate, sortOrder, router]);
+      if (searchQuery) params.set('q', searchQuery);
+      if (selectedAgency) params.set('agency', selectedAgency);
+      if (startDate) params.set('start_date', startDate);
+      if (endDate) params.set('end_date', endDate);
+      if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
+      if (selectedPresident) params.set('president', selectedPresident);
+
+      const queryString = params.toString();
+      const url = queryString ? `/executive-orders?${queryString}` : '/executive-orders';
+      router.push(url, { scroll: false });
+
+      // Reset infinite scroll and fetch first page with new filters
+      resetScroll();
+      fetchOrders(1);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, selectedAgency, startDate, endDate, sortOrder, selectedPresident, initialLoadComplete, router]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -151,6 +193,10 @@ function ExecutiveOrdersContent() {
 
   const handleAgencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedAgency(e.target.value);
+  };
+
+  const handlePresidentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPresident(e.target.value);
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,69 +217,86 @@ function ExecutiveOrdersContent() {
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
+    setSelectedPresident('');
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Executive Orders</h1>
-      <p className="text-gray-600 text-sm mb-6">Explore presidential executive orders that direct federal agencies and interpret constitutional powers of the executive branch.</p>
+      <h1 className="text-3xl font-bold mb-8">Executive Orders</h1>
 
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
           <div>
-            <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Search Executive Orders
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+              Search
             </label>
             <input
-              id="search-filter"
               type="text"
+              id="search"
               value={searchQuery}
               onChange={handleSearchChange}
-              placeholder="Search by title or document number..."
+              placeholder="Search by title or document number"
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label htmlFor="agency-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Agency
+            <label htmlFor="agency" className="block text-sm font-medium text-gray-700 mb-2">
+              Agency
             </label>
             <select
-              id="agency-filter"
+              id="agency"
               value={selectedAgency}
               onChange={handleAgencyChange}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
               <option value="">All Agencies</option>
-              {agencies.map((agency) => (
+              {agencies.map(agency => (
                 <option key={agency.id} value={agency.id}>
                   {agency.name}
                 </option>
               ))}
             </select>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Publication Date
+            <label htmlFor="president" className="block text-sm font-medium text-gray-700 mb-2">
+              President
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex-1">
+            <select
+              id="president"
+              value={selectedPresident}
+              onChange={handlePresidentChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">All Presidents</option>
+              {presidents.map(president => (
+                <option key={president} value={president}>
+                  {president}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="date-range" className="block text-sm font-medium text-gray-700 mb-2">
+              Date Range
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
                 <input
-                  id="start-date"
                   type="date"
+                  id="start-date"
                   value={startDate}
                   onChange={handleStartDateChange}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Start date"
                 />
               </div>
-              <div className="flex-1">
+              <div>
                 <input
-                  id="end-date"
                   type="date"
+                  id="end-date"
                   value={endDate}
                   onChange={handleEndDateChange}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -261,7 +324,7 @@ function ExecutiveOrdersContent() {
           </div>
         </div>
 
-        {(searchQuery || selectedAgency || startDate || endDate || sortOrder !== 'desc') && (
+        {(searchQuery || selectedAgency || startDate || endDate || sortOrder !== 'desc' || selectedPresident) && (
           <div className="mb-4 flex items-center flex-wrap">
             <div className="text-sm text-gray-600 mr-2">Active filters:</div>
             {searchQuery && (
@@ -272,6 +335,11 @@ function ExecutiveOrdersContent() {
             {selectedAgency && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
                 Agency: {agencies.find(a => a.id === selectedAgency)?.name || selectedAgency}
+              </span>
+            )}
+            {selectedPresident && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2 mb-2">
+                President: {selectedPresident}
               </span>
             )}
             {startDate && (

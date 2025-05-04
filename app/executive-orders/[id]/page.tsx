@@ -17,6 +17,7 @@ interface ExecutiveOrder {
   pdf_url: string;
   pdf_file_path?: string;
   html_file_path?: string;
+  president?: string;
   agency: {
     id: string;
     name: string;
@@ -47,6 +48,7 @@ export default function ExecutiveOrderDetailPage() {
           pdf_url,
           pdf_file_path,
           html_file_path,
+          president,
           agency:agency_agencydocument!agency_document_id(
             agency:agency(id, name)
           )
@@ -109,6 +111,11 @@ export default function ExecutiveOrderDetailPage() {
               <div className="text-sm text-gray-600 mb-2">
                 Document Number: {order.remote_document_number}
               </div>
+              {order.president && (
+                <div className="text-sm text-gray-600 mb-2">
+                  President: {order.president}
+                </div>
+              )}
               {order.signing_date && (
                 <div className="text-sm text-gray-600 mb-2">
                   Signed: {new Date(order.signing_date).toLocaleDateString()}

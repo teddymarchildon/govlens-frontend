@@ -136,6 +136,7 @@ export interface AgencyDocument {
   remote_document_number: string;
   signing_date?: string;
   subtype?: string;
+  president?: string;
 }
 
 export interface Court {
