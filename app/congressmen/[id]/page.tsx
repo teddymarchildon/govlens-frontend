@@ -93,27 +93,55 @@ export default function CongressmanDetailPage() {
 
     // Calculate bipartisan collaboration depth
     const otherPartyCollaborators = [...sponsoredBills, ...cosponsoredBills].reduce((acc: any, bill) => {
-      const collaborators = new Set();
-
       // Check sponsor
-      if (bill.sponsor && (bill.sponsor.congressman?.party || bill.sponsor.congressman?.party)?.toLowerCase() !== congressman?.party.toLowerCase()) {
-        collaborators.add(bill.sponsor.congressman?.id || bill.sponsor.congressman?.id);
+      if (bill.sponsor?.congressman && bill.sponsor.congressman.party?.toLowerCase() !== congressman?.party.toLowerCase()) {
+        const sponsorId = bill.sponsor.congressman.id;
+        const sponsorName = bill.sponsor.congressman.full_name;
+        const sponsorParty = bill.sponsor.congressman.party;
+
+        if (!acc[sponsorId]) {
+          acc[sponsorId] = {
+            name: sponsorName,
+            party: sponsorParty,
+            count: 0
+          };
+        }
+        acc[sponsorId].count++;
       }
 
       // Check cosponsors
       (bill.cosponsors || []).forEach((cosponsor: any) => {
-        if ((cosponsor.congressman?.party || cosponsor.party)?.toLowerCase() !== congressman?.party.toLowerCase()) {
-          collaborators.add(cosponsor.congressman?.id || cosponsor.id);
+        if (cosponsor.congressman && cosponsor.congressman.party?.toLowerCase() !== congressman?.party.toLowerCase()) {
+          const cosponsorId = cosponsor.congressman.id;
+          const cosponsorName = cosponsor.congressman.name; // Changed from full_name to name
+          const cosponsorParty = cosponsor.congressman.party;
+
+          if (!acc[cosponsorId]) {
+            acc[cosponsorId] = {
+              name: cosponsorName,
+              party: cosponsorParty,
+              count: 0
+            };
+          }
+          acc[cosponsorId].count++;
         }
       });
 
-      return acc + collaborators.size;
-    }, 0);
+      return acc;
+    }, {});
 
     const avgOtherPartyCollaborators = totalBills > 0
-      ? (otherPartyCollaborators / totalBills).toFixed(1)
+      ? (Object.keys(otherPartyCollaborators).length / totalBills).toFixed(1)
       : 0;
 
+    // Sort collaborators by count for top collaborators list
+    const topCollaborators = Object.entries(otherPartyCollaborators)
+      .sort(([, a]: [string, any], [, b]: [string, any]) => b.count - a.count)
+      .slice(0, 5)
+      .reduce((acc: any, [id, data]: [string, any]) => {
+        acc[id] = data;
+        return acc;
+      }, {});
     return {
       sponsoredBecameLaw,
       cosponsoredBecameLaw,
@@ -124,7 +152,8 @@ export default function CongressmanDetailPage() {
       totalBills,
       policyAreaStats,
       activityByYear,
-      avgOtherPartyCollaborators
+      avgOtherPartyCollaborators,
+      topCollaborators
     };
   };
 
@@ -351,9 +380,6 @@ export default function CongressmanDetailPage() {
                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Position
                         </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Party
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -400,60 +426,6 @@ export default function CongressmanDetailPage() {
                       <div className="text-xs text-gray-500">
                         {stats.totalBills > 0 ? Math.round(((stats.sponsoredBecameLaw + stats.cosponsoredBecameLaw) / stats.totalBills) * 100) : 0}% success rate
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cross-Party Collaboration */}
-                <div className="bg-gray-50 rounded-lg p-4 md:p-6">
-                  <h3 className="text-xl font-semibold mb-4">Cross-Party Collaboration</h3>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Bipartisan Bills</span>
-                        <span className="font-medium">{stats.totalCrossPartyBills} of {stats.totalBills}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-purple-600 h-2 rounded-full"
-                          style={{ width: `${stats.crossPartyPercentage}%` }}
-                        ></div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {stats.crossPartyPercentage}% of bills involve cross-party collaboration
-                      </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left py-2 text-xs">Top Collaborators</th>
-                            <th className="text-right py-2 text-xs">Party</th>
-                            <th className="text-right py-2 text-xs">Bills</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(stats.avgOtherPartyCollaborators)
-                            .sort(([, countA]: [string, any], [, countB]: [string, any]) => countB - countA)
-                            .slice(0, 5)
-                            .map(([name, data]: [string, any]) => (
-                              <tr key={name} className="border-b">
-                                <td className="py-2 text-sm">{name}</td>
-                                <td className="text-right py-2">
-                                  <span className={`px-2 py-1 text-xs rounded-full ${
-                                    data.party === 'Republican' ? 'bg-red-100 text-red-800' :
-                                    data.party === 'Democrat' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {data.party}
-                                  </span>
-                                </td>
-                                <td className="text-right py-2 text-sm">{data.count}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
                     </div>
                   </div>
                 </div>
