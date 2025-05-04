@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../../../lib/supabase';
 import { Cluster } from '../../../types/types';
+import SaveButton from '../../../components/SaveButton';
 
 export default function SupremeCourtCaseDetailPage() {
   const params = useParams();
@@ -121,9 +122,12 @@ export default function SupremeCourtCaseDetailPage() {
                 <p className="text-lg text-gray-600">{cluster.case_name_short}</p>
               )}
             </div>
-            <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-purple-100 text-purple-800 mt-2 md:mt-0">
-              {formattedDate}
-            </span>
+            <div className="flex items-center space-x-3 mt-2 md:mt-0">
+              <SaveButton itemId={cluster.id} itemType="cluster" />
+              <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-purple-100 text-purple-800">
+                {formattedDate}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

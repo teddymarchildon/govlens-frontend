@@ -123,11 +123,6 @@ export default function ExecutiveOrderDetailPage() {
                 </div>
               )}
             </div>
-            <SaveButton
-              itemId={order.id}
-              itemType="agency"
-              className="text-gray-400 hover:text-blue-500"
-            />
           </div>
         </div>
       </div>

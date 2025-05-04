@@ -167,18 +167,7 @@ export interface CourtOpinion {
   court?: Court;
   author?: Judge;
   cluster?: Cluster;
-}
-
-export interface ClusterOpinion {
-  id: string;
-  remote_id: string;
-  date: string;
-  type: string;
-  pdf_file_path: string | null;
-  html_file_path: string | null;
-  text_file_path: string | null;
-  author: Judge;
-  joined_by: Judge[];
+  type?: string;
 }
 
 export interface Cluster {
@@ -189,7 +178,7 @@ export interface Cluster {
   slug: string;
   case_name: string;
   case_name_short: string;
-  opinions: ClusterOpinion[];
+  opinions: CourtOpinion[];
   date_filed: string;
 }
 
@@ -200,4 +189,29 @@ export interface UserPreferences {
   policy_areas: string[];
   created_at?: string;
   updated_at?: string;
+}
+
+export interface SavedJudge {
+  id: string;
+  judge_id: string;
+  user_id: string;
+  judge?: Judge;
+}
+
+export interface SavedCluster {
+  id: string;
+  cluster_id: string;
+  user_id: string;
+  cluster?: Cluster;
+}
+
+export interface SavedAgencyDocument {
+  id: string;
+  agency_document_id: string;
+  user_id: string;
+  agency_document?: AgencyDocument;
+}
+
+export interface SaveItemType {
+  itemType: 'congressman' | 'bill' | 'agency' | 'judge' | 'cluster' | 'agencyDocument';
 }

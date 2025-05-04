@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Agency, AgencyDocument, Bill, ClusterOpinion, Congressman, Judge } from '../types/types';
+import { Agency, AgencyDocument, Bill, Congressman, Judge } from '../types/types';
 
 // Storage API
 export const getStoragePublicUrl = (bucket: string, path: string): string | null => {
@@ -617,33 +617,6 @@ export const getAgencyRules = async (params: {
   }
 };
 
-export const getClusterOpinions = async (clusterId: string, params: { type?: string; oldest_first?: boolean } = {}): Promise<ClusterOpinion[]> => {
-  let query = supabase
-    .from('court_opinion')
-    .select(`
-      *,
-      author:judge(*),
-      joined_by:judge(*)
-    `)
-    .eq('cluster_id', clusterId);
-
-  // Filter by opinion type if provided
-  if (params.type) {
-    query = query.eq('type', params.type);
-  }
-
-  // Sort by date (newest first by default)
-  query = query.order('date', { ascending: params.oldest_first ? true : false });
-
-  const { data, error } = await query;
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-};
-
 export const getClusterJoinedJudges = async (clusterId: string): Promise<Judge[]> => {
   // Get all unique judges who have joined any opinion in this cluster
   const { data: opinions, error: opinionsError } = await supabase
@@ -670,7 +643,16 @@ export const getClusterJoinedJudges = async (clusterId: string): Promise<Judge[]
   return Array.from(uniqueJudges.values());
 };
 
-export const getCourtOpinions = async (params: { limit?: number; court_id?: number; author_id?: string; cluster_id?: string; search?: string; oldest_first?: boolean; start_date?: string; end_date?: string } = {}) => {
+export const getCourtOpinions = async (params: {
+  limit?: number;
+  court_id?: number;
+  author_id?: string;
+  cluster_id?: string;
+  search?: string;
+  oldest_first?: boolean;
+  start_date?: string;
+  end_date?: string;
+} = {}) => {
   let query = supabase
     .from('court_opinion')
     .select(`
@@ -983,4 +965,270 @@ export const globalSearch = async (query: string, limit = 5) => {
       displayText: doc.title
     })) || []
   };
+};
+
+// Save/Unsave Judge
+export const saveJudge = async (userId: string, judgeId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_judge')
+      .insert({
+        user_id: userId,
+        judge_id: judgeId
+      })
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const unsaveJudge = async (userId: string, judgeId: string) => {
+  try {
+    const { error } = await supabase
+      .from('saved_judge')
+      .delete()
+      .eq('user_id', userId)
+      .eq('judge_id', judgeId);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const isJudgeSaved = async (userId: string, judgeId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_judge')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('judge_id', judgeId);
+
+    if (error) {
+      throw error;
+    }
+
+    return data && data.length > 0;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save/Unsave Cluster
+export const saveCluster = async (userId: string, clusterId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_cluster')
+      .insert({
+        user_id: userId,
+        cluster_id: clusterId
+      })
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const unsaveCluster = async (userId: string, clusterId: string) => {
+  try {
+    const { error } = await supabase
+      .from('saved_cluster')
+      .delete()
+      .eq('user_id', userId)
+      .eq('cluster_id', clusterId);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const isClusterSaved = async (userId: string, clusterId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_cluster')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('cluster_id', clusterId);
+
+    if (error) {
+      throw error;
+    }
+
+    return data && data.length > 0;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Save/Unsave Agency Document
+export const saveAgencyDocument = async (userId: string, agencyDocumentId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_agencydocument')
+      .insert({
+        user_id: userId,
+        agency_document_id: agencyDocumentId
+      })
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const unsaveAgencyDocument = async (userId: string, agencyDocumentId: string) => {
+  try {
+    const { error } = await supabase
+      .from('saved_agencydocument')
+      .delete()
+      .eq('user_id', userId)
+      .eq('agency_document_id', agencyDocumentId);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const isAgencyDocumentSaved = async (userId: string, agencyDocumentId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('saved_agencydocument')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('agency_document_id', agencyDocumentId);
+
+    if (error) {
+      throw error;
+    }
+
+    return data && data.length > 0;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get Saved Items for new types
+export const getSavedJudges = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('saved_judge')
+    .select('*, judge(*)')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data;
+};
+
+export const getSavedClusters = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('saved_cluster')
+    .select(`
+      *,
+      cluster(
+        *,
+        court(*),
+        opinions:court_opinion(
+          *,
+          author:judge(*)
+        )
+      )
+    `)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data;
+};
+
+export const getSavedAgencyDocuments = async (userId: string) => {
+  // First, get the saved agency documents with their document details
+  const { data: savedDocs, error } = await supabase
+    .from('saved_agencydocument')
+    .select(`
+      *,
+      agency_document(*)
+    `)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+
+  // If there are no saved documents, return empty array
+  if (!savedDocs || savedDocs.length === 0) {
+    return [];
+  }
+
+  // For each document, we need to find its associated agency through the join table
+  const enhancedDocs = await Promise.all(
+    savedDocs.map(async (savedDoc) => {
+      // Find the agency_agencydocument entry for this document
+      const { data: agencyLinks, error: linkError } = await supabase
+        .from('agency_agencydocument')
+        .select('agency_id')
+        .eq('agency_document_id', savedDoc.agency_document_id)
+        .limit(1);
+
+      if (linkError) {
+        console.error('Error fetching agency link:', linkError);
+        return savedDoc;
+      }
+
+      // If we found an agency link, fetch the agency details
+      if (agencyLinks && agencyLinks.length > 0) {
+        const { data: agency, error: agencyError } = await supabase
+          .from('agency')
+          .select('*')
+          .eq('id', agencyLinks[0].agency_id)
+          .single();
+
+        if (agencyError) {
+          console.error('Error fetching agency:', agencyError);
+          return savedDoc;
+        }
+
+        // Add the agency to the document
+        if (agency && savedDoc.agency_document) {
+          return {
+            ...savedDoc,
+            agency_document: {
+              ...savedDoc.agency_document,
+              agency
+            }
+          };
+        }
+      }
+
+      return savedDoc;
+    })
+  );
+
+  return enhancedDocs;
 };

@@ -2,11 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getSavedBills, getSavedCongressmen, getSavedAgencies, unsaveBill, unsaveCongressman, unsaveAgency } from '../../services/api';
+import {
+  getSavedBills, getSavedCongressmen, getSavedAgencies,
+  getSavedJudges, getSavedClusters, getSavedAgencyDocuments,
+  unsaveBill, unsaveCongressman, unsaveAgency,
+  unsaveJudge, unsaveCluster, unsaveAgencyDocument
+} from '../../services/api';
 import BillCard from '../../components/BillCard';
 import CongressmanCard from '../../components/CongressmanCard';
 import AgencyCard from '../../components/AgencyCard';
-import { SavedBill, SavedCongressman, SavedAgency } from '../../types/types';
+import JudgeCard from '../../components/JudgeCard';
+import CourtCaseCard from '../../components/CourtCaseCard';
+import AgencyRuleCard from '../../components/AgencyRuleCard';
+import {
+  SavedBill, SavedCongressman, SavedAgency,
+  SavedJudge, SavedCluster, SavedAgencyDocument
+} from '../../types/types';
 import Link from 'next/link';
 import UserPreferencesSection from '../../components/UserPreferencesSection';
 
@@ -15,19 +26,30 @@ export default function ProfilePage() {
   const [savedBills, setSavedBills] = useState<SavedBill[]>([]);
   const [savedCongressmen, setSavedCongressmen] = useState<SavedCongressman[]>([]);
   const [savedAgencies, setSavedAgencies] = useState<SavedAgency[]>([]);
+  const [savedJudges, setSavedJudges] = useState<SavedJudge[]>([]);
+  const [savedClusters, setSavedClusters] = useState<SavedCluster[]>([]);
+  const [savedAgencyDocuments, setSavedAgencyDocuments] = useState<SavedAgencyDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSavedItems = async () => {
       if (user) {
         try {
-          const bills = await getSavedBills(user.id);
-          const congressmen = await getSavedCongressmen(user.id);
-          const agencies = await getSavedAgencies(user.id);
+          const [bills, congressmen, agencies, judges, clusters, documents] = await Promise.all([
+            getSavedBills(user.id),
+            getSavedCongressmen(user.id),
+            getSavedAgencies(user.id),
+            getSavedJudges(user.id),
+            getSavedClusters(user.id),
+            getSavedAgencyDocuments(user.id)
+          ]);
 
           setSavedBills(bills);
           setSavedCongressmen(congressmen);
           setSavedAgencies(agencies);
+          setSavedJudges(judges);
+          setSavedClusters(clusters);
+          setSavedAgencyDocuments(documents);
         } catch (error) {
           console.error('Error fetching saved items:', error);
         }
@@ -70,6 +92,39 @@ export default function ProfilePage() {
       setSavedAgencies(savedAgencies.filter(agency => agency.id !== savedAgency.id));
     } catch (error) {
       console.error('Error deleting saved agency:', error);
+    }
+  };
+
+  const handleDeleteSavedJudge = async (savedJudge: SavedJudge) => {
+    if (!user) return;
+
+    try {
+      await unsaveJudge(user.id, savedJudge.judge_id);
+      setSavedJudges(savedJudges.filter(judge => judge.id !== savedJudge.id));
+    } catch (error) {
+      console.error('Error deleting saved judge:', error);
+    }
+  };
+
+  const handleDeleteSavedCluster = async (savedCluster: SavedCluster) => {
+    if (!user) return;
+
+    try {
+      await unsaveCluster(user.id, savedCluster.cluster_id);
+      setSavedClusters(savedClusters.filter(cluster => cluster.id !== savedCluster.id));
+    } catch (error) {
+      console.error('Error deleting saved court case:', error);
+    }
+  };
+
+  const handleDeleteSavedAgencyDocument = async (savedDocument: SavedAgencyDocument) => {
+    if (!user) return;
+
+    try {
+      await unsaveAgencyDocument(user.id, savedDocument.agency_document_id);
+      setSavedAgencyDocuments(savedAgencyDocuments.filter(doc => doc.id !== savedDocument.id));
+    } catch (error) {
+      console.error('Error deleting saved agency document:', error);
     }
   };
 
@@ -180,7 +235,7 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div>
+      <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Saved Agencies</h2>
         {savedAgencies.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -210,6 +265,113 @@ export default function ProfilePage() {
             <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any agencies yet.</p>
             <Link href="/agencies" className="text-blue-600 hover:underline">
               Browse agencies
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Saved Judges</h2>
+        {savedJudges.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savedJudges.map((savedJudge) => (
+              <div key={savedJudge.id} className="relative group">
+                {savedJudge.judge && <JudgeCard judge={savedJudge.judge} />}
+                <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSavedJudge(savedJudge);
+                    }}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
+                    aria-label="Unsave this judge"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Unsave
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any judges yet.</p>
+            <Link href="/judges" className="text-blue-600 hover:underline">
+              Browse judges
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Saved Court Cases</h2>
+        {savedClusters.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savedClusters.map((savedCluster) => (
+              <div key={savedCluster.id} className="relative group">
+                {savedCluster.cluster && <CourtCaseCard cluster={savedCluster.cluster} />}
+                <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSavedCluster(savedCluster);
+                    }}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
+                    aria-label="Unsave this court case"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Unsave
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any court cases yet.</p>
+            <Link href="/supreme-court-cases" className="text-blue-600 hover:underline">
+              Browse court cases
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Saved Agency Rules</h2>
+        {savedAgencyDocuments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {savedAgencyDocuments.map((savedDocument) => (
+              <div key={savedDocument.id} className="relative group">
+                {savedDocument.agency_document && (
+                  <AgencyRuleCard rule={savedDocument.agency_document} />
+                )}
+                <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSavedAgencyDocument(savedDocument);
+                    }}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
+                    aria-label="Unsave this document"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Unsave
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any agency rules yet.</p>
+            <Link href="/agency-rules" className="text-blue-600 hover:underline">
+              Browse agency rules
             </Link>
           </div>
         )}

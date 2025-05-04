@@ -88,10 +88,7 @@ export default function JudgeDetailPage() {
             {judge.full_name || `${judge.first_name} ${judge.middle_name ? judge.middle_name + ' ' : ''}${judge.last_name}`}
             {judge.suffix && ` ${judge.suffix}`}
           </h1>
-          <SaveButton
-            itemType='judge'
-            itemId={judge.id}
-          />
+          <SaveButton itemId={judge.id} itemType="judge" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

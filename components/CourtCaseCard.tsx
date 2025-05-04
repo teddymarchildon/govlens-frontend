@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Cluster, ClusterOpinion } from '../types/types';
+import { Cluster, CourtOpinion } from '../types/types';
 
 interface CourtCaseCardProps {
   cluster: Cluster;
@@ -14,14 +14,16 @@ export default function CourtCaseCard({ cluster }: CourtCaseCardProps) {
 
   // Get the most recent opinion date
   const mostRecentDate = cluster.opinions?.length > 0
-    ? new Date(Math.max(...cluster.opinions.map((o: ClusterOpinion) => new Date(o.date).getTime()))).toLocaleDateString()
-    : 'Unknown date';
+    ? new Date(Math.max(...cluster.opinions.map((o: CourtOpinion) => new Date(o.date).getTime()))).toLocaleDateString()
+    : cluster.date_filed 
+      ? new Date(cluster.date_filed).toLocaleDateString()
+      : 'Unknown date';
 
   // Get the primary opinion (usually the majority opinion)
-  const primaryOpinion = cluster.opinions?.find((o: ClusterOpinion) => o.type === 'majority') || cluster.opinions?.[0];
+  const primaryOpinion = cluster.opinions?.find((o: CourtOpinion) => o.type === 'majority') || cluster.opinions?.[0];
 
   // Count opinions by type
-  const opinionCounts = cluster.opinions?.reduce((acc: Record<string, number>, opinion: ClusterOpinion) => {
+  const opinionCounts = cluster.opinions?.reduce((acc: Record<string, number>, opinion: CourtOpinion) => {
     const type = opinion.type || 'Unknown';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
@@ -34,6 +36,11 @@ export default function CourtCaseCard({ cluster }: CourtCaseCardProps) {
           <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
             {mostRecentDate}
           </span>
+          {cluster.court && (
+            <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 truncate max-w-[180px]">
+              {cluster.court.short_name}
+            </span>
+          )}
         </div>
 
         <Link
@@ -61,7 +68,7 @@ export default function CourtCaseCard({ cluster }: CourtCaseCardProps) {
           )}
 
           {/* Opinion type counts */}
-          {opinionCounts && (
+          {opinionCounts && Object.keys(opinionCounts).length > 0 && (
             <div className="flex flex-wrap gap-2">
               {Object.entries(opinionCounts).map(([type, count]) => (
                 <span
