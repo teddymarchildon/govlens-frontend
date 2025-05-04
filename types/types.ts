@@ -168,6 +168,7 @@ export interface CourtOpinion {
   author?: Judge;
   cluster?: Cluster;
   type?: string;
+  joined_by: Judge[];
 }
 
 export interface Cluster {

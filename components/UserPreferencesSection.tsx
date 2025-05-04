@@ -137,7 +137,7 @@ const UserPreferencesSection = () => {
 
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">
-          States
+          States to watch
         </label>
 
         {/* Selected States Tags */}
@@ -204,7 +204,7 @@ const UserPreferencesSection = () => {
 
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">
-          Policy Areas
+          Policy areas to watch
         </label>
 
         {/* Selected Policy Areas Tags */}

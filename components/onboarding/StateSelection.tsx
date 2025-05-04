@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { US_STATES } from '../../constants/onboarding';
 
@@ -14,9 +14,9 @@ export default function StateSelection() {
     const newSelectedStates = selectedStates.includes(stateCode)
       ? selectedStates.filter(s => s !== stateCode)
       : [...selectedStates, stateCode];
-    
+
     setSelectedStates(newSelectedStates);
-    
+
     // Then update context and save to database
     setIsSaving(true);
     try {
@@ -47,7 +47,7 @@ export default function StateSelection() {
         Select the states you want to follow. This helps us show you relevant content.
         You can always change these later.
       </p>
-      
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-8">
         {US_STATES.map((state) => (
           <button
