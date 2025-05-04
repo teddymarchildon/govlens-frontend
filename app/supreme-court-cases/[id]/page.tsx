@@ -186,7 +186,7 @@ export default function SupremeCourtCaseDetailPage() {
                           return judge ? (
                             <span key={judge.id}>
                               {judge.full_name}
-                              {index < opinion.joined_by?.length - 1 ? ', ' : ''}
+                              {index < opinion.joined_by.length - 1 ? ', ' : ''}
                             </span>
                           ) : null;
                         })}
