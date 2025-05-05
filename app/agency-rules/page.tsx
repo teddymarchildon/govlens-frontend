@@ -147,8 +147,9 @@ function AgencyRulesContent() {
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
             <option value="">All Rule Types</option>
+            <option value="Presidential Document">Presidential Document</option>
             <option value="Proposed Rule">Proposed Rule</option>
-            <option value="Final Rule">Final Rule</option>
+            <option value="Rule">Rule</option>
             <option value="Notice">Notice</option>
           </select>
         </div>

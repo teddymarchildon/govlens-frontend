@@ -10,19 +10,16 @@ import LoadingIndicator from '@/components/ui/LoadingIndicator';
 
 interface ExecutiveOrdersClientProps {
   initialOrders: AgencyDocument[];
-  initialAgencies: Array<{ id: string; name: string }>;
   initialPresidents: string[];
 }
 
-export default function ExecutiveOrdersClient({ 
-  initialOrders, 
-  initialAgencies, 
-  initialPresidents 
+export default function ExecutiveOrdersClient({
+  initialOrders,
+  initialPresidents
 }: ExecutiveOrdersClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearchQuery = searchParams.get('q') || '';
-  const currentAgency = searchParams.get('agency') || '';
   const currentStartDate = searchParams.get('start_date') || '';
   const currentEndDate = searchParams.get('end_date') || '';
   const currentSortOrder = searchParams.get('sort_order') || 'desc';
@@ -31,11 +28,9 @@ export default function ExecutiveOrdersClient({
   const [orders, setOrders] = useState<AgencyDocument[]>(initialOrders);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
-  const [selectedAgency, setSelectedAgency] = useState(currentAgency);
   const [startDate, setStartDate] = useState(currentStartDate);
   const [endDate, setEndDate] = useState(currentEndDate);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder === 'asc' ? 'asc' : 'desc');
-  const [agencies] = useState<Array<{ id: string; name: string }>>(initialAgencies);
   const [initialLoadComplete, setInitialLoadComplete] = useState(true); // Already loaded from server
   const [presidents] = useState<string[]>(initialPresidents);
   const [selectedPresident, setSelectedPresident] = useState(currentPresident);
@@ -70,10 +65,6 @@ export default function ExecutiveOrdersClient({
       if (searchQuery) {
         // Search across multiple fields
         query = query.or(`title.ilike.%${searchQuery}%,remote_document_number.ilike.%${searchQuery}%`);
-      }
-
-      if (selectedAgency) {
-        query = query.eq('agency_agencydocument.agency_id', selectedAgency);
       }
 
       if (selectedPresident) {
@@ -129,34 +120,29 @@ export default function ExecutiveOrdersClient({
   useEffect(() => {
     if (initialLoadComplete) {
       const params = new URLSearchParams();
-      
+
       if (searchQuery) params.set('q', searchQuery);
-      if (selectedAgency) params.set('agency', selectedAgency);
       if (startDate) params.set('start_date', startDate);
       if (endDate) params.set('end_date', endDate);
       if (sortOrder !== 'desc') params.set('sort_order', sortOrder);
       if (selectedPresident) params.set('president', selectedPresident);
-      
+
       const queryString = params.toString();
       const url = queryString ? `/executive-orders?${queryString}` : '/executive-orders';
       router.push(url, { scroll: false });
-      
+
       // Only fetch if any filter is applied
-      if (searchQuery || selectedAgency || startDate || endDate || sortOrder !== 'desc' || selectedPresident) {
+      if (searchQuery || startDate || endDate || sortOrder !== 'desc' || selectedPresident) {
         setLoading(true);
         resetScroll();
         fetchOrders(1);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, selectedAgency, startDate, endDate, sortOrder, selectedPresident, initialLoadComplete, router]);
+  }, [searchQuery, startDate, endDate, sortOrder, selectedPresident, initialLoadComplete, router]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-  };
-
-  const handleAgencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedAgency(e.target.value);
   };
 
   const handlePresidentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -177,7 +163,6 @@ export default function ExecutiveOrdersClient({
 
   const clearFilters = () => {
     setSearchQuery('');
-    setSelectedAgency('');
     setStartDate('');
     setEndDate('');
     setSortOrder('desc');
@@ -203,26 +188,6 @@ export default function ExecutiveOrdersClient({
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
-          <div>
-            <label htmlFor="agency" className="block text-sm font-medium text-gray-700 mb-2">
-              Agency
-            </label>
-            <select
-              id="agency"
-              value={selectedAgency}
-              onChange={handleAgencyChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">All Agencies</option>
-              {agencies.map(agency => (
-                <option key={agency.id} value={agency.id}>
-                  {agency.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div>
             <label htmlFor="president" className="block text-sm font-medium text-gray-700 mb-2">
               President
@@ -288,17 +253,12 @@ export default function ExecutiveOrdersClient({
           </div>
         </div>
 
-        {(searchQuery || selectedAgency || startDate || endDate || sortOrder !== 'desc' || selectedPresident) && (
+        {(searchQuery || startDate || endDate || sortOrder !== 'desc' || selectedPresident) && (
           <div className="mb-4 flex items-center flex-wrap">
             <div className="text-sm text-gray-600 mr-2">Active filters:</div>
             {searchQuery && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
                 Search: {searchQuery}
-              </span>
-            )}
-            {selectedAgency && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
-                Agency: {agencies.find(a => a.id === selectedAgency)?.name || selectedAgency}
               </span>
             )}
             {selectedPresident && (

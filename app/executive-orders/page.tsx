@@ -48,25 +48,6 @@ async function fetchInitialOrders() {
   }
 }
 
-async function fetchAgencies() {
-  try {
-    const { data, error } = await supabaseServer
-      .from('agency')
-      .select('id, name')
-      .order('name');
-
-    if (error) {
-      console.error('Error fetching agencies:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching agencies:', error);
-    return [];
-  }
-}
-
 async function fetchPresidents() {
   try {
     const { data, error } = await supabaseServer
@@ -91,9 +72,8 @@ async function fetchPresidents() {
 
 export default async function ExecutiveOrdersPage() {
   // Fetch initial data on the server
-  const [initialOrders, agencies, presidents] = await Promise.all([
+  const [initialOrders, presidents] = await Promise.all([
     fetchInitialOrders(),
-    fetchAgencies(),
     fetchPresidents()
   ]);
 
@@ -103,7 +83,6 @@ export default async function ExecutiveOrdersPage() {
     </div>}>
       <ExecutiveOrdersClient
         initialOrders={initialOrders}
-        initialAgencies={agencies}
         initialPresidents={presidents}
       />
     </Suspense>

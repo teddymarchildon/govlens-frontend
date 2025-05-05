@@ -33,7 +33,6 @@ export default function AgencyRuleDetailPage() {
           )
         `)
         .eq('id', id)
-        .eq('type', 'Rule')
         .single();
 
       if (error) {

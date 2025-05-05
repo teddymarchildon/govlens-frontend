@@ -563,6 +563,7 @@ export const getAgencyRules = async (params: {
   agencyId?: string;
   limit?: number;
   type?: string;
+  subtype?: string;
   search?: string;
   start_date?: string;
   end_date?: string;
@@ -578,7 +579,6 @@ export const getAgencyRules = async (params: {
           agency:agency(*)
         )
       `)
-      .eq('type', 'Rule')
       .order('publication_date', { ascending: params.sort_order === 'asc' });
 
     // Apply limit if provided
@@ -588,7 +588,12 @@ export const getAgencyRules = async (params: {
 
     // Filter by type if provided
     if (params.type) {
-      query = query.eq('subtype', params.type);
+      query = query.eq('type', params.type);
+    }
+
+    // Filter by subtype if provided
+    if (params.subtype) {
+      query = query.eq('subtype', params.subtype);
     }
 
     // Search by title if provided

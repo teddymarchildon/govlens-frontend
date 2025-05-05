@@ -5,7 +5,20 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import BillCard from '../components/BillCard';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../components/CongressmanSearchSelect';
-import { Bill, Congressman } from '../types/types';
+import { Bill, Congressman, UserPreferences, SavedBill, SavedCongressman, SavedJudge, SavedAgency, SavedAgencyDocument, SavedCluster, AgencyDocument } from '../types/types';
+import { useAuth } from '../contexts/AuthContext';
+import Link from 'next/link';
+import {
+  getSavedBills,
+  getSavedCongressmen,
+  getSavedJudges,
+  getSavedAgencies,
+  getSavedAgencyDocuments,
+  getSavedClusters,
+  getUserPreferences,
+  getBills,
+  getAgencyRules
+} from '../services/api';
 
 // Define policy areas based on the backend model
 const POLICY_AREAS = [
@@ -32,14 +45,82 @@ const POLICY_AREAS = [
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
   const currentPolicyArea = searchParams.get('policy_area');
 
+  // State for logged-out experience
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPolicyArea, setSelectedPolicyArea] = useState(currentPolicyArea || '');
   const [selectedSponsor, setSelectedSponsor] = useState<Congressman | null>(null);
   const congressmanSearchRef = useRef<CongressmanSearchSelectRef>(null);
 
+  // State for logged-in experience
+  const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
+  const [savedBills, setSavedBills] = useState<SavedBill[]>([]);
+  const [savedCongressmen, setSavedCongressmen] = useState<SavedCongressman[]>([]);
+  const [savedJudges, setSavedJudges] = useState<SavedJudge[]>([]);
+  const [savedAgencies, setSavedAgencies] = useState<SavedAgency[]>([]);
+  const [savedAgencyDocuments, setSavedAgencyDocuments] = useState<SavedAgencyDocument[]>([]);
+  const [savedClusters, setSavedClusters] = useState<SavedCluster[]>([]);
+  const [recentExecutiveOrders, setRecentExecutiveOrders] = useState<AgencyDocument[]>([]);
+  const [activeTab, setActiveTab] = useState('bills');
+
+  // Fetch user data when logged in
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+
+      try {
+        // Fetch user preferences
+        const preferences = await getUserPreferences(user.id);
+        setUserPreferences(preferences);
+
+        // Fetch saved items
+        const [bills, congressmen, judges, agencies, agencyDocs, clusters] = await Promise.all([
+          getSavedBills(user.id),
+          getSavedCongressmen(user.id),
+          getSavedJudges(user.id),
+          getSavedAgencies(user.id),
+          getSavedAgencyDocuments(user.id),
+          getSavedClusters(user.id)
+        ]);
+
+        setSavedBills(bills);
+        setSavedCongressmen(congressmen);
+        setSavedJudges(judges);
+        setSavedAgencies(agencies);
+        setSavedAgencyDocuments(agencyDocs);
+        setSavedClusters(clusters);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    if (user) {
+      fetchUserData();
+    }
+  }, [user]);
+
+  // Fetch recent executive orders
+  useEffect(() => {
+    const fetchExecutiveOrders = async () => {
+      try {
+        const orders = await getAgencyRules({
+          subtype: 'Executive Order',
+          limit: 5,
+          sort_order: 'desc'
+        });
+        setRecentExecutiveOrders(orders);
+      } catch (error) {
+        console.error('Error fetching executive orders:', error);
+      }
+    };
+
+    fetchExecutiveOrders();
+  }, []);
+
+  // Fetch bills for logged-out experience
   useEffect(() => {
     const fetchBills = async () => {
       setLoading(true);
@@ -89,8 +170,10 @@ function HomeContent() {
       }
     };
 
-    fetchBills();
-  }, [selectedPolicyArea, selectedSponsor]);
+    if (!user) {
+      fetchBills();
+    }
+  }, [selectedPolicyArea, selectedSponsor, user]);
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -121,6 +204,303 @@ function HomeContent() {
     router.push('/');
   };
 
+  // Render logged-in user experience
+  if (user) {
+    const totalSavedItems =
+      savedBills.length +
+      savedCongressmen.length +
+      savedJudges.length +
+      savedAgencies.length +
+      savedAgencyDocuments.length +
+      savedClusters.length;
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
+          <h1 className="text-2xl font-bold mb-2">Welcome back{user.user_metadata?.name ? `, ${user.user_metadata.name}` : ''}!</h1>
+          <p className="mb-4">You&apos;re tracking {totalSavedItems} items across GovLens.</p>
+          {userPreferences && (!userPreferences.policy_areas || userPreferences.policy_areas.length === 0) && (
+            <Link href="/profile" className="inline-flex items-center px-4 py-2 bg-white text-blue-700 rounded-md font-medium hover:bg-blue-50 transition-colors">
+              Complete your profile
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+        </div>
+
+        {/* Your Policy Areas */}
+        {userPreferences && userPreferences.policy_areas && userPreferences.policy_areas.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Your Policy Areas</h2>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {userPreferences.policy_areas.map((area) => (
+                <Link
+                  key={area}
+                  href={`/bills?policy_area=${encodeURIComponent(area)}`}
+                  className="px-3 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+                >
+                  {area}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Your Saved Items */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Your Saved Items</h2>
+
+          {/* Tabs */}
+          <div className="border-b border-gray-200 mb-4">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('bills')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'bills'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Bills ({savedBills.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('congressmen')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'congressmen'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Congressmen ({savedCongressmen.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('judges')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'judges'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Judges ({savedJudges.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('agencies')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'agencies'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Agencies ({savedAgencies.length})
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div>
+            {activeTab === 'bills' && (
+              <>
+                {savedBills.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedBills.map((savedBill) => (
+                      savedBill.bill && <BillCard key={savedBill.id} bill={savedBill.bill} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <p className="text-gray-700">You haven&apos;t saved any bills yet.</p>
+                    <Link href="/bills" className="text-blue-600 hover:underline mt-2 inline-block">
+                      Browse bills
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'congressmen' && (
+              <>
+                {savedCongressmen.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedCongressmen.map((saved) => (
+                      saved.congressman && (
+                        <div key={saved.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
+                          <div className="p-4 h-full flex flex-col">
+                            <Link
+                              href={`/congressmen/${saved.congressman.id}`}
+                              className="block mb-2 hover:text-blue-600 transition-colors"
+                            >
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {saved.congressman.full_name}
+                              </h3>
+                            </Link>
+                            <div className="text-sm text-gray-600 mb-2">
+                              {saved.congressman.party} - {saved.congressman.state}
+                              {saved.congressman.district && `, District ${saved.congressman.district}`}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-auto">
+                              {saved.congressman.chamber === 'House' ? 'Representative' : 'Senator'}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <p className="text-gray-700">You haven&apos;t saved any congressmen yet.</p>
+                    <Link href="/congressmen" className="text-blue-600 hover:underline mt-2 inline-block">
+                      Browse congressmen
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'judges' && (
+              <>
+                {savedJudges.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedJudges.map((saved) => (
+                      saved.judge && (
+                        <div key={saved.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
+                          <div className="p-4 h-full flex flex-col">
+                            <Link
+                              href={`/judges/${saved.judge.id}`}
+                              className="block mb-2 hover:text-blue-600 transition-colors"
+                            >
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {saved.judge.full_name}
+                              </h3>
+                            </Link>
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <p className="text-gray-700">You haven&apos;t saved any judges yet.</p>
+                    <Link href="/judges" className="text-blue-600 hover:underline mt-2 inline-block">
+                      Browse judges
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'agencies' && (
+              <>
+                {savedAgencies.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savedAgencies.map((saved) => (
+                      saved.agency && (
+                        <div key={saved.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
+                          <div className="p-4 h-full flex flex-col">
+                            <Link
+                              href={`/agencies/${saved.agency.id}`}
+                              className="block mb-2 hover:text-blue-600 transition-colors"
+                            >
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {saved.agency.name}
+                              </h3>
+                            </Link>
+                            {saved.agency.description && (
+                              <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                {saved.agency.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <p className="text-gray-700">You haven&apos;t saved any agencies yet.</p>
+                    <Link href="/agencies" className="text-blue-600 hover:underline mt-2 inline-block">
+                      Browse agencies
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Executive Orders */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Recent Executive Orders</h2>
+            <Link href="/executive-orders" className="text-sm text-blue-600 hover:underline">
+              View all
+            </Link>
+          </div>
+
+          {recentExecutiveOrders.length > 0 ? (
+            <div className="space-y-4">
+              {recentExecutiveOrders.map((order) => (
+                <div key={order.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Link
+                        href={`/executive-orders/${order.id}`}
+                        className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                      >
+                        {order.title}
+                      </Link>
+                      <div className="mt-1 text-sm text-gray-600">
+                        {order.signing_date && (
+                          <span>Signed on {new Date(order.signing_date).toLocaleDateString()}</span>
+                        )}
+                        {order.president && (
+                          <span> by President {order.president}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-shrink-0">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        Executive Order
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+              <p className="text-gray-700">No recent executive orders found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Legislative Updates */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Legislative Updates</h2>
+
+          {savedBills.length > 0 ? (
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <p className="text-gray-700">
+                  Stay tuned for updates on your saved bills. We&apos;ll show status changes and new cosponsors here.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+              <p className="text-gray-700">Save bills to see legislative updates here.</p>
+              <Link href="/bills" className="text-blue-600 hover:underline mt-2 inline-block">
+                Browse bills
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Render logged-out experience
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Federal Bills & Proposals</h1>
