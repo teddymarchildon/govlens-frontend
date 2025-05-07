@@ -33,7 +33,7 @@ export default function JudgeDetailPage() {
         // Fetch opinions authored by this judge using the API service
         const opinionData = await getCourtOpinions({
           author_id: judgeId,
-          limit: 10
+          limit: 10,
         });
 
         setOpinions(opinionData || []);
@@ -90,35 +90,6 @@ export default function JudgeDetailPage() {
           </h1>
           <SaveButton itemId={judge.id} itemType="judge" />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-3 text-gray-700">Personal Information</h2>
-            <div className="space-y-2">
-              <p className="text-gray-600">
-                <span className="font-medium">First Name:</span> {judge.first_name}
-              </p>
-              {judge.middle_name && (
-                <p className="text-gray-600">
-                  <span className="font-medium">Middle Name:</span> {judge.middle_name}
-                </p>
-              )}
-              <p className="text-gray-600">
-                <span className="font-medium">Last Name:</span> {judge.last_name}
-              </p>
-              {judge.suffix && (
-                <p className="text-gray-600">
-                  <span className="font-medium">Suffix:</span> {judge.suffix}
-                </p>
-              )}
-              {judge.remote_id && (
-                <p className="text-gray-600">
-                  <span className="font-medium">Remote ID:</span> {judge.remote_id}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="mb-8">
@@ -126,20 +97,51 @@ export default function JudgeDetailPage() {
         {opinions.length > 0 ? (
           <div className="space-y-4">
             {opinions.map((opinion) => (
-              <div key={opinion.id} className="bg-white rounded-lg shadow-md p-4">
-                <div className="flex justify-between">
-                  <h3 className="text-lg font-semibold">
-                    {opinion.cluster?.case_name || 'Unnamed Case'}
-                  </h3>
-                  <span className="text-sm text-gray-500">
-                    {new Date(opinion.date).toLocaleDateString()}
-                  </span>
+              <div key={opinion.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {opinion.cluster?.case_name || 'Unnamed Case'}
+                    </h3>
+                    {opinion.cluster?.case_name_short && opinion.cluster.case_name_short !== opinion.cluster.case_name && (
+                      <p className="text-sm text-gray-600">{opinion.cluster.case_name_short}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center mt-2 md:mt-0">
+                    {opinion.type && (
+                      <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 mr-2">
+                        {opinion.type.charAt(0).toUpperCase() + opinion.type.slice(1)}
+                      </span>
+                    )}
+                    <span className="text-sm text-gray-500">
+                      {new Date(opinion.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
                 </div>
-                {opinion.court && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {opinion.court.full_name}
-                  </p>
-                )}
+
+                <div className="mt-2">
+                  {opinion.court && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Court:</span> {opinion.court.full_name}
+                    </p>
+                  )}
+
+                  {opinion.joined_by && opinion.joined_by.length > 0 && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="font-medium">Joined by:</span>{' '}
+                      {opinion.joined_by.map((judge, index) => (
+                        <span key={judge.id}>
+                          {judge.full_name}
+                          {index < opinion.joined_by.length - 1 ? ', ' : ''}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
