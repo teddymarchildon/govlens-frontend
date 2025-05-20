@@ -61,15 +61,13 @@ function HomeContent() {
   const [savedBills, setSavedBills] = useState<SavedBill[]>([]);
   const [savedCongressmen, setSavedCongressmen] = useState<SavedCongressman[]>([]);
   const [savedJudges, setSavedJudges] = useState<SavedJudge[]>([]);
-  const [savedAgencies, setSavedAgencies] = useState<SavedAgency[]>([]);
-  const [savedAgencyDocuments, setSavedAgencyDocuments] = useState<SavedAgencyDocument[]>([]);
-  const [savedClusters, setSavedClusters] = useState<SavedCluster[]>([]);
+  const [savedAgencies, setSavedAgencies] = useState<SavedAgency[]>([])
   const [recentExecutiveOrders, setRecentExecutiveOrders] = useState<AgencyDocument[]>([]);
   const [activeTab, setActiveTab] = useState('bills');
 
   // State for recent legislation
   const [recentBills, setRecentBills] = useState<Bill[]>([]);
-  const [recentLaws, setRecentLaws] = useState<Bill[]>([]); // Using Bill type as it contains law fields
+  const [recentLaws, setRecentLaws] = useState<Law[]>([]);
   const [recentLegislationLoading, setRecentLegislationLoading] = useState(false);
 
   // Fetch user data when logged in
@@ -83,21 +81,17 @@ function HomeContent() {
         setUserPreferences(preferences);
 
         // Fetch saved items
-        const [bills, congressmen, judges, agencies, agencyDocs, clusters] = await Promise.all([
+        const [bills, congressmen, judges, agencies] = await Promise.all([
           getSavedBills(user.id),
           getSavedCongressmen(user.id),
           getSavedJudges(user.id),
           getSavedAgencies(user.id),
-          getSavedAgencyDocuments(user.id),
-          getSavedClusters(user.id)
         ]);
 
         setSavedBills(bills);
         setSavedCongressmen(congressmen);
         setSavedJudges(judges);
         setSavedAgencies(agencies);
-        setSavedAgencyDocuments(agencyDocs);
-        setSavedClusters(clusters);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
