@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import BillCard from '../components/BillCard';
+import LawCard from '../components/LawCard';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../components/CongressmanSearchSelect';
-import { Bill, Congressman, UserPreferences, SavedBill, SavedCongressman, SavedJudge, SavedAgency, SavedAgencyDocument, SavedCluster, AgencyDocument } from '../types/types';
+import { Bill, Congressman, UserPreferences, SavedBill, SavedCongressman, SavedJudge, SavedAgency, SavedAgencyDocument, SavedCluster, AgencyDocument, Law } from '../types/types';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
 import {
@@ -66,6 +67,11 @@ function HomeContent() {
   const [recentExecutiveOrders, setRecentExecutiveOrders] = useState<AgencyDocument[]>([]);
   const [activeTab, setActiveTab] = useState('bills');
 
+  // State for recent legislation
+  const [recentBills, setRecentBills] = useState<Bill[]>([]);
+  const [recentLaws, setRecentLaws] = useState<Bill[]>([]); // Using Bill type as it contains law fields
+  const [recentLegislationLoading, setRecentLegislationLoading] = useState(false);
+
   // Fetch user data when logged in
   useEffect(() => {
     const fetchUserData = async () => {
@@ -120,60 +126,84 @@ function HomeContent() {
     fetchExecutiveOrders();
   }, []);
 
-  // Fetch bills for logged-out experience
+  // Fetch bills when policy area changes
   useEffect(() => {
     const fetchBills = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('bill').select('*');
+        // Build query parameters
+        const params: any = { limit: 12 };
 
-        // Apply policy area filter if selected
         if (selectedPolicyArea) {
-          query = query.eq('policy_area', selectedPolicyArea);
+          params.policy_area = selectedPolicyArea;
         }
 
-        // Apply sponsor filter if selected
         if (selectedSponsor) {
-          // First get the bill IDs sponsored by this congressman
-          const { data: sponsoredBills, error: sponsorError } = await supabase
-            .from('sponsored_bills')
-            .select('bill_id')
-            .eq('congressman_id', selectedSponsor.id);
-
-          if (sponsorError) throw sponsorError;
-
-          // If there are sponsored bills, filter the query
-          if (sponsoredBills && sponsoredBills.length > 0) {
-            const billIds = sponsoredBills.map(item => item.bill_id);
-            query = query.in('id', billIds);
-          } else {
-            // If no bills are sponsored by this congressman, return empty array
-            setBills([]);
-            setLoading(false);
-            return;
-          }
+          params.sponsor_id = selectedSponsor.id;
         }
 
-        // Limit the number of results
-        query = query.limit(25);
-
-        // Execute the query
-        const { data, error } = await query;
-        if (error) throw error;
-
-        setBills(data || []);
+        // Fetch bills with filters
+        const data = await getBills(params);
+        setBills(data);
       } catch (error) {
         console.error('Error fetching bills:', error);
-        setBills([]);
       } finally {
         setLoading(false);
       }
     };
 
+    // Only fetch for logged-out experience
     if (!user) {
       fetchBills();
     }
-  }, [selectedPolicyArea, selectedSponsor, user]);
+
+    // Update URL with filters
+    if (selectedPolicyArea || selectedSponsor) {
+      const params = new URLSearchParams();
+      if (selectedPolicyArea) params.set('policy_area', selectedPolicyArea);
+      if (selectedSponsor) params.set('sponsor_id', selectedSponsor.id.toString());
+      router.push(`/?${params.toString()}`, { scroll: false });
+    } else {
+      router.push('/', { scroll: false });
+    }
+  }, [selectedPolicyArea, selectedSponsor, router, user]);
+
+  // Fetch recent legislation in user's policy areas
+  useEffect(() => {
+    const fetchRecentLegislation = async () => {
+      if (!user || !userPreferences || !userPreferences.policy_areas || userPreferences.policy_areas.length === 0) return;
+
+      setRecentLegislationLoading(true);
+      try {
+        // Fetch recently introduced bills (up to 4)
+        const recentBillsData = await getBills({
+          limit: 4,
+          policy_area: userPreferences.policy_areas.length > 0 ? userPreferences.policy_areas : undefined
+        });
+
+        // Fetch recently enacted laws (up to 4)
+        // We're using the getBills function but filtering for bills that have been enacted into law
+        const { data: recentLawsData, error } = await supabase
+          .from('bill')
+          .select('*')
+          .not('law_enacted_date', 'is', null)
+          .in('policy_area', userPreferences.policy_areas)
+          .order('law_enacted_date', { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+
+        setRecentBills(recentBillsData);
+        setRecentLaws(recentLawsData);
+      } catch (error) {
+        console.error('Error fetching recent legislation:', error);
+      } finally {
+        setRecentLegislationLoading(false);
+      }
+    };
+
+    fetchRecentLegislation();
+  }, [user, userPreferences]);
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -206,20 +236,12 @@ function HomeContent() {
 
   // Render logged-in user experience
   if (user) {
-    const totalSavedItems =
-      savedBills.length +
-      savedCongressmen.length +
-      savedJudges.length +
-      savedAgencies.length +
-      savedAgencyDocuments.length +
-      savedClusters.length;
-
     return (
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
           <h1 className="text-2xl font-bold mb-2">Welcome back{user.user_metadata?.name ? `, ${user.user_metadata.name}` : ''}!</h1>
-          <p className="mb-4">You&apos;re tracking {totalSavedItems} items across GovLens.</p>
+          <p className="mb-4">See what&apos;s new</p>
           {userPreferences && (!userPreferences.policy_areas || userPreferences.policy_areas.length === 0) && (
             <Link href="/profile" className="inline-flex items-center px-4 py-2 bg-white text-blue-700 rounded-md font-medium hover:bg-blue-50 transition-colors">
               Complete your profile
@@ -230,23 +252,47 @@ function HomeContent() {
           )}
         </div>
 
-        {/* Your Policy Areas */}
-        {userPreferences && userPreferences.policy_areas && userPreferences.policy_areas.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Your Policy Areas</h2>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {userPreferences.policy_areas.map((area) => (
-                <Link
-                  key={area}
-                  href={`/bills?policy_area=${encodeURIComponent(area)}`}
-                  className="px-3 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
-                >
-                  {area}
-                </Link>
-              ))}
+        {/* Recent Legislation in Your Policy Areas */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Recent legislation in your policy areas</h2>
+          {userPreferences?.policy_areas && userPreferences.policy_areas.length > 0 ? (
+            recentLegislationLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-xl">Loading...</div>
+              </div>
+            ) : (
+              <div>
+                {recentBills.length > 0 || recentLaws.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Recently Introduced Bills */}
+                    {recentBills.map((bill) => (
+                      <BillCard key={`bill-${bill.id}`} bill={bill} />
+                    ))}
+
+                    {/* Recently Enacted Laws */}
+                    {recentLaws.map((law) => (
+                      <LawCard key={`law-${law.id}`} law={law as Law} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <p className="text-gray-700">No recent legislation found in your policy areas.</p>
+                    <Link href="/bills" className="text-blue-600 hover:underline mt-2 inline-block">
+                      Browse all bills
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+              <p className="text-gray-700">You haven&apos;t selected any policy areas yet.</p>
+              <Link href="/profile" className="text-blue-600 hover:underline mt-2 inline-block">
+                Update preferences
+              </Link>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Your Saved Items */}
         <div className="mb-8">

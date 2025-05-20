@@ -10,6 +10,12 @@ export interface Bill {
   law_enacted_date?: string;
   sponsor?: { congressman: Congressman }
   cosponsors?: ({ congressman: Congressman }[])
+  most_recent_action?: {
+    id: string;
+    date: string;
+    text: string;
+    type: string;
+  } | null;
 }
 
 export interface BillText {

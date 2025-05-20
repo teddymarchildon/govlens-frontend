@@ -17,7 +17,19 @@ export const getStoragePublicUrl = (bucket: string, path: string): string | null
 
 // Bills API
 export const getBills = async (params: any = {}) => {
-  let query = supabase.from('bill').select('*');
+  // Enhanced query to include sponsor information and most recent action
+  let query = supabase.from('bill').select(`
+    *,
+    sponsor:sponsored_bills!bill_id(
+      congressman:congressman(*)
+    ),
+    actions:bill_action!bill_id(
+      id,
+      date,
+      text,
+      type
+    )
+  `);
 
   if (params.limit) {
     query = query.limit(params.limit);
@@ -50,7 +62,26 @@ export const getBills = async (params: any = {}) => {
   const { data, error } = await query;
 
   if (error) throw error;
-  return data;
+
+  // Process the data to include the most recent action and format sponsor
+  return data.map(bill => {
+    // Sort actions by date (descending) and get the most recent one
+    const sortedActions = bill.actions ?
+      [...bill.actions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) :
+      [];
+
+    return {
+      ...bill,
+      // Format sponsor to match the expected structure in BillCard
+      sponsor: bill.sponsor && bill.sponsor.length > 0 ?
+        { congressman: bill.sponsor[0].congressman } :
+        undefined,
+      // Add most recent action
+      most_recent_action: sortedActions.length > 0 ? sortedActions[0] : null,
+      // Remove the actions array to keep the response clean
+      actions: undefined
+    };
+  });
 };
 
 export const getBillById = async (billId: string): Promise<Bill> => {
@@ -63,6 +94,12 @@ export const getBillById = async (billId: string): Promise<Bill> => {
       ),
       cosponsors:cosponsored_bills!bill_id(
         congressman:congressman(*)
+      ),
+      actions:bill_action!bill_id(
+        id,
+        date,
+        text,
+        type
       )
     `)
     .eq('id', billId)
@@ -70,11 +107,18 @@ export const getBillById = async (billId: string): Promise<Bill> => {
 
   if (error) throw error;
 
+  // Sort actions by date (descending) and get the most recent one
+  const sortedActions = data.actions ?
+    [...data.actions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) :
+    [];
+
   // Transform data to match the Bill interface
   return {
     ...data,
     sponsor: data.sponsor && data.sponsor.length > 0 ? data.sponsor[0] : undefined,
-    cosponsors: data.cosponsors || []
+    cosponsors: data.cosponsors || [],
+    most_recent_action: sortedActions.length > 0 ? sortedActions[0] : null,
+    actions: undefined
   } as Bill;
 };
 

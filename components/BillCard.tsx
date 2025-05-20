@@ -10,35 +10,40 @@ interface BillCardProps {
 }
 
 export default function BillCard({ bill }: BillCardProps) {
-  const [sponsor, setSponsor] = useState<Congressman | null>(null);
   const [loading, setLoading] = useState(true);
+  // Use pre-loaded data if available, otherwise initialize as null
+  const [sponsor, setSponsor] = useState<Congressman | null>(bill.sponsor?.congressman || null);
+  // Use pre-loaded most recent action if available
+  const [mostRecentAction, setMostRecentAction] = useState(bill.most_recent_action || null);
 
   // Format bill identifier (e.g., HR. 2139)
   const billIdentifier = `${bill.type.toUpperCase()}. ${bill.number}`;
 
   useEffect(() => {
+    // Only fetch sponsor if not already available in the bill data
     const fetchSponsor = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('sponsored_bills')
-          .select('congressman_id, congressman:congressman(*)')
-          .eq('bill_id', bill.id)
-          .limit(1);
+      if (!bill.sponsor) {
+        try {
+          const { data, error } = await supabase
+            .from('sponsored_bills')
+            .select('congressman_id, congressman:congressman(*)')
+            .eq('bill_id', bill.id)
+            .limit(1);
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (data && data.length > 0) {
-          setSponsor(data[0].congressman as unknown as Congressman);
+          if (data && data.length > 0) {
+            setSponsor(data[0].congressman as unknown as Congressman);
+          }
+        } catch (error) {
+          console.error('Error fetching sponsor:', error);
         }
-      } catch (error) {
-        console.error('Error fetching sponsor:', error);
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
 
     fetchSponsor();
-  }, [bill.id]);
+  }, [bill.id, bill.sponsor]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-full hover:shadow-md transition-shadow duration-200">
@@ -81,6 +86,12 @@ export default function BillCard({ bill }: BillCardProps) {
           {bill.introduced_date && (
             <div className="text-xs text-gray-500">
               <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
+            </div>
+          )}
+          
+          {mostRecentAction && mostRecentAction.date && (
+            <div className="text-xs text-gray-500 mt-1">
+              <span className="font-medium">Latest Action:</span> {new Date(mostRecentAction.date).toLocaleDateString()}
             </div>
           )}
         </div>
