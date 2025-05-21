@@ -277,7 +277,12 @@ function HomeContent() {
 
         {/* Recent Legislation in Your Policy Areas */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Legislative updates in your policy areas</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Legislative updates in your policy areas</h2>
+            <Link href="/bills" className="text-sm text-blue-600 hover:underline">
+              View all legislation
+            </Link>
+          </div>
           {userPreferences?.policy_areas && userPreferences.policy_areas.length > 0 ? (
             recentLegislationLoading ? (
               <div className="flex justify-center items-center h-64">
