@@ -169,26 +169,55 @@ function HomeContent() {
 
       setRecentLegislationLoading(true);
       try {
-        // Fetch recently introduced bills (up to 4)
-        const recentBillsData = await getBills({
-          limit: 4,
-          policy_area: userPreferences.policy_areas.length > 0 ? userPreferences.policy_areas : undefined
-        });
-
-        // Fetch recently enacted laws (up to 4)
-        // We're using the getBills function but filtering for bills that have been enacted into law
-        const { data: recentLawsData, error } = await supabase
+        // Make a single query to fetch all recent legislation (both bills and laws)
+        // with their actions and sponsor information
+        const { data: recentLegislationData, error } = await supabase
           .from('bill')
-          .select('*')
-          .not('law_enacted_date', 'is', null)
+          .select(`
+            *,
+            sponsor:sponsored_bills!bill_id(
+              congressman:congressman(*)
+            ),
+            actions:bill_action!bill_id(
+              id,
+              date,
+              text,
+              type
+            )
+          `)
           .in('policy_area', userPreferences.policy_areas)
-          .order('law_enacted_date', { ascending: false })
-          .limit(4);
+          .order('introduced_date', { ascending: false })
+          .limit(8); // Fetch more items since we'll be splitting them
 
         if (error) throw error;
 
-        setRecentBills(recentBillsData);
-        setRecentLaws(recentLawsData);
+        // Process all legislation data to include the most recent action and format sponsor
+        const processedLegislationData = recentLegislationData.map(item => {
+          // Sort actions by date (descending) and get the most recent one
+          const sortedActions = item.actions ?
+            [...item.actions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) :
+            [];
+
+          return {
+            ...item,
+            // Format sponsor to match the expected structure
+            sponsor: item.sponsor && item.sponsor.length > 0 ?
+              item.sponsor[0].congressman :
+              undefined,
+            // Add most recent action
+            most_recent_action: sortedActions.length > 0 ? sortedActions[0] : null,
+            // Remove the actions array to keep the response clean
+            actions: undefined
+          };
+        });
+
+        // Separate bills and laws based on whether law_enacted_date is null
+        const bills = processedLegislationData.filter(item => !item.law_enacted_date);
+        const laws = processedLegislationData.filter(item => item.law_enacted_date);
+
+        // Set the data
+        setRecentBills(bills);
+        setRecentLaws(laws);
       } catch (error) {
         console.error('Error fetching recent legislation:', error);
       } finally {
@@ -248,7 +277,7 @@ function HomeContent() {
 
         {/* Recent Legislation in Your Policy Areas */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Recent legislation in your policy areas</h2>
+          <h2 className="text-xl font-semibold mb-4">Legislative updates in your policy areas</h2>
           {userPreferences?.policy_areas && userPreferences.policy_areas.length > 0 ? (
             recentLegislationLoading ? (
               <div className="flex justify-center items-center h-64">
@@ -258,15 +287,23 @@ function HomeContent() {
               <div>
                 {recentBills.length > 0 || recentLaws.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Recently Introduced Bills */}
-                    {recentBills.map((bill) => (
-                      <BillCard key={`bill-${bill.id}`} bill={bill} />
-                    ))}
-
-                    {/* Recently Enacted Laws */}
-                    {recentLaws.map((law) => (
-                      <LawCard key={`law-${law.id}`} law={law as Law} />
-                    ))}
+                    {/* Combined and sorted bills and laws by most recent action date */}
+                    {[
+                      ...recentBills.map(bill => ({ type: 'bill', data: bill })),
+                      ...recentLaws.map(law => ({ type: 'law', data: law as Law }))
+                    ]
+                      .sort((a, b) => {
+                        // Get the action dates or default to a very old date if no action
+                        const dateA = a.data.most_recent_action?.date ? new Date(a.data.most_recent_action.date).getTime() : 0;
+                        const dateB = b.data.most_recent_action?.date ? new Date(b.data.most_recent_action.date).getTime() : 0;
+                        return dateB - dateA; // Sort descending (newest first)
+                      })
+                      .map(item => (
+                        item.type === 'bill' ?
+                          <BillCard key={`bill-${item.data.id}`} bill={item.data as Bill} /> :
+                          <LawCard key={`law-${item.data.id}`} law={item.data as Law} />
+                      ))
+                    }
                   </div>
                 ) : (
                   <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
@@ -511,28 +548,6 @@ function HomeContent() {
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
               <p className="text-gray-700">No recent executive orders found.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Legislative Updates */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Legislative Updates</h2>
-
-          {savedBills.length > 0 ? (
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <p className="text-gray-700">
-                  Stay tuned for updates on your saved bills. We&apos;ll show status changes and new cosponsors here.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
-              <p className="text-gray-700">Save bills to see legislative updates here.</p>
-              <Link href="/bills" className="text-blue-600 hover:underline mt-2 inline-block">
-                Browse bills
-              </Link>
             </div>
           )}
         </div>

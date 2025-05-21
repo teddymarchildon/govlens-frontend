@@ -44,6 +44,12 @@ export interface Law {
   law_unique_id: string;
   law_title: string;
   sponsor: Congressman;
+  most_recent_action?: {
+    id: string;
+    date: string;
+    text: string;
+    type: string;
+  } | null;
 }
 
 export interface LawText {

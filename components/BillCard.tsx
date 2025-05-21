@@ -10,11 +10,8 @@ interface BillCardProps {
 }
 
 export default function BillCard({ bill }: BillCardProps) {
-  const [loading, setLoading] = useState(true);
   // Use pre-loaded data if available, otherwise initialize as null
   const [sponsor, setSponsor] = useState<Congressman | null>(bill.sponsor?.congressman || null);
-  // Use pre-loaded most recent action if available
-  const [mostRecentAction, setMostRecentAction] = useState(bill.most_recent_action || null);
 
   // Format bill identifier (e.g., HR. 2139)
   const billIdentifier = `${bill.type.toUpperCase()}. ${bill.number}`;
@@ -39,7 +36,6 @@ export default function BillCard({ bill }: BillCardProps) {
           console.error('Error fetching sponsor:', error);
         }
       }
-      setLoading(false);
     };
 
     fetchSponsor();
@@ -88,10 +84,10 @@ export default function BillCard({ bill }: BillCardProps) {
               <span className="font-medium">Introduced:</span> {new Date(bill.introduced_date).toLocaleDateString()}
             </div>
           )}
-          
-          {mostRecentAction && mostRecentAction.date && (
+
+          {bill.most_recent_action && bill.most_recent_action.date && (
             <div className="text-xs text-gray-500 mt-1">
-              <span className="font-medium">Latest Action:</span> {new Date(mostRecentAction.date).toLocaleDateString()}
+              <span className="font-medium">Latest Action:</span> {new Date(bill.most_recent_action.date).toLocaleDateString()}
             </div>
           )}
         </div>
