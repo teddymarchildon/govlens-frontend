@@ -10,7 +10,7 @@ function AgencyRulesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentAgencyId = searchParams.get('agency_id') || '';
-  const currentRuleType = searchParams.get('rule_type') || '';
+  const currentRuleType = searchParams.get('type') || ''; // Changed from 'rule_type' to 'type' to match API parameter
   const currentSearchQuery = searchParams.get('search') || '';
   const currentStartDate = searchParams.get('start_date') || '';
   const currentEndDate = searchParams.get('end_date') || '';
@@ -43,7 +43,7 @@ function AgencyRulesContent() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (selectedAgencyId) params.set('agency_id', selectedAgencyId);
-    if (ruleType) params.set('rule_type', ruleType);
+    if (ruleType) params.set('type', ruleType); // Changed from 'rule_type' to 'type' to match API parameter
     if (searchQuery) params.set('search', searchQuery);
     if (startDate) params.set('start_date', startDate);
     if (endDate) params.set('end_date', endDate);
@@ -59,6 +59,15 @@ function AgencyRulesContent() {
     const fetchRules = async () => {
       setLoading(true);
       try {
+        console.log('Fetching rules with filters:', {
+          agencyId: selectedAgencyId,
+          type: ruleType,
+          search: searchQuery,
+          start_date: startDate,
+          end_date: endDate,
+          sort_order: sortOrder
+        });
+
         const data = await getAgencyRules({
           agencyId: selectedAgencyId || undefined,
           type: ruleType || undefined,
@@ -69,6 +78,8 @@ function AgencyRulesContent() {
           limit: 50,
           excludeExecutiveOrders: true // Always exclude Executive Orders
         });
+
+        console.log(`Fetched ${data?.length || 0} rules`);
         setRules(data || []);
       } catch (error) {
         console.error('Error fetching rules:', error);
