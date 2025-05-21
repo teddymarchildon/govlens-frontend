@@ -27,6 +27,19 @@ export default function AgencyRuleCard({ rule }: AgencyRuleCardProps) {
             {rule.title}
           </h3>
         </Link>
+        
+        <div className="flex flex-wrap gap-2 mb-2">
+          {rule.type && (
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+              {rule.type}
+            </span>
+          )}
+          {rule.subtype && (
+            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+              {rule.subtype}
+            </span>
+          )}
+        </div>
 
         {rule.abstract && (
           <p className="text-sm text-gray-600 mb-2 line-clamp-2">

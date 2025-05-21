@@ -149,6 +149,7 @@ export interface AgencyDocument {
   signing_date?: string;
   subtype?: string;
   president?: string;
+  agency?: Agency;
 }
 
 export interface Court {

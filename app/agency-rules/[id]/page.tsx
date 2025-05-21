@@ -28,7 +28,9 @@ export default function AgencyRuleDetailPage() {
           html_file_path,
           xml_url,
           xml_file_path,
-          agency:agency_agencydocument!agency_document_id(
+          type,
+          subtype,
+          agencies:agency_agencydocument!agency_document_id(
             agency:agency(id, name, short_name)
           )
         `)
@@ -44,9 +46,10 @@ export default function AgencyRuleDetailPage() {
       // Transform the data to match our interface
       const transformedData = data ? {
         ...data,
-        agency: data.agency?.[0]?.agency || null
+        agency: data.agencies?.[0]?.agency || null
       } : null;
 
+      console.log('Fetched agency rule:', transformedData);
       setRule(transformedData);
       setLoading(false);
     };

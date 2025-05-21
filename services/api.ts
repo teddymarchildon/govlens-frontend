@@ -612,6 +612,7 @@ export const getAgencyRules = async (params: {
   start_date?: string;
   end_date?: string;
   sort_order?: 'asc' | 'desc';
+  excludeExecutiveOrders?: boolean;
 } = {}): Promise<AgencyDocument[]> => {
   try {
     // First, get all agency documents that are of type 'Rule'
@@ -638,6 +639,11 @@ export const getAgencyRules = async (params: {
     // Filter by subtype if provided
     if (params.subtype) {
       query = query.eq('subtype', params.subtype);
+    }
+    
+    // Exclude Executive Orders if requested
+    if (params.excludeExecutiveOrders) {
+      query = query.neq('subtype', 'Executive Order');
     }
 
     // Search by title if provided

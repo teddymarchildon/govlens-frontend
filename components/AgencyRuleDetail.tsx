@@ -5,26 +5,13 @@ import { formatDate } from '@/lib/utils';
 import SaveButton from '@/components/SaveButton';
 import PdfViewer from '@/components/PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
-import { Agency } from '@/types/types';
+import { AgencyDocument } from '@/types/types';
 import Link from 'next/link';
 
 type TabType = 'details' | 'text';
 
-interface AgencyRule {
-  id: string;
-  title: string;
-  remote_document_number: string;
-  publication_date: string;
-  abstract?: string;
-  pdf_url?: string;
-  pdf_file_path?: string;
-  html_url?: string;
-  html_file_path?: string;
-  agency?: Agency;
-}
-
 interface AgencyRuleDetailProps {
-  rule: AgencyRule;
+  rule: AgencyDocument;
 }
 
 export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
@@ -53,6 +40,16 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
               <div className="text-sm text-gray-600 mb-2">
                 Published: {rule.publication_date && formatDate(rule.publication_date)}
               </div>
+              {rule.type && (
+                <div className="text-sm text-gray-600 mb-2">
+                  Type: <span className="font-medium">{rule.type}</span>
+                </div>
+              )}
+              {rule.subtype && (
+                <div className="text-sm text-gray-600 mb-2">
+                  Subtype: <span className="font-medium">{rule.subtype}</span>
+                </div>
+              )}
               {rule.agency && (
                 <div className="text-sm text-gray-600">
                   Agency: <Link href={`/agencies/${rule.agency.id}`} className="text-blue-600 hover:underline">{rule.agency.name}</Link>

@@ -66,7 +66,8 @@ function AgencyRulesContent() {
           start_date: startDate || undefined,
           end_date: endDate || undefined,
           sort_order: sortOrder,
-          limit: 50
+          limit: 50,
+          excludeExecutiveOrders: true // Always exclude Executive Orders
         });
         setRules(data || []);
       } catch (error) {
@@ -199,7 +200,7 @@ function AgencyRulesContent() {
         </div>
         <div>
           <label htmlFor="sort-order" className="block text-sm font-medium text-gray-700 mb-2">
-            Sort by Signing Date
+            Sort by Publication Date
           </label>
           <div className="flex">
             <select
