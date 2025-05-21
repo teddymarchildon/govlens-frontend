@@ -13,16 +13,16 @@ export default function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Use our custom search hook
-  const { 
-    searchQuery, 
-    results, 
-    isLoading, 
-    showResults, 
-    handleSearchChange, 
-    clearSearch, 
-    closeResults 
+  const {
+    searchQuery,
+    results,
+    isLoading,
+    showResults,
+    handleSearchChange,
+    clearSearch,
+    closeResults
   } = useSearch();
 
   const handleSignOut = async () => {
@@ -90,7 +90,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-blue-600">
-              GovLens
+              Lex
             </Link>
           </div>
 
@@ -135,7 +135,7 @@ export default function Header() {
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
               </div>
-              
+
               {/* Clear search button */}
               {searchQuery && (
                 <button
@@ -148,7 +148,7 @@ export default function Header() {
                   </svg>
                 </button>
               )}
-              
+
               {/* Search Results Dropdown */}
               {showResults && (
                 <SearchResults
@@ -235,7 +235,7 @@ export default function Header() {
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
             </div>
-            
+
             {/* Clear search button */}
             {searchQuery && (
               <button
@@ -248,7 +248,7 @@ export default function Header() {
                 </svg>
               </button>
             )}
-            
+
             {/* Search Results Dropdown */}
             {showResults && (
               <SearchResults
