@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getStoragePublicUrl } from '@/services/api';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -105,12 +106,10 @@ export default function AiChat({
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all"
+          className="px-4 py-3 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all text-sm font-medium"
           aria-label="Open AI Chat"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
+          Chat with this bill
         </button>
       )}
 
@@ -154,7 +153,11 @@ export default function AiChat({
                       : 'bg-white text-gray-900 border border-gray-200'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                  <div className="whitespace-pre-wrap text-sm markdown-content">
+                    <ReactMarkdown>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}

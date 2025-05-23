@@ -31,7 +31,7 @@ export default function ExecutiveOrderDetailPage() {
   const executiveOrderId = params.id
   const [order, setOrder] = useState<ExecutiveOrder | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabType>('details');
+  const [activeTab, setActiveTab] = useState<TabType>('text');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -138,6 +138,16 @@ export default function ExecutiveOrderDetailPage() {
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex space-x-8" aria-label="Tabs">
+        <button
+            onClick={() => setActiveTab('text')}
+            className={`py-4 px-1 inline-flex items-center border-b-2 ${
+              activeTab === 'text'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Text
+          </button>
           <button
             onClick={() => setActiveTab('details')}
             className={`py-4 px-1 inline-flex items-center border-b-2 ${
@@ -147,17 +157,6 @@ export default function ExecutiveOrderDetailPage() {
             }`}
           >
             Details
-          </button>
-
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`py-4 px-1 inline-flex items-center border-b-2 ${
-              activeTab === 'text'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Text
           </button>
         </nav>
       </div>
