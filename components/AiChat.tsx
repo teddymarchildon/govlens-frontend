@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { getStoragePublicUrl } from '@/services/api';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 
@@ -56,7 +55,7 @@ export default function AiChat({
 
     try {
       // We'll let the API handle content fetching
-      let documentContent = null;
+      const documentContent = null;
 
       // Call the API endpoint with the user message and document content
       const response = await fetch('/api/ai/chat', {
@@ -71,7 +70,6 @@ export default function AiChat({
           documentId,
           documentTitle,
           htmlFilePath,
-          pdfFilePath,
           storageBucket,
         }),
       });
