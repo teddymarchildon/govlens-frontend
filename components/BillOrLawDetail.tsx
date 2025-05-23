@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/utils';
 import SaveButton from './SaveButton';
 import PdfViewer from './PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
+import AiChat from './AiChat';
 import { BillText, Congressman } from '@/types/types';
 
 interface BillAction {
@@ -50,7 +51,7 @@ export default function BillOrLawDetail({
   actions,
   isLaw = false
 }: BillOrLawDetailProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('sponsors');
+  const [activeTab, setActiveTab] = useState<TabType>('text');
   const latestText = texts.length > 0 ? texts[0] : null;
 
   const itemType = isLaw ? 'law' : 'bill';
@@ -60,7 +61,7 @@ export default function BillOrLawDetail({
   const date = isLaw ? item.law_enacted_date : item.introduced_date;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 relative">
       {/* Breadcrumb */}
       <Breadcrumbs
         steps={[
@@ -91,6 +92,17 @@ export default function BillOrLawDetail({
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6 overflow-x-auto">
         <nav className="flex space-x-4 md:space-x-8 whitespace-nowrap" aria-label="Tabs">
+        <button
+            onClick={() => setActiveTab('text')}
+            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
+              activeTab === 'text'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Text
+          </button>
+
           <button
             onClick={() => setActiveTab('sponsors')}
             className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
@@ -125,17 +137,6 @@ export default function BillOrLawDetail({
             }`}>
               {actions?.length || 0}
             </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
-              activeTab === 'text'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Text
           </button>
         </nav>
       </div>
@@ -248,6 +249,15 @@ export default function BillOrLawDetail({
           </div>
         )}
       </div>
+      {/* AI Chat Floating Bubble */}
+      <AiChat
+        documentType={isLaw ? 'law' : 'bill'}
+        documentId={item.id}
+        documentTitle={title}
+        htmlFilePath={latestText?.html_file_path}
+        pdfFilePath={latestText?.pdf_file_path}
+        storageBucket="bill-pdfs"
+      />
     </div>
   );
 }
