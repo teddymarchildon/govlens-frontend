@@ -9,6 +9,39 @@ interface Message {
   content: string;
 }
 
+// Define preset types that match the backend types
+type PresetType = 'default' | 'summarize' | 'keyPoints' | 'historicalContext' | 'prosAndCons';
+
+interface Preset {
+  type: PresetType;
+  label: string;
+  userMessage: string;
+}
+
+// Preset configurations for quick actions
+const PRESETS: Preset[] = [
+  {
+    type: 'summarize',
+    label: 'Summarize',
+    userMessage: 'Please summarize this document for me.'
+  },
+  {
+    type: 'keyPoints',
+    label: 'Key Points',
+    userMessage: 'What are the key points of this document?'
+  },
+  {
+    type: 'historicalContext',
+    label: 'Historical Context',
+    userMessage: 'What is the historical context of this document?'
+  },
+  {
+    type: 'prosAndCons',
+    label: 'Pros & Cons',
+    userMessage: 'What are the pros and cons of this document?'
+  }
+];
+
 interface AiChatProps {
   documentType: 'bill' | 'law' | 'agencyDocument' | 'courtOpinion';
   documentId: string;
@@ -23,7 +56,6 @@ export default function AiChat({
   documentId,
   documentTitle,
   htmlFilePath,
-  pdfFilePath,
   storageBucket
 }: AiChatProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,13 +75,8 @@ export default function AiChat({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  // Function to handle sending a message to the AI API
+  const sendMessageToApi = async (messagesToSend: Message[], presetType: PresetType = 'default') => {
     setIsLoading(true);
     setError(null);
 
@@ -57,20 +84,21 @@ export default function AiChat({
       // We'll let the API handle content fetching
       const documentContent = null;
 
-      // Call the API endpoint with the user message and document content
+      // Call the API endpoint with the messages and document content
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: messagesToSend,
           documentContent,
           documentType,
           documentId,
           documentTitle,
           htmlFilePath,
           storageBucket,
+          presetType, // Send the preset type to the backend
         }),
       });
 
@@ -86,6 +114,38 @@ export default function AiChat({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle preset button click
+  const handlePresetClick = (preset: Preset) => {
+    if (isLoading) return;
+
+    // Create a user message with the preset's user message
+    const userMessage: Message = { role: 'user', content: preset.userMessage };
+
+    // Update the messages state with the user message
+    setMessages(prev => {
+      // Filter out any existing system messages to keep UI clean
+      const filteredMessages = prev.filter(m => m.role !== 'system');
+      return [...filteredMessages, userMessage];
+    });
+
+    // Send the message to the API with the preset type
+    // The backend will handle creating the appropriate system message
+    sendMessageToApi([userMessage], preset.type);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+
+    // For regular user input, we just send the user message and previous messages
+    // The backend will handle maintaining the conversation context
+    await sendMessageToApi([...messages.filter(m => m.role !== 'system'), userMessage]);
   };
 
   const handleClearChat = () => {
@@ -113,7 +173,7 @@ export default function AiChat({
 
       {/* Chat window */}
       {isOpen && (
-        <div className="flex flex-col w-80 md:w-96 h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-slide-up">
+        <div className="flex flex-col w-96 md:w-[550px] h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-slide-up">
           {/* Header */}
           <div className="p-3 bg-blue-600 text-white flex justify-between items-center">
             <h2 className="text-lg font-semibold">AI Assistant</h2>
@@ -178,6 +238,24 @@ export default function AiChat({
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Preset buttons */}
+          <div className="p-2 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 justify-center">
+            {PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                onClick={() => handlePresetClick(preset)}
+                disabled={isLoading}
+                className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                  isLoading
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
           </div>
 
           {/* Input form */}

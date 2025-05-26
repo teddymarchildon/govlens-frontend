@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { fetchHtmlContent, processDocumentContent, truncateContent } from '@/utils/documentUtils';
 
+// Define preset types and their corresponding system prompts
+type PresetType = 'default' | 'summarize' | 'keyPoints' | 'historicalContext' | 'prosAndCons';
+
+const PRESET_PROMPTS: Record<PresetType, string> = {
+  default: 'Answer questions based on the document content.',
+  summarize: 'Provide a concise summary of the document, highlighting its main purpose, key provisions, and potential impact. Keep your summary clear and objective.',
+  keyPoints: 'Extract and explain the most important points from this document. Focus on the provisions that have the most significant impact or introduce notable changes.',
+  historicalContext: 'Provide historical context for this document. Explain how it relates to previous legislation, what problems it aims to solve, and how it fits into the broader legislative history on this topic.',
+  prosAndCons: 'Analyze the potential benefits and drawbacks of this document. Present a balanced view of arguments for and against its provisions, considering different stakeholder perspectives.'
+};
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,7 +20,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { messages, documentContent, documentTitle, htmlFilePath, storageBucket } = await request.json();
+    const { messages, documentContent, documentTitle, htmlFilePath, storageBucket, presetType = 'default' } = await request.json();
 
     // Validate required fields
     if (!messages || !messages.length) {
@@ -19,10 +30,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get the appropriate system prompt based on the preset type
+    const presetPrompt = PRESET_PROMPTS[presetType as PresetType] || PRESET_PROMPTS.default;
+    
     // Create a system message with context about the document
     const systemMessage = {
       role: 'system',
-      content: `You are an AI assistant helping with information about this US federal government document: "${documentTitle}". Answer questions based on the document content.`
+      content: `You are an AI assistant helping with information about this US federal government document: "${documentTitle}". ${presetPrompt}`
     };
 
     // Try to get document content from the provided HTML path if not directly provided

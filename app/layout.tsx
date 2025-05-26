@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Lex - Straight to the source',
-  description: 'Track bills, congressmen, and legislative activities',
+  title: 'Lex - See for yourself',
+  description: 'Track legislative activities and congressman',
 };
 
 export const viewport: Viewport = {
