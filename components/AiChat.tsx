@@ -107,7 +107,7 @@ export default function AiChat({
           className="px-4 py-3 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all text-sm font-medium"
           aria-label="Open AI Chat"
         >
-          Chat with this bill
+          Learn about this bill
         </button>
       )}
 
