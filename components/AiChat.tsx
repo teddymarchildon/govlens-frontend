@@ -44,7 +44,7 @@ const PRESETS: Preset[] = [
 ];
 
 interface AiChatProps {
-  documentType: 'bill' | 'law' | 'agencyDocument' | 'courtOpinion' | 'executiveOrder';
+  documentType: 'bill' | 'law' | 'agencyDocument' | 'opinion' | 'executiveOrder';
   documentId: string;
   documentTitle: string;
   htmlFilePath?: string;
@@ -150,8 +150,8 @@ export default function AiChat({
     case 'agencyDocument':
       buttonText = 'Learn about this agency document';
       break;
-    case 'courtOpinion':
-      buttonText = 'Learn about this court opinion';
+    case 'opinion':
+      buttonText = 'Learn about this opinion';
       break;
     case 'executiveOrder':
       buttonText = 'Learn about this executive order';

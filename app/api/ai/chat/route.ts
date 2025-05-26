@@ -54,6 +54,9 @@ export async function POST(request: Request) {
       case 'executiveOrder':
         storageBucket = 'agency-docs';
         break;
+      case 'opinion':
+        storageBucket = 'opinions';
+        break;
       // Add more cases for other document types as needed
       default:
         storageBucket = 'bill-htmls'; // fallback
