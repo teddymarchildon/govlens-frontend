@@ -8,6 +8,7 @@ import PdfViewer from './PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
 import AiChat from './AiChat';
 import { BillText, Congressman } from '@/types/types';
+import { AuthProvider } from '../context/AuthContext';
 
 interface BillAction {
   id: string;
@@ -249,15 +250,16 @@ export default function BillOrLawDetail({
           </div>
         )}
       </div>
-      {/* AI Chat Floating Bubble */}
-      <AiChat
-        documentType={isLaw ? 'law' : 'bill'}
-        documentId={item.id}
-        documentTitle={title}
-        htmlFilePath={latestText?.html_file_path}
-        pdfFilePath={latestText?.pdf_file_path}
-        storageBucket="bill-pdfs"
-      />
+      {/* AI Chat (fixed position) */}
+      <AuthProvider>
+        <AiChat
+          documentType={itemType}
+          documentId={item.id}
+          documentTitle={title}
+          htmlFilePath={latestText?.html_path}
+          storageBucket={latestText?.storage_bucket || ''}
+        />
+      </AuthProvider>
     </div>
   );
 }

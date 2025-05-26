@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '../context/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -64,6 +65,9 @@ export default function AiChat({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auth state
+  const { user, loading: authLoading } = useAuth();
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -166,6 +170,7 @@ export default function AiChat({
                 onClick={handleClearChat}
                 className="text-xs text-white/80 hover:text-white"
                 title="Clear chat"
+                disabled={!user && !authLoading}
               >
                 Clear
               </button>
@@ -181,47 +186,58 @@ export default function AiChat({
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-lg p-2.5 ${
-                    message.role === 'user'
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'bg-white text-gray-900 border border-gray-200'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap text-sm markdown-content">
-                    <ReactMarkdown>
-                      {message.content}
-                    </ReactMarkdown>
+            {/* If not logged in and not loading, show login message */}
+            {!user && !authLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="max-w-[85%] rounded-lg p-4 bg-yellow-100 text-yellow-900 text-center text-sm border border-yellow-300">
+                  <p>You must log in to use the AI Assistant.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-lg p-2.5 ${
+                        message.role === 'user'
+                          ? 'bg-blue-100 text-blue-900'
+                          : 'bg-white text-gray-900 border border-gray-200'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap text-sm markdown-content">
+                        <ReactMarkdown>
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] rounded-lg p-2.5 bg-white border border-gray-200">
-                  <div className="flex space-x-1.5 items-center">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-lg p-2.5 bg-white border border-gray-200">
+                      <div className="flex space-x-1.5 items-center">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
+                {error && (
+                  <div className="flex justify-center">
+                    <div className="max-w-[85%] rounded-lg p-2.5 bg-red-100 text-red-800 text-sm">
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
             )}
-            {error && (
-              <div className="flex justify-center">
-                <div className="max-w-[85%] rounded-lg p-2.5 bg-red-100 text-red-800 text-sm">
-                  <p>{error}</p>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Preset buttons */}
@@ -230,9 +246,9 @@ export default function AiChat({
               <button
                 key={preset.label}
                 onClick={() => handlePresetClick(preset)}
-                disabled={isLoading}
+                disabled={isLoading || (!user && !authLoading)}
                 className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
-                  isLoading
+                  isLoading || (!user && !authLoading)
                     ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
@@ -251,16 +267,16 @@ export default function AiChat({
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about this document..."
                 className="flex-1 p-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
+                disabled={isLoading || (!user && !authLoading)}
               />
               <button
                 type="submit"
                 className={`px-3 py-2 rounded-lg text-white text-sm ${
-                  isLoading || !input.trim()
+                  isLoading || !input.trim() || (!user && !authLoading)
                     ? 'bg-blue-300 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !input.trim() || (!user && !authLoading)}
               >
                 Send
               </button>
