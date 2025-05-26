@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, DocumentTextIcon, SparklesIcon, ClockIcon, ScaleIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../context/AuthContext';
 
@@ -202,7 +202,7 @@ export default function AiChat({
         <div className="flex flex-col w-96 md:w-[550px] h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-slide-up">
           {/* Header */}
           <div className="p-3 bg-blue-600 text-white flex justify-between items-center">
-            <h2 className="text-lg font-semibold">AI Assistant</h2>
+            <h2 className="text-lg font-semibold">Lex AI</h2>
             <div className="flex space-x-2">
               <button
                 onClick={() => setIsOpen(false)}
@@ -212,6 +212,44 @@ export default function AiChat({
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
+          </div>
+
+          {/* Preset buttons (moved to top, with extra spacing) */}
+          <div className="p-2 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2 justify-center mt-3">
+            {PRESETS.map((preset) => {
+              let IconComponent = null;
+              switch (preset.type) {
+                case 'summarize':
+                  IconComponent = DocumentTextIcon;
+                  break;
+                case 'keyPoints':
+                  IconComponent = SparklesIcon;
+                  break;
+                case 'historicalContext':
+                  IconComponent = ClockIcon;
+                  break;
+                case 'prosAndCons':
+                  IconComponent = ScaleIcon;
+                  break;
+                default:
+                  IconComponent = DocumentTextIcon;
+              }
+              return (
+                <button
+                  key={preset.label}
+                  onClick={() => handlePresetClick(preset)}
+                  disabled={isLoading || (!user && !authLoading)}
+                  className={`px-3 py-1.5 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
+                    isLoading || (!user && !authLoading)
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                >
+                  <IconComponent className="h-4 w-4" />
+                  {preset.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Messages */}
@@ -239,7 +277,7 @@ export default function AiChat({
                           : 'bg-white text-gray-900 border border-gray-200'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap text-sm markdown-content">
+                      <div className="whitespace-pre-wrap text-sm markdown-content prose">
                         <ReactMarkdown>
                           {message.content}
                         </ReactMarkdown>
@@ -270,24 +308,6 @@ export default function AiChat({
             )}
           </div>
 
-          {/* Preset buttons */}
-          <div className="p-2 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-2 justify-center">
-            {PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                onClick={() => handlePresetClick(preset)}
-                disabled={isLoading || (!user && !authLoading)}
-                className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
-                  isLoading || (!user && !authLoading)
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-
           {/* Input form */}
           <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-gray-200">
             <div className="flex space-x-2">
@@ -295,7 +315,7 @@ export default function AiChat({
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about this document..."
+                placeholder={`Ask about ${documentTitle || 'this document'}...`}
                 className="flex-1 p-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading || (!user && !authLoading)}
               />

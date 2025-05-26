@@ -182,12 +182,9 @@ export default function ExecutiveOrderDetailPage() {
           {activeTab === 'text' && (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Executive Order Text</h2>
                 <div className="h-[600px]">
                   {order.pdf_file_path ? (
                     <PdfViewer storagePath={order.pdf_file_path} storageBucket="agency-docs" className="h-full" />
-                  ) : order.pdf_url ? (
-                    <PdfViewer pdfUrl={order.pdf_url} className="h-full" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-500">
                       No PDF available
