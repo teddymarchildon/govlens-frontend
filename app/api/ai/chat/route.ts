@@ -20,7 +20,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { messages, documentContent, documentTitle, htmlFilePath, documentType, presetType = 'default' } = await request.json();
+    const { messages, documentTitle, htmlFilePath, documentType, presetType = 'default' } = await request.json();
 
     // 'messages' should only contain user and assistant messages from the frontend
     // System message will be added here in the backend
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
       content: `You are an AI assistant helping with information about this US federal government document: "${documentTitle}". ${presetPrompt}`
     };
 
-    // Try to get document content from the provided HTML path if not directly provided
-    let content = documentContent;
+    // Try to get document content from the provided HTML path
+    let content = null;
 
     // Determine storage bucket based on documentType
     let storageBucket = '';
@@ -76,7 +76,6 @@ export async function POST(request: Request) {
       // Prepare messages for OpenAI API with document content
       const apiMessages = [systemMessage, ...messages];
 
-      console.log('API Messages with document content');
       // Call OpenAI API with document content
       const completion = await openai.chat.completions.create({
         model: 'gpt-4o',

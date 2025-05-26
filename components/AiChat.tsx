@@ -19,29 +19,50 @@ interface Preset {
   userMessage: string;
 }
 
-// Preset configurations for quick actions
-const PRESETS: Preset[] = [
-  {
-    type: 'summarize',
-    label: 'Summarize',
-    userMessage: 'Please summarize this document for me.'
-  },
-  {
-    type: 'keyPoints',
-    label: 'Key Points',
-    userMessage: 'What are the key points of this document?'
-  },
-  {
-    type: 'historicalContext',
-    label: 'Historical Context',
-    userMessage: 'What is the historical context of this document?'
-  },
-  {
-    type: 'prosAndCons',
-    label: 'Pros & Cons',
-    userMessage: 'What are the pros and cons of this document?'
+// Helper to get the noun for the document type
+function getDocumentNoun(documentType: AiChatProps['documentType']) {
+  switch (documentType) {
+    case 'bill':
+      return 'bill';
+    case 'law':
+      return 'law';
+    case 'agencyDocument':
+      return 'agency document';
+    case 'opinion':
+      return 'opinion';
+    case 'executiveOrder':
+      return 'executive order';
+    default:
+      return 'document';
   }
-];
+}
+
+// Function to generate tailored presets based on documentType
+function getPresets(documentType: AiChatProps['documentType']): Preset[] {
+  const noun = getDocumentNoun(documentType);
+  return [
+    {
+      type: 'summarize',
+      label: 'Summarize',
+      userMessage: `Please summarize this ${noun} for me.`
+    },
+    {
+      type: 'keyPoints',
+      label: 'Key Points',
+      userMessage: `What are the key points of this ${noun}?`
+    },
+    {
+      type: 'historicalContext',
+      label: 'Historical Context',
+      userMessage: `What is the historical context of this ${noun}?`
+    },
+    {
+      type: 'prosAndCons',
+      label: 'Pros & Cons',
+      userMessage: `What are the pros and cons of this ${noun}?`
+    }
+  ];
+}
 
 interface AiChatProps {
   documentType: 'bill' | 'law' | 'agencyDocument' | 'opinion' | 'executiveOrder';
@@ -66,6 +87,9 @@ export default function AiChat({
 
   // Auth state
   const { user, loading: authLoading } = useAuth();
+
+  // Get tailored presets for the current documentType
+  const PRESETS = getPresets(documentType);
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
