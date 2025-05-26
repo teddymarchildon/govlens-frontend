@@ -1,24 +1,4 @@
-// Policy areas based on the memory about PolicyArea enum
-export const POLICY_AREAS = [
-  'Agriculture',
-  'Armed Forces and National Security',
-  'Civil Rights and Liberties, Minority Issues',
-  'Economics and Public Finance',
-  'Education',
-  'Environment',
-  'Government Operations and Politics',
-  'Health',
-  'International Affairs',
-  'Labor and Employment',
-  'Law',
-  'Native Americans',
-  'Public Lands and Natural Resources',
-  'Science, Technology, Communications',
-  'Social Welfare',
-  'Taxation',
-  'Transportation and Public Works',
-  'Water Resources Development'
-];
+export { POLICY_AREAS } from './policyAreas';
 
 // US States and territories
 export const US_STATES = [

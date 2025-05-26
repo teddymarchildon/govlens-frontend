@@ -1,4 +1,6 @@
-export const POLICY_AREAS = [
+import type { PolicyArea } from '../types/types';
+
+export const POLICY_AREAS: PolicyArea[] = [
   'Agriculture',
   'Armed Forces and National Security',
   'Civil Rights and Liberties, Minority Issues',

@@ -3,19 +3,20 @@
 import { useState } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { POLICY_AREAS } from '../../constants/onboarding';
+import type { PolicyArea } from '../../types/types';
 
 export default function PolicyAreaSelection() {
   const { userPreferences, updatePreference, savePreferences, goToPreviousStep, completeOnboarding } = useOnboarding();
-  const [selectedAreas, setSelectedAreas] = useState<string[]>(userPreferences.policy_areas || []);
+  const [selectedAreas, setSelectedAreas] = useState<PolicyArea[]>(userPreferences.policy_areas as PolicyArea[] || []);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleAreaToggle = async (area: string) => {
     // Update local state first
-    const newSelectedAreas = selectedAreas.includes(area)
+    const newSelectedAreas = selectedAreas.includes(area as PolicyArea)
       ? selectedAreas.filter(a => a !== area)
       : [...selectedAreas, area];
 
-    setSelectedAreas(newSelectedAreas);
+    setSelectedAreas(newSelectedAreas as PolicyArea[]);
 
     // Then update context and save to database
     setIsSaving(true);

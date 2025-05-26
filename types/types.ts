@@ -236,3 +236,23 @@ export interface SavedAgencyDocument {
 export interface SaveItemType {
   itemType: 'congressman' | 'bill' | 'agency' | 'judge' | 'cluster' | 'agencyDocument';
 }
+
+export type PolicyArea =
+  | 'Agriculture'
+  | 'Armed Forces and National Security'
+  | 'Civil Rights and Liberties, Minority Issues'
+  | 'Economics and Public Finance'
+  | 'Education'
+  | 'Environment'
+  | 'Government Operations and Politics'
+  | 'Health'
+  | 'International Affairs'
+  | 'Labor and Employment'
+  | 'Law'
+  | 'Native Americans'
+  | 'Public Lands and Natural Resources'
+  | 'Science, Technology, Communications'
+  | 'Social Welfare'
+  | 'Taxation'
+  | 'Transportation and Public Works'
+  | 'Water Resources Development';

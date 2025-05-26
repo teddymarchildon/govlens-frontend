@@ -8,6 +8,7 @@ import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '../../compo
 import { Bill, Congressman } from '../../types/types';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import LoadingIndicator from '../../components/ui/LoadingIndicator';
+import type { PolicyArea } from '@/types/types';
 
 function BillsPageContent() {
   const router = useRouter();
@@ -21,8 +22,8 @@ function BillsPageContent() {
 
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [policyArea, setPolicyArea] = useState(currentPolicyArea);
-  const [policyAreas, setPolicyAreas] = useState<string[]>([]);
+  const [policyArea, setPolicyArea] = useState<PolicyArea | ''>(currentPolicyArea as PolicyArea | '');
+  const [policyAreas, setPolicyAreas] = useState<PolicyArea[]>([]);
   const [selectedSponsor, setSelectedSponsor] = useState<Congressman | null>(null);
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
   const [startDate, setStartDate] = useState(currentStartDate);
@@ -59,12 +60,12 @@ function BillsPageContent() {
     if (page === 1) {
       setBills([]);
     }
-    
+
     try {
       // Calculate range for pagination
       const from = (page - 1) * 50;
       const to = from + 49;
-      
+
       let query = supabase.from('bill').select('*')
         .range(from, to);
 
@@ -150,7 +151,7 @@ function BillsPageContent() {
           const uniquePolicyAreas = Array.from(
             new Set(policyAreaData.map(item => item.policy_area).filter(Boolean))
           ).sort();
-          setPolicyAreas(uniquePolicyAreas);
+          setPolicyAreas(uniquePolicyAreas.map(area => area as PolicyArea));
         }
       } catch (error) {
         console.error('Error fetching policy areas:', error);
@@ -171,7 +172,7 @@ function BillsPageContent() {
     setLoading(true);
     resetScroll();
     fetchBills(1);
-    
+
     // Update URL when filters change
     const params = new URLSearchParams();
 
@@ -188,15 +189,10 @@ function BillsPageContent() {
 
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
-
-    // If congressman is null, we're clearing the selection
-    if (!congressman && congressmanSearchRef.current) {
-      congressmanSearchRef.current.clear();
-    }
   };
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+    const value = e.target.value as PolicyArea | '';
     setPolicyArea(value);
   };
 
@@ -387,10 +383,10 @@ function BillsPageContent() {
                   <BillCard key={bill.id} bill={bill} />
                 ))}
               </div>
-              
+
               {/* Sentinel element for infinite scrolling */}
               <div ref={sentinelRef} className="h-4 mt-4"></div>
-              
+
               {/* Loading indicator for more items */}
               {loadingMore && <LoadingIndicator size="medium" />}
             </>

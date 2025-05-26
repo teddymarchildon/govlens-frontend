@@ -6,12 +6,13 @@ import { getUserPreferences, updateUserPreferences } from '../services/api';
 import { US_STATES } from '../constants/states';
 import { POLICY_AREAS } from '../constants/policyAreas';
 import { UserPreferences } from '../types/types';
+import type { PolicyArea } from '../types/types';
 
 const UserPreferencesSection = () => {
   const { user } = useAuth();
   const [_preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
-  const [selectedPolicyAreas, setSelectedPolicyAreas] = useState<string[]>([]);
+  const [selectedPolicyAreas, setSelectedPolicyAreas] = useState<PolicyArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -100,8 +101,8 @@ const UserPreferencesSection = () => {
   };
 
   const addPolicyArea = (area: string) => {
-    if (!selectedPolicyAreas.includes(area)) {
-      setSelectedPolicyAreas([...selectedPolicyAreas, area]);
+    if (!selectedPolicyAreas.includes(area as PolicyArea)) {
+      setSelectedPolicyAreas([...selectedPolicyAreas, area as PolicyArea]);
     }
     setPolicyAreaSearchTerm('');
   };

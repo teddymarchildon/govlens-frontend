@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { supabaseServer } from '@/lib/supabase-server';
 import { Law } from '@/types/types';
 import { POLICY_AREAS } from '@/constants/policyAreas';
+import type { PolicyArea } from '@/types/types';
 import LawsClient from './LawsClient';
 
 // Server Component
@@ -45,7 +46,7 @@ export default async function LawsPage() {
     </div>}>
       <LawsClient
         initialLaws={initialLaws}
-        policyAreas={POLICY_AREAS}
+        policyAreas={POLICY_AREAS as PolicyArea[]}
       />
     </Suspense>
   );

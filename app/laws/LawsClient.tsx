@@ -5,19 +5,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import LawCard from '@/components/LawCard';
 import CongressmanSearchSelect, { CongressmanSearchSelectRef } from '@/components/CongressmanSearchSelect';
-import { Law, Congressman } from '@/types/types';
+import { Law, Congressman, PolicyArea } from '@/types/types';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import LoadingIndicator from '@/components/ui/LoadingIndicator';
 
 interface LawsClientProps {
   initialLaws: Law[];
-  policyAreas: string[];
+  policyAreas: PolicyArea[];
 }
 
 export default function LawsClient({ initialLaws, policyAreas }: LawsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentPolicyArea = searchParams.get('policy_area');
+  const currentPolicyArea = searchParams.get('policy_area') || '';
   const currentSearchQuery = searchParams.get('search') || '';
   const currentSponsorId = searchParams.get('sponsor_id');
   const currentStartDate = searchParams.get('start_date') || '';
@@ -26,7 +26,7 @@ export default function LawsClient({ initialLaws, policyAreas }: LawsClientProps
 
   const [laws, setLaws] = useState<Law[]>(initialLaws);
   const [loading, setLoading] = useState(false);
-  const [selectedPolicyArea, setSelectedPolicyArea] = useState(currentPolicyArea || '');
+  const [selectedPolicyArea, setSelectedPolicyArea] = useState<PolicyArea | ''>(currentPolicyArea as PolicyArea | '');
   const [searchQuery, setSearchQuery] = useState(currentSearchQuery);
   const [selectedSponsor, setSelectedSponsor] = useState<Congressman | null>(null);
   const [startDate, setStartDate] = useState(currentStartDate);
@@ -155,18 +155,17 @@ export default function LawsClient({ initialLaws, policyAreas }: LawsClientProps
       const url = queryString ? `/laws?${queryString}` : '/laws';
       router.push(url, { scroll: false });
 
-      // Only fetch if any filter is applied
-      if (selectedPolicyArea || searchQuery || selectedSponsor || startDate || endDate || sortOrder !== 'desc') {
-        setLoading(true);
-        resetScroll();
-        fetchLaws(1);
-      }
+      // Always fetch, even if no filters are applied
+      setLoading(true);
+      resetScroll();
+      fetchLaws(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPolicyArea, searchQuery, selectedSponsor, startDate, endDate, sortOrder, initialLoadComplete, router]);
 
   const handlePolicyAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedPolicyArea(e.target.value);
+    const value = e.target.value as PolicyArea | '';
+    setSelectedPolicyArea(value || '');
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,11 +186,6 @@ export default function LawsClient({ initialLaws, policyAreas }: LawsClientProps
 
   const handleSponsorSelect = (congressman: Congressman | null) => {
     setSelectedSponsor(congressman);
-
-    // If congressman is null, we're clearing the selection
-    if (!congressman && congressmanSearchRef.current) {
-      congressmanSearchRef.current.clear();
-    }
   };
 
   const clearFilters = () => {
@@ -221,7 +215,7 @@ export default function LawsClient({ initialLaws, policyAreas }: LawsClientProps
             </label>
             <select
               id="policy-area"
-              value={selectedPolicyArea}
+              value={selectedPolicyArea || ''}
               onChange={handlePolicyAreaChange}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
