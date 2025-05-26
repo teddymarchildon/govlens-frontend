@@ -44,7 +44,7 @@ const PRESETS: Preset[] = [
 ];
 
 interface AiChatProps {
-  documentType: 'bill' | 'law' | 'agencyDocument' | 'courtOpinion';
+  documentType: 'bill' | 'law' | 'agencyDocument' | 'courtOpinion' | 'executiveOrder';
   documentId: string;
   documentTitle: string;
   htmlFilePath?: string;
@@ -138,10 +138,27 @@ export default function AiChat({
     await sendMessageToApi([...messages, userMessage]);
   };
 
-  const handleClearChat = () => {
-    setMessages([]);
-    setError(null);
-  };
+  // Determine button text based on documentType
+  let buttonText = 'Learn about this document';
+  switch (documentType) {
+    case 'bill':
+      buttonText = 'Learn about this bill';
+      break;
+    case 'law':
+      buttonText = 'Learn about this law';
+      break;
+    case 'agencyDocument':
+      buttonText = 'Learn about this agency document';
+      break;
+    case 'courtOpinion':
+      buttonText = 'Learn about this court opinion';
+      break;
+    case 'executiveOrder':
+      buttonText = 'Learn about this executive order';
+      break;
+    default:
+      buttonText = 'Learn about this document';
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -152,7 +169,7 @@ export default function AiChat({
           className="px-4 py-3 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all text-sm font-medium"
           aria-label="Open AI Chat"
         >
-          Learn about this bill
+          {buttonText}
         </button>
       )}
 
@@ -163,14 +180,6 @@ export default function AiChat({
           <div className="p-3 bg-blue-600 text-white flex justify-between items-center">
             <h2 className="text-lg font-semibold">AI Assistant</h2>
             <div className="flex space-x-2">
-              <button
-                onClick={handleClearChat}
-                className="text-xs text-white/80 hover:text-white"
-                title="Clear chat"
-                disabled={!user && !authLoading}
-              >
-                Clear
-              </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:text-white/80"

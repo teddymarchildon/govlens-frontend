@@ -50,13 +50,15 @@ export async function POST(request: Request) {
       case 'law':
         storageBucket = 'bill-htmls';
         break;
+      case 'agencyDocument':
+      case 'executiveOrder':
+        storageBucket = 'agency-docs';
+        break;
       // Add more cases for other document types as needed
       default:
         storageBucket = 'bill-htmls'; // fallback
     }
 
-    console.log('storageBucket', storageBucket);
-    console.log('htmlFilePath', htmlFilePath);
     // Try to fetch HTML content if available
     if (htmlFilePath && storageBucket) {
       content = await fetchHtmlContent(storageBucket, htmlFilePath);

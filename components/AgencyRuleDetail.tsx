@@ -7,6 +7,8 @@ import PdfViewer from '@/components/PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
 import { AgencyDocument } from '@/types/types';
 import Link from 'next/link';
+import AiChat from './AiChat';
+import { AuthProvider } from '../context/AuthContext';
 
 type TabType = 'details' | 'text';
 
@@ -99,7 +101,6 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
             <div className="p-6">
               {rule.abstract && (
                 <div className="prose max-w-none mb-6">
-                  <h2 className="text-xl font-semibold mb-4">Abstract</h2>
                   <div dangerouslySetInnerHTML={{ __html: rule.abstract }} />
                 </div>
               )}
@@ -126,6 +127,16 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
           </div>
         )}
       </div>
+
+      {/* AI Chat (fixed position) */}
+      <AuthProvider>
+        <AiChat
+          documentType="agencyDocument"
+          documentId={rule.id}
+          documentTitle={rule.title}
+          htmlFilePath={rule.html_file_path}
+        />
+      </AuthProvider>
     </div>
   );
 }
