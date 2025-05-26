@@ -20,7 +20,7 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
-    const { messages, documentContent, documentTitle, htmlFilePath, storageBucket, presetType = 'default' } = await request.json();
+    const { messages, documentContent, documentTitle, htmlFilePath, documentType, presetType = 'default' } = await request.json();
 
     // 'messages' should only contain user and assistant messages from the frontend
     // System message will be added here in the backend
@@ -43,6 +43,20 @@ export async function POST(request: Request) {
     // Try to get document content from the provided HTML path if not directly provided
     let content = documentContent;
 
+    // Determine storage bucket based on documentType
+    let storageBucket = '';
+    switch (documentType) {
+      case 'bill':
+      case 'law':
+        storageBucket = 'bill-htmls';
+        break;
+      // Add more cases for other document types as needed
+      default:
+        storageBucket = 'bill-htmls'; // fallback
+    }
+
+    console.log('storageBucket', storageBucket);
+    console.log('htmlFilePath', htmlFilePath);
     // Try to fetch HTML content if available
     if (htmlFilePath && storageBucket) {
       content = await fetchHtmlContent(storageBucket, htmlFilePath);

@@ -256,8 +256,7 @@ export default function BillOrLawDetail({
           documentType={itemType}
           documentId={item.id}
           documentTitle={title}
-          htmlFilePath={latestText?.html_path}
-          storageBucket={latestText?.storage_bucket || ''}
+          htmlFilePath={latestText?.html_file_path}
         />
       </AuthProvider>
     </div>

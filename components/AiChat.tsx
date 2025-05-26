@@ -49,15 +49,13 @@ interface AiChatProps {
   documentTitle: string;
   htmlFilePath?: string;
   pdfFilePath?: string;
-  storageBucket: string;
 }
 
 export default function AiChat({
   documentType,
   documentId,
   documentTitle,
-  htmlFilePath,
-  storageBucket
+  htmlFilePath
 }: AiChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([])
@@ -96,7 +94,6 @@ export default function AiChat({
           documentId,
           documentTitle,
           htmlFilePath,
-          storageBucket,
           presetType, // Send the preset type to the backend
         }),
       });
