@@ -5,7 +5,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -59,12 +59,7 @@ export default function AiChat({
   storageBucket
 }: AiChatProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'system',
-      content: `You are an AI assistant helping with information about this ${documentType}: "${documentTitle}". Answer questions based on the document content.`
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,14 +119,9 @@ export default function AiChat({
     const userMessage: Message = { role: 'user', content: preset.userMessage };
 
     // Update the messages state with the user message
-    setMessages(prev => {
-      // Filter out any existing system messages to keep UI clean
-      const filteredMessages = prev.filter(m => m.role !== 'system');
-      return [...filteredMessages, userMessage];
-    });
+    setMessages(prev => [...prev, userMessage]);
 
     // Send the message to the API with the preset type
-    // The backend will handle creating the appropriate system message
     sendMessageToApi([userMessage], preset.type);
   };
 
@@ -144,17 +134,11 @@ export default function AiChat({
     setInput('');
 
     // For regular user input, we just send the user message and previous messages
-    // The backend will handle maintaining the conversation context
-    await sendMessageToApi([...messages.filter(m => m.role !== 'system'), userMessage]);
+    await sendMessageToApi([...messages, userMessage]);
   };
 
   const handleClearChat = () => {
-    setMessages([
-      {
-        role: 'system',
-        content: `You are an AI assistant helping with information about this ${documentType}: "${documentTitle}". Answer questions based on the document content.`
-      }
-    ]);
+    setMessages([]);
     setError(null);
   };
 
@@ -197,7 +181,7 @@ export default function AiChat({
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
-            {messages.filter(m => m.role !== 'system').map((message, index) => (
+            {messages.map((message, index) => (
               <div
                 key={index}
                 className={`flex ${

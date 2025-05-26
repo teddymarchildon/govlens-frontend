@@ -6,11 +6,11 @@ import { fetchHtmlContent, processDocumentContent, truncateContent } from '@/uti
 type PresetType = 'default' | 'summarize' | 'keyPoints' | 'historicalContext' | 'prosAndCons';
 
 const PRESET_PROMPTS: Record<PresetType, string> = {
-  default: 'Answer questions based on the document content.',
-  summarize: 'Provide a concise summary of the document, highlighting its main purpose, key provisions, and potential impact. Keep your summary clear and objective.',
-  keyPoints: 'Extract and explain the most important points from this document. Focus on the provisions that have the most significant impact or introduce notable changes.',
-  historicalContext: 'Provide historical context for this document. Explain how it relates to previous legislation, what problems it aims to solve, and how it fits into the broader legislative history on this topic.',
-  prosAndCons: 'Analyze the potential benefits and drawbacks of this document. Present a balanced view of arguments for and against its provisions, considering different stakeholder perspectives.'
+  default: 'Answer questions based on the document content. Be objective and factual about the contents of the document.',
+  summarize: 'Provide a concise summary of the document, highlighting its main purpose, key provisions, and potential impact. Keep your summary clear and objective. Be objective and factual about the contents of the document.',
+  keyPoints: 'Extract and explain the most important points from this document. Focus on the provisions that have the most significant impact or introduce notable changes. Be objective and factual about the contents of the document.',
+  historicalContext: 'Provide historical context for this document. Explain how it relates to previous legislation, what problems it aims to solve, and how it fits into the broader legislative history on this topic. Be objective and factual about the contents of the document.',
+  prosAndCons: 'Analyze the potential benefits and drawbacks of this document. Present a balanced view of arguments for and against its provisions, considering different stakeholder perspectives. Be objective and factual about the contents of the document.'
 };
 
 // Initialize OpenAI client
@@ -22,7 +22,8 @@ export async function POST(request: Request) {
   try {
     const { messages, documentContent, documentTitle, htmlFilePath, storageBucket, presetType = 'default' } = await request.json();
 
-    // Validate required fields
+    // 'messages' should only contain user and assistant messages from the frontend
+    // System message will be added here in the backend
     if (!messages || !messages.length) {
       return NextResponse.json(
         { error: 'Messages are required' },
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
 
     // Get the appropriate system prompt based on the preset type
     const presetPrompt = PRESET_PROMPTS[presetType as PresetType] || PRESET_PROMPTS.default;
-    
+
     // Create a system message with context about the document
     const systemMessage = {
       role: 'system',
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     let content = documentContent;
 
     // Try to fetch HTML content if available
-    if (!content && htmlFilePath && storageBucket) {
+    if (htmlFilePath && storageBucket) {
       content = await fetchHtmlContent(storageBucket, htmlFilePath);
     }
 
