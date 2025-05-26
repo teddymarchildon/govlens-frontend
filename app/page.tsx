@@ -563,76 +563,86 @@ function HomeContent() {
   // Render logged-out experience
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Federal Bills & Proposals</h1>
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
+        <h1 className="text-2xl font-bold mb-2">Welcome to GovLens!</h1>
+        <p className="mb-4">Discover, track, and understand US federal legislation, court cases, and more.</p>
+      </div>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Filter Bills</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="policy-filter" className="block text-sm font-medium text-gray-700 mb-2">
-              Policy Area
-            </label>
-            <div className="flex">
-              <select
-                id="policy-filter"
-                value={selectedPolicyArea}
-                onChange={handlePolicyAreaChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">All Policy Areas</option>
-                {POLICY_AREAS.map((area) => (
-                  <option key={area} value={area}>
-                    {area}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Introduced By
-            </label>
-            <CongressmanSearchSelect
-              ref={congressmanSearchRef}
-              onSelect={handleSponsorSelect}
-              placeholder="Search for a congressman..."
-              className="w-full"
-            />
-          </div>
+      {/* Why Sign Up Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
+        <h2 className="text-xl font-semibold mb-2 text-gray-900">Why create an account?</h2>
+        <ul className="list-disc pl-5 mb-4 text-gray-700">
+          <li>Save and track bills, agencies, and court cases</li>
+          <li>Get personalized legislative updates</li>
+          <li>Access advanced AI-powered document analysis</li>
+        </ul>
+        <div className="flex space-x-3">
+          <Link href="/signup" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors">Sign Up</Link>
+          <Link href="/login" className="inline-block px-4 py-2 bg-gray-100 text-blue-700 rounded-md font-medium hover:bg-gray-200 transition-colors">Log In</Link>
         </div>
       </div>
 
-      {(selectedPolicyArea || selectedSponsor) && (
-        <div className="mb-4 flex items-center">
-          <div className="text-sm text-gray-600 mr-2">Active filters:</div>
-          {selectedPolicyArea && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-              Policy: {selectedPolicyArea}
-            </span>
-          )}
-          {selectedSponsor && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
-              Sponsor: {selectedSponsor.full_name}
-            </span>
-          )}
-          <button
-            onClick={clearFilters}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Clear all
-          </button>
+      {/* Recent Executive Orders */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Recent Executive Orders</h2>
+          <Link href="/executive-orders" className="text-sm text-blue-600 hover:underline">
+            View all
+          </Link>
         </div>
-      )}
+        {recentExecutiveOrders.length > 0 ? (
+          <div className="space-y-4">
+            {recentExecutiveOrders.map((order) => (
+              <div key={order.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Link
+                      href={`/executive-orders/${order.id}`}
+                      className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                    >
+                      {order.title}
+                    </Link>
+                    <div className="mt-1 text-sm text-gray-600">
+                      {order.signing_date && (
+                        <span>Signed on {new Date(order.signing_date).toLocaleDateString()}</span>
+                      )}
+                      {order.president && (
+                        <span> by President {order.president}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      Executive Order
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+            <p className="text-gray-700">No recent executive orders found.</p>
+          </div>
+        )}
+      </div>
 
+      {/* Bills Filter/Search and Grid */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Recent Legislation</h2>
+          <Link href="/bills" className="text-sm text-blue-600 hover:underline">
+            View all
+          </Link>
+        </div>
+      </div>
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="text-xl">Loading...</div>
         </div>
       ) : (
         <>
-          <p className="mb-4">Showing {bills.length} bills</p>
           {bills.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {bills.map((bill) => (
@@ -642,7 +652,7 @@ function HomeContent() {
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
               <p className="text-yellow-700">
-                No bills found matching your filters. Try adjusting your search criteria.
+                No bills found.
               </p>
             </div>
           )}
