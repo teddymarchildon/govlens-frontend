@@ -61,7 +61,6 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
             <SaveButton
               itemId={rule.id}
               itemType="agencyDocument"
-              className="text-gray-400 hover:text-blue-500"
             />
           </div>
         </div>

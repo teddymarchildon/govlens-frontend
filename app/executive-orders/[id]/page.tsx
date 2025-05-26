@@ -26,7 +26,7 @@ interface ExecutiveOrder {
   } | null;
 }
 
-type TabType = 'details' | 'text';
+type TabType = 'text';
 
 export default function ExecutiveOrderDetailPage() {
   const params = useParams()
@@ -151,33 +151,10 @@ export default function ExecutiveOrderDetailPage() {
             >
               Text
             </button>
-            <button
-              onClick={() => setActiveTab('details')}
-              className={`py-4 px-1 inline-flex items-center border-b-2 ${
-                activeTab === 'details'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Details
-            </button>
           </nav>
         </div>
 
         {/* Tab Content */}
-        <div className="space-y-6">
-          {activeTab === 'details' && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="p-6">
-                {order.abstract && (
-                  <div className="prose max-w-none mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Abstract</h2>
-                    <div dangerouslySetInnerHTML={{ __html: order.abstract }} />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {activeTab === 'text' && (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -194,7 +171,6 @@ export default function ExecutiveOrderDetailPage() {
               </div>
             </div>
           )}
-        </div>
       </div>
       {/* Floating AI Chat Button */}
       <AuthProvider>
