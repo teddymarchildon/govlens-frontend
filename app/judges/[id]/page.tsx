@@ -7,6 +7,7 @@ import { Judge, CourtOpinion } from '@/types/types';
 import SaveButton from '@/components/SaveButton';
 import Link from 'next/link';
 import { getCourtOpinions } from '@/services/api';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export default function JudgeDetailPage() {
   const params = useParams();
@@ -76,11 +77,15 @@ export default function JudgeDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-4">
-        <Link href="/judges" className="text-blue-600 hover:text-blue-800">
-          ← Back to Judges
-        </Link>
-      </div>
+      <nav className="mb-6 text-sm">
+        <Breadcrumbs
+          steps={[
+            { label: 'Home', href: '/' },
+            { label: 'Judges', href: '/judges' },
+            { label: judge.full_name || `${judge.first_name} ${judge.middle_name ? judge.middle_name + ' ' : ''}${judge.last_name}${judge.suffix ? ' ' + judge.suffix : ''}` }
+          ]}
+        />
+      </nav>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex justify-between items-start mb-4">
@@ -97,11 +102,17 @@ export default function JudgeDetailPage() {
         {opinions.length > 0 ? (
           <div className="space-y-4">
             {opinions.map((opinion) => (
-              <div key={opinion.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div key={opinion.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {opinion.cluster?.case_name || 'Unnamed Case'}
+                      {opinion.cluster?.id ? (
+                        <Link href={`/supreme-court-cases/${opinion.cluster.id}`}>
+                          {opinion.cluster?.case_name || 'Unnamed Case'}
+                        </Link>
+                      ) : (
+                        opinion.cluster?.case_name || 'Unnamed Case'
+                      )}
                     </h3>
                     {opinion.cluster?.case_name_short && opinion.cluster.case_name_short !== opinion.cluster.case_name && (
                       <p className="text-sm text-gray-600">{opinion.cluster.case_name_short}</p>
