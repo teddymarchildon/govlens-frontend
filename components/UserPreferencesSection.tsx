@@ -14,8 +14,6 @@ const UserPreferencesSection = () => {
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedPolicyAreas, setSelectedPolicyAreas] = useState<PolicyArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [stateSearchTerm, setStateSearchTerm] = useState('');
   const [policyAreaSearchTerm, setPolicyAreaSearchTerm] = useState('');
   const [showStateDropdown, setShowStateDropdown] = useState(false);
@@ -64,51 +62,74 @@ const UserPreferencesSection = () => {
     };
   }, []);
 
-  const handleSavePreferences = async () => {
+  const addState = async (state: string) => {
     if (!user) return;
-
-    try {
-      setIsSaving(true);
-      setSaveSuccess(false);
-
-      await updateUserPreferences(user.id, {
-        states: selectedStates,
-        policy_areas: selectedPolicyAreas
-      });
-
-      setSaveSuccess(true);
-
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    } catch (error) {
-      // Error handling
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const addState = (state: string) => {
+    const newSelectedStates = [...selectedStates, state];
     if (!selectedStates.includes(state)) {
-      setSelectedStates([...selectedStates, state]);
+      setSelectedStates(newSelectedStates);
+      // Update preferences in the database
+      try {
+        await updateUserPreferences(user.id, {
+          states: newSelectedStates,
+          policy_areas: selectedPolicyAreas
+        });
+      } catch (error) {
+        console.error('Error updating state preferences:', error);
+        // Optionally, revert state or show error message
+      }
     }
     setStateSearchTerm('');
   };
 
-  const removeState = (state: string) => {
-    setSelectedStates(selectedStates.filter(s => s !== state));
+  const removeState = async (state: string) => {
+    if (!user) return;
+    const newSelectedStates = selectedStates.filter(s => s !== state);
+    setSelectedStates(newSelectedStates);
+    // Update preferences in the database
+    try {
+      await updateUserPreferences(user.id, {
+        states: newSelectedStates,
+        policy_areas: selectedPolicyAreas
+      });
+    } catch (error) {
+      console.error('Error updating state preferences:', error);
+      // Optionally, revert state or show error message
+    }
   };
 
-  const addPolicyArea = (area: string) => {
+  const addPolicyArea = async (area: string) => {
+    if (!user) return;
+    const newSelectedPolicyAreas = [...selectedPolicyAreas, area as PolicyArea];
     if (!selectedPolicyAreas.includes(area as PolicyArea)) {
-      setSelectedPolicyAreas([...selectedPolicyAreas, area as PolicyArea]);
+      setSelectedPolicyAreas(newSelectedPolicyAreas);
+      // Update preferences in the database
+      try {
+        await updateUserPreferences(user.id, {
+          states: selectedStates,
+          policy_areas: newSelectedPolicyAreas
+        });
+      } catch (error) {
+        console.error('Error updating policy area preferences:', error);
+        // Optionally, revert state or show error message
+      }
     }
     setPolicyAreaSearchTerm('');
   };
 
-  const removePolicyArea = (area: string) => {
-    setSelectedPolicyAreas(selectedPolicyAreas.filter(a => a !== area));
+  const removePolicyArea = async (area: string) => {
+    if (!user) return;
+    const newSelectedPolicyAreas = selectedPolicyAreas.filter(a => a !== area);
+    setSelectedPolicyAreas(newSelectedPolicyAreas);
+    // Update preferences in the database
+    try {
+      await updateUserPreferences(user.id, {
+        states: selectedStates,
+        policy_areas: newSelectedPolicyAreas
+      });
+    } catch (error) {
+      console.error('Error updating policy area preferences:', error);
+      // Optionally, revert state or show error message
+    }
   };
 
   const filteredStates = US_STATES.filter(state =>
@@ -268,24 +289,6 @@ const UserPreferencesSection = () => {
             </div>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center">
-        <button
-          onClick={handleSavePreferences}
-          disabled={isSaving}
-          className={`px-4 py-2 rounded-md text-white font-medium ${
-            isSaving ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {isSaving ? 'Saving...' : 'Save Preferences'}
-        </button>
-
-        {saveSuccess && (
-          <span className="ml-4 text-green-600 font-medium">
-            Preferences saved successfully!
-          </span>
-        )}
       </div>
     </div>
   );
