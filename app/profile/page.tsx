@@ -214,7 +214,7 @@ export default function ProfilePage() {
                       handleDeleteSavedCongressman(savedCongressman);
                     }}
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center shadow-md transition-all pointer-events-auto"
-                    aria-label="Unsave this congressman"
+                    aria-label="Unsave this congressmember"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -227,7 +227,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any congressmen yet.</p>
+            <p className="text-lg text-gray-600 mb-4">You haven&apos;t saved any congressmembers yet.</p>
             <Link href="/congressmen" className="text-blue-600 hover:underline">
               Browse congressmen
             </Link>

@@ -77,7 +77,7 @@ export default function CongressmenPage() {
       <div className="mb-8">
         <div className="mb-4">
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-            Search Congressmen
+            Search Congressmembers
           </label>
           <input
             type="text"
