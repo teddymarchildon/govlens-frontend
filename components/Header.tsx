@@ -119,7 +119,7 @@ export default function Header() {
           </div>
 
           {/* Desktop search and user menu */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center ml-auto">
             <div className="relative mr-4" ref={searchContainerRef}>
               <input
                 type="text"

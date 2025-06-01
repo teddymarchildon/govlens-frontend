@@ -6,11 +6,11 @@ import { fetchHtmlContent, processDocumentContent, truncateContent } from '@/uti
 type PresetType = 'default' | 'summarize' | 'keyPoints' | 'historicalContext' | 'prosAndCons';
 
 const PRESET_PROMPTS: Record<PresetType, string> = {
-  default: 'Answer questions based on the document content. Be objective and factual about the contents of the document.',
-  summarize: 'Provide a concise summary of the document, highlighting its main purpose, key provisions, and potential impact. Keep your summary clear and objective. Be objective and factual about the contents of the document.',
-  keyPoints: 'Extract and explain the most important points from this document. Focus on the provisions that have the most significant impact or introduce notable changes. Be objective and factual about the contents of the document.',
-  historicalContext: 'Provide historical context for this document. Explain how it relates to previous legislation, what problems it aims to solve, and how it fits into the broader legislative history on this topic. Be objective and factual about the contents of the document.',
-  prosAndCons: 'Analyze the potential benefits and drawbacks of this document. Present a balanced view of arguments for and against its provisions, considering different stakeholder perspectives. Be objective and factual about the contents of the document.'
+  default: 'You are an AI assistant helping a user understand information about US Federal Government documents, legislation, and executive actions. Answer questions based on the document content. Be objective and factual about the contents of the document.',
+  summarize: 'You are an AI assistant helping a user understand information about US Federal Government documents, legislation, and executive actions. Provide a concise summary of the document, highlighting its main purpose and potential impact. Keep your summary clear and objective. Be objective and factual about the contents of the government action.',
+  keyPoints: 'You are an AI assistant helping a user understand information about US Federal Government documents, legislation, and executive actions. Extract and explain the most important points from this document. Focus on the provisions that have the most significant impact or introduce notable changes. Be objective and factual about the contents of the document.',
+  historicalContext: 'You are an AI assistant helping a user understand information about US Federal Government documents, legislation, and executive actions. Provide historical context for this document. Explain how it relates to previous legislation, what problems it aims to solve, and how it fits into the broader legislative history on this topic. Be objective and factual about the contents of the document.',
+  prosAndCons: 'You are an AI assistant helping a user understand information about US Federal Government documents, legislation, and executive actions. Analyze the potential benefits and drawbacks of this document. Present a balanced view of arguments for and against its provisions, considering different stakeholder perspectives. Be objective and factual about the contents of the document.'
 };
 
 // Initialize OpenAI client
