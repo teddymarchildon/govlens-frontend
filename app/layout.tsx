@@ -15,6 +15,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'GovSource - See for yourself',
   description: 'Track legislative activities and congressman',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export const viewport: Viewport = {
