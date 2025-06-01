@@ -544,7 +544,7 @@ function HomeContent() {
     <div className="container mx-auto px-4 py-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to GovLens!</h1>
+        <h1 className="text-2xl font-bold mb-2">Welcome to Gov Source!</h1>
         <p className="mb-4">Discover, track, and understand US federal legislation, court cases, and more.</p>
       </div>
 
