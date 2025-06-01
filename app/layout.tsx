@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Lex - See for yourself',
+  title: 'GovSource - See for yourself',
   description: 'Track legislative activities and congressman',
 };
 
