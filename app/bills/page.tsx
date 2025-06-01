@@ -230,6 +230,19 @@ function BillsPageContent() {
     }
   };
 
+  // Individual clear handlers
+  const clearPolicyAreaFilter = () => setPolicyArea('');
+  const clearSearchQueryFilter = () => setSearchQuery('');
+  const clearSponsorFilter = () => {
+    setSelectedSponsor(null);
+    if (congressmanSearchRef.current) {
+      congressmanSearchRef.current.clear();
+    }
+  };
+  const clearStartDateFilter = () => setStartDate('');
+  const clearEndDateFilter = () => setEndDate('');
+  const clearSortOrderFilter = () => setSortOrder('desc');
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Bills</h1>
@@ -333,31 +346,73 @@ function BillsPageContent() {
           {policyArea && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2">
               Policy: {policyArea}
+              <button
+                onClick={clearPolicyAreaFilter}
+                className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
+                aria-label="Clear policy area filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {selectedSponsor && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2 mb-2">
               Sponsor: {selectedSponsor.full_name}
+              <button
+                onClick={clearSponsorFilter}
+                className="ml-2 text-green-500 hover:text-green-700 focus:outline-none"
+                aria-label="Clear sponsor filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {searchQuery && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2 mb-2">
               Search: {searchQuery}
+              <button
+                onClick={clearSearchQueryFilter}
+                className="ml-2 text-purple-500 hover:text-purple-700 focus:outline-none"
+                aria-label="Clear search filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {startDate && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
               From: {new Date(startDate).toLocaleDateString()}
+              <button
+                onClick={clearStartDateFilter}
+                className="ml-2 text-amber-500 hover:text-amber-700 focus:outline-none"
+                aria-label="Clear start date filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {endDate && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 mr-2 mb-2">
               To: {new Date(endDate).toLocaleDateString()}
+              <button
+                onClick={clearEndDateFilter}
+                className="ml-2 text-amber-500 hover:text-amber-700 focus:outline-none"
+                aria-label="Clear end date filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {sortOrder !== 'desc' && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2 mb-2">
               Sort: {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
+              <button
+                onClick={clearSortOrderFilter}
+                className="ml-2 text-indigo-500 hover:text-indigo-700 focus:outline-none"
+                aria-label="Clear sort order filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           <button

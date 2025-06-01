@@ -70,6 +70,12 @@ export default function CongressmenPage() {
     setCurrentOnly(true); // Reset to default (true)
   };
 
+  // Individual clear handlers
+  const clearPartyFilter = () => setParty('');
+  const clearStateFilter = () => setState('');
+  const clearChamberFilter = () => setChamber('');
+  const clearCurrentOnlyFilter = () => setCurrentOnly(true);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Members of Congress</h1>
@@ -168,21 +174,49 @@ export default function CongressmenPage() {
           {party && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
               Party: {party}
+              <button
+                onClick={clearPartyFilter}
+                className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
+                aria-label="Clear party filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {state && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
               State: {state}
+              <button
+                onClick={clearStateFilter}
+                className="ml-2 text-green-500 hover:text-green-700 focus:outline-none"
+                aria-label="Clear state filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {chamber && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2">
               Chamber: {chamber}
+              <button
+                onClick={clearChamberFilter}
+                className="ml-2 text-purple-500 hover:text-purple-700 focus:outline-none"
+                aria-label="Clear chamber filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           {!currentOnly && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
               Including former members
+              <button
+                onClick={clearCurrentOnlyFilter}
+                className="ml-2 text-yellow-500 hover:text-yellow-700 focus:outline-none"
+                aria-label="Clear current only filter"
+              >
+                &times;
+              </button>
             </span>
           )}
           <button

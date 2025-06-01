@@ -40,6 +40,10 @@ export default function AgenciesPage() {
     (agency.short_name && agency.short_name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Individual clear handlers
+  const clearSearchTermFilter = () => setSearchTerm('');
+  const clearParentAgenciesOnlyFilter = () => setParentAgenciesOnly(false);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -82,6 +86,36 @@ export default function AgenciesPage() {
           </label>
         </div>
       </div>
+
+      {(searchTerm || parentAgenciesOnly) && (
+        <div className="mb-4 flex items-center">
+          <div className="text-sm text-gray-600 mr-2">Active filters:</div>
+          {searchTerm && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+              Search: {searchTerm}
+              <button
+                onClick={clearSearchTermFilter}
+                className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
+                aria-label="Clear search filter"
+              >
+                &times;
+              </button>
+            </span>
+          )}
+          {parentAgenciesOnly && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+              Show parent agencies only
+              <button
+                onClick={clearParentAgenciesOnlyFilter}
+                className="ml-2 text-green-500 hover:text-green-700 focus:outline-none"
+                aria-label="Clear parent agencies only filter"
+              >
+                &times;
+              </button>
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredAgencies.map((agency) => (
