@@ -191,7 +191,7 @@ export default function AiChat({
         <button
           onClick={() => setIsOpen(true)}
           className="px-4 py-3 rounded-lg bg-blue-700 text-white flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all text-sm font-medium"
-          aria-label="Open AI Chat"
+          aria-label="AI Chat"
         >
           {buttonText}
         </button>
