@@ -320,7 +320,7 @@ function HomeContent() {
                 onClick={() => setActiveTab('bills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'bills'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -330,7 +330,7 @@ function HomeContent() {
                 onClick={() => setActiveTab('congressmen')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'congressmen'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -340,7 +340,7 @@ function HomeContent() {
                 onClick={() => setActiveTab('judges')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'judges'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -350,7 +350,7 @@ function HomeContent() {
                 onClick={() => setActiveTab('agencies')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'agencies'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
