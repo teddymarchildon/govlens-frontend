@@ -89,7 +89,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-blue-600">
+            <Link href="/" className="text-xl font-bold text-blue-700">
               GovSource
             </Link>
           </div>
@@ -170,7 +170,7 @@ export default function Header() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md"
+                  className="text-sm font-medium text-white bg-blue-700 hover:bg-blue-700 px-4 py-2 rounded-md"
                 >
                   Sign Up
                 </Link>
@@ -276,7 +276,7 @@ export default function Header() {
               </Link>
               <Link
                 href="/signup"
-                className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-center"
+                className="text-sm font-medium text-white bg-blue-700 hover:bg-blue-700 px-4 py-2 rounded-md text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Sign Up

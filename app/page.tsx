@@ -543,7 +543,7 @@ function HomeContent() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
+      <div className="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
         <h1 className="text-2xl font-bold mb-2">Welcome to GovSource!</h1>
         <p className="mb-4">Discover, track, and understand US federal legislation, court cases, and more.</p>
       </div>
@@ -557,7 +557,7 @@ function HomeContent() {
           <li>Get personalized legislative updates (coming soon)</li>
         </ul>
         <div className="flex space-x-3">
-          <Link href="/signup" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors">Sign Up</Link>
+          <Link href="/signup" className="inline-block px-4 py-2 bg-blue-700 text-white rounded-md font-medium hover:bg-blue-700 transition-colors">Sign Up</Link>
           <Link href="/login" className="inline-block px-4 py-2 bg-gray-100 text-blue-700 rounded-md font-medium hover:bg-gray-200 transition-colors">Log In</Link>
         </div>
       </div>

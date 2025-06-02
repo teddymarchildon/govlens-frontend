@@ -151,7 +151,7 @@ export default function SupremeCourtCaseDetailPage() {
                           onClick={() => setActiveTab(idx)}
                           className={`py-3 px-1 inline-flex items-center border-b-2 transition-colors duration-200 ${
                             activeTab === idx
-                              ? 'border-blue-500 text-blue-600 font-semibold'
+                              ? 'border-blue-700 text-blue-700 font-medium'
                               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                           }`}
                         >

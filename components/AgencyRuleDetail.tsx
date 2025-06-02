@@ -73,7 +73,7 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
             onClick={() => setActiveTab('details')}
             className={`py-4 px-1 inline-flex items-center border-b-2 ${
               activeTab === 'details'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-700 text-blue-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -84,7 +84,7 @@ export default function AgencyRuleDetail({ rule }: AgencyRuleDetailProps) {
             onClick={() => setActiveTab('text')}
             className={`py-4 px-1 inline-flex items-center border-b-2 ${
               activeTab === 'text'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-700 text-blue-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >

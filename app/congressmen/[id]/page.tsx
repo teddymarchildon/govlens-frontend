@@ -291,14 +291,14 @@ export default function CongressmanDetailPage() {
                 onClick={() => setActiveTab('bills')}
                 className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
                   activeTab === 'bills'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700 font-medium'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Bills
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   activeTab === 'bills'
-                    ? 'bg-blue-100 text-blue-600'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'bg-gray-100 text-gray-900'
                 }`}>
                   {sponsoredBills.length + cosponsoredBills.length}
@@ -308,14 +308,14 @@ export default function CongressmanDetailPage() {
                 onClick={() => setActiveTab('terms')}
                 className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
                   activeTab === 'terms'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700 font-medium'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Terms
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   activeTab === 'terms'
-                    ? 'bg-blue-100 text-blue-600'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'bg-gray-100 text-gray-900'
                 }`}>
                   {terms.length}
@@ -325,7 +325,7 @@ export default function CongressmanDetailPage() {
                 onClick={() => setActiveTab('statistics')}
                 className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
                   activeTab === 'statistics'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-blue-700 text-blue-700 font-medium'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >

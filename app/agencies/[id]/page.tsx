@@ -119,17 +119,6 @@ export default function AgencyDetailPage() {
             </div>
             <div className="mt-4 md:mt-0 flex items-center space-x-4">
               <SaveButton itemId={agencyId} itemType="agency" />
-              <a
-                href={agency.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Visit Website
-                <svg className="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </a>
             </div>
           </div>
 
@@ -152,12 +141,12 @@ export default function AgencyDetailPage() {
               onClick={() => setActiveTab('subagencies')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'subagencies'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-blue-700 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Sub-Agencies
-              <span className="ml-2 py-0.5 px-2 text-xs rounded-full bg-gray-100">
+              <span className={`ml-2 py-0.5 px-2 text-xs rounded-full bg-gray-100${activeTab === 'subagencies' ? ' text-blue-700' : ''}`}>
                 {childAgencies.length}
               </span>
             </button>
@@ -165,12 +154,12 @@ export default function AgencyDetailPage() {
               onClick={() => setActiveTab('rules')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'rules'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-blue-700 text-blue-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
               Rules
-              <span className="ml-2 py-0.5 px-2 text-xs rounded-full bg-gray-100">
+              <span className={`ml-2 py-0.5 px-2 text-xs rounded-full bg-gray-100${activeTab === 'rules' ? ' text-blue-700' : ''}`}>
                 {agencyRulesCount}
               </span>
             </button>

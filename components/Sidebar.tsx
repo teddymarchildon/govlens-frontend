@@ -146,7 +146,7 @@ export default function Sidebar() {
   }, [isMobileOpen]);
 
   const isActive = (path: string) => {
-    return pathname === path ? 'bg-gray-100 text-blue-600 font-medium' : '';
+    return pathname === path ? 'bg-gray-100 text-blue-700 font-medium' : '';
   };
 
   // Fixed button to toggle sidebar on mobile
