@@ -33,17 +33,17 @@ export default function OnboardingContainer() {
       <main className="flex-grow flex flex-col items-center justify-center py-12">
         <div className="w-full max-w-4xl">
           <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="p-4 bg-blue-50 border-b border-blue-100">
+            <div className="p-4 bg-blue-700">
               <div className="flex items-center">
                 <div className="flex-1">
-                  <div className="h-2 bg-gray-200 rounded-full">
+                  <div className="h-2 bg-blue-900 rounded-full">
                     <div
-                      className="h-2 bg-blue-600 rounded-full"
+                      className="h-2 bg-white rounded-full"
                       style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                     ></div>
                   </div>
                 </div>
-                <span className="ml-4 text-sm font-medium text-gray-600">
+                <span className="ml-4 text-sm font-medium text-white">
                   Step {currentStep} of {totalSteps}
                 </span>
               </div>
