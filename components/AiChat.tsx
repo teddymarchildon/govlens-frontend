@@ -201,7 +201,7 @@ export default function AiChat({
       {isOpen && (
         <div className="flex flex-col w-96 md:w-[550px] h-[600px] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-slide-up">
           {/* Header */}
-          <div className="p-3 bg-blue-600 text-white flex justify-between items-center">
+          <div className="p-3 bg-blue-700 text-white flex justify-between items-center">
             <h2 className="text-lg font-semibold">GovSource Assistant</h2>
             <div className="flex space-x-2">
               <button
