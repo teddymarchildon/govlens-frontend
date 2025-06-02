@@ -241,7 +241,7 @@ function HomeContent() {
     return (
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-6 mb-8 text-white">
+        <div className="bg-gradient-to-r from-blue-700 to-blue-600 rounded-lg shadow-md p-6 mb-8 text-white">
           <h1 className="text-2xl font-bold mb-2">Welcome back{user.user_metadata?.name ? `, ${user.user_metadata.name}` : ''}!</h1>
           <p className="mb-4">See what&apos;s new</p>
           {userPreferences && (!userPreferences.policy_areas || userPreferences.policy_areas.length === 0) && (

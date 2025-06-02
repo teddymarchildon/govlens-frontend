@@ -185,7 +185,7 @@ export default function Header() {
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
                 >
-                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium cursor-pointer">
+                  <div className="h-8 w-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-medium cursor-pointer">
                     {user.email?.substring(0, 2).toUpperCase() || 'ME'}
                   </div>
                 </button>
