@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.png',
   },
+  openGraph: {
+    title: 'GovSource - See for yourself',
+    description: 'Track legislative activities, executive orders, agencies, and congressman',
+    url: 'https://www.govsrc.com',
+    siteName: 'GovSource',
+    type: 'website',
+  },
 };
 
 export const viewport: Viewport = {
