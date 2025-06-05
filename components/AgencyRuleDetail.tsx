@@ -8,7 +8,7 @@ import Breadcrumbs from './Breadcrumbs';
 import { AgencyDocument } from '@/types/types';
 import Link from 'next/link';
 import AiChat from './AiChat';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '../contexts/AuthContext';
 
 type TabType = 'details' | 'text';
 

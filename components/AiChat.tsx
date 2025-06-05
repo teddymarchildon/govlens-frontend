@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, DocumentTextIcon, SparklesIcon, ClockIcon, ScaleIcon } from '@heroicons/react/24/outline';
 import ReactMarkdown from 'react-markdown';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';

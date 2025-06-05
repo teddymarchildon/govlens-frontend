@@ -9,7 +9,7 @@ import SaveButton from '../../../components/SaveButton';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 import PdfViewer from '../../../components/PdfViewer';
 import AiChat from '../../../components/AiChat';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function SupremeCourtCaseDetailPage() {
   const params = useParams();

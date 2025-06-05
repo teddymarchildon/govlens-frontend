@@ -17,6 +17,12 @@ export default function SignupPage() {
   const { signUp, user } = useAuth();
   const [showConfirmNotice, setShowConfirmNotice] = useState(false);
 
+  useEffect(() => {
+    if (user && user.email_confirmed_at) {
+      router.push('/onboarding');
+    }
+  }, [user, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -39,12 +45,6 @@ export default function SignupPage() {
     }
   };
 
-  // If user is logged in and confirmed, redirect to onboarding
-  if (user && user.email_confirmed_at) {
-    router.push('/onboarding');
-    return null;
-  }
-
   // Poll for email confirmation every 5 seconds when waiting for confirmation
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -62,6 +62,11 @@ export default function SignupPage() {
       if (interval) clearInterval(interval);
     };
   }, [showConfirmNotice, user]);
+
+  if (user && user.email_confirmed_at) {
+    // Optionally, render nothing or a loading spinner while redirecting
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

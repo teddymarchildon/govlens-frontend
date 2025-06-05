@@ -7,7 +7,7 @@ import PdfViewer from '@/components/PdfViewer';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import SaveButton from '@/components/SaveButton';
 import AiChat from '@/components/AiChat';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 interface ExecutiveOrder {
   id: string;

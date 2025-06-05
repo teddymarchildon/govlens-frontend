@@ -8,7 +8,7 @@ import PdfViewer from './PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
 import AiChat from './AiChat';
 import { BillText, Congressman } from '@/types/types';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '../contexts/AuthContext';
 
 interface BillAction {
   id: string;
