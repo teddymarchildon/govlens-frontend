@@ -111,6 +111,8 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  email_confirmed_at?: string | null;
+  confirmed_at?: string | null;
 }
 
 export interface Agency {

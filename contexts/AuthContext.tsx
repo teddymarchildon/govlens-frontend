@@ -2,10 +2,11 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as AppUser } from '../types/types';
 
 type AuthContextType = {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -17,13 +18,13 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(true);
 
   const checkOnboardingStatus = async (): Promise<boolean> => {
     if (!user) return false;
-    
+
     try {
       // Check user_usage table for saw_onboarding_flow_at
       const { data, error } = await supabase
@@ -31,12 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('saw_onboarding_flow_at')
         .eq('user_id', user.id)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
         console.error('Error checking onboarding status:', error);
         return false;
       }
-      
+
       // User has completed onboarding if saw_onboarding_flow_at is not null
       const completed = !!(data && data.saw_onboarding_flow_at);
       setHasCompletedOnboarding(completed);
@@ -51,17 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for active session on mount
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
-      
+
       if (error) {
         console.error('Error checking auth session:', error);
       }
-      
+
       if (data?.session) {
-        setUser(data.session.user);
+        const supaUser = data.session.user as SupabaseUser;
+        setUser({
+          id: supaUser.id,
+          email: supaUser.email ?? '',
+          email_confirmed_at: (supaUser as any).email_confirmed_at ?? null,
+          confirmed_at: (supaUser as any).confirmed_at ?? null,
+        });
         // Check onboarding status when user is set
         await checkOnboardingStatus();
       }
-      
+
       setLoading(false);
     };
 
@@ -71,8 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          setUser(session.user);
-          
+          const supaUser = session.user as SupabaseUser;
+          setUser({
+            id: supaUser.id,
+            email: supaUser.email ?? '',
+            email_confirmed_at: (supaUser as any).email_confirmed_at ?? null,
+            confirmed_at: (supaUser as any).confirmed_at ?? null,
+          });
           // Check onboarding status when auth state changes
           if (event === 'SIGNED_IN') {
             await checkOnboardingStatus();
@@ -94,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) throw error;
-    
+
     // Check onboarding status after sign in
     await checkOnboardingStatus();
   };
@@ -104,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (error) throw error;
-    
+
     // New users haven't completed onboarding
     setHasCompletedOnboarding(false);
   };
@@ -117,12 +129,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      signIn, 
-      signOut, 
-      signUp, 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signIn,
+      signOut,
+      signUp,
       hasCompletedOnboarding,
       checkOnboardingStatus
     }}>
