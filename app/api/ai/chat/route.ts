@@ -71,6 +71,7 @@ export async function POST(request: Request) {
 
     // Process and truncate the content if available
     if (content) {
+      console.log('Processing document content');
       content = processDocumentContent(content);
       content = truncateContent(content, 50000); // Limit to ~50K chars to stay within token limits
       systemMessage.content += `\n\nHere is the content of the document:\n\n${content}`;
