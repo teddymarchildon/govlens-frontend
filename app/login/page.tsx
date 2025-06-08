@@ -109,6 +109,18 @@ function LoginPageInner() {
             </Link>
           </p>
         </div>
+
+        {/* Stripe Checkout Button */}
+        <div className="mt-6">
+          <a
+            href="https://buy.stripe.com/7sY4gzcew0Exef437l2ZO00"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-block text-center bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+          >
+            Subscribe to use AI, get notifications, and more
+          </a>
+        </div>
       </div>
     </div>
   );
