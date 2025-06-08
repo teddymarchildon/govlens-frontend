@@ -168,7 +168,7 @@ export default function ProfilePage() {
       <UserPreferencesSection />
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Bills</h2>
+        <h2 className="text-2xl font-semibold mb-4">Bills watched</h2>
         {savedBills.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedBills.map((savedBill) => (
@@ -203,7 +203,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Congressmembers</h2>
+        <h2 className="text-2xl font-semibold mb-4">Congressmembers watched</h2>
         {savedCongressmen.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedCongressmen.map((savedCongressman) => (
@@ -238,7 +238,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Agencies</h2>
+        <h2 className="text-2xl font-semibold mb-4">Agencies watched</h2>
         {savedAgencies.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedAgencies.map((savedAgency) => (
@@ -273,7 +273,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Judges</h2>
+        <h2 className="text-2xl font-semibold mb-4">Judges watched</h2>
         {savedJudges.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedJudges.map((savedJudge) => (
@@ -308,7 +308,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Court Cases</h2>
+        <h2 className="text-2xl font-semibold mb-4">Court cases watched</h2>
         {savedClusters.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedClusters.map((savedCluster) => (
@@ -343,7 +343,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Watching Agency Rules</h2>
+        <h2 className="text-2xl font-semibold mb-4">Agency rules watched</h2>
         {savedAgencyDocuments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedAgencyDocuments.map((savedDocument) => (
