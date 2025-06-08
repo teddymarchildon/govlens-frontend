@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBillById, getBillTexts, getBillSponsors, getBillCosponsors, getBillActions } from '../../../services/api';
+import { getBillById, getBillTexts, getBillSponsors, getBillCosponsors, getBillActions, getBillSummary } from '../../../services/api';
 import BillOrLawDetail from '@/components/BillOrLawDetail';
 import { useParams } from 'next/navigation';
 
@@ -13,6 +13,7 @@ export default function BillDetailPage() {
   const [sponsors, setSponsors] = useState<any[]>([]);
   const [cosponsors, setCosponsors] = useState<any[]>([]);
   const [actions, setActions] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,12 +25,14 @@ export default function BillDetailPage() {
         const sponsorsData = await getBillSponsors(billId);
         const cosponsorsData = await getBillCosponsors(billId);
         const actionsData = await getBillActions(billId);
+        const summaryData = await getBillSummary(billId);
 
         setBill(billData);
         setTexts(textsData);
         setSponsors(sponsorsData);
         setCosponsors(cosponsorsData);
         setActions(actionsData);
+        setSummary(summaryData);
       } catch (error) {
         console.error('Error fetching bill data:', error);
       } finally {
@@ -61,6 +64,7 @@ export default function BillDetailPage() {
       sponsors={sponsors}
       cosponsors={cosponsors}
       actions={actions}
+      summary={summary}
       isLaw={false}
     />
   );

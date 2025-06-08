@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Agency, AgencyDocument, Bill, Congressman, Judge, BillText, CongressmanTerm, SavedCongressman, SavedBill } from '../types/types';
+import { Agency, AgencyDocument, Bill, Congressman, Judge, BillText, CongressmanTerm, SavedCongressman, SavedBill, BillSummary } from '../types/types';
 
 // Storage API
 export const getStoragePublicUrl = (bucket: string, path: string): string | null => {
@@ -1317,4 +1317,15 @@ export const getSavedAgencyDocuments = async (userId: string) => {
   );
 
   return enhancedDocs;
+};
+
+export const getBillSummary = async (billId: string): Promise<BillSummary | null> => {
+  const { data, error } = await supabase
+    .from('bill_summary')
+    .select('*')
+    .eq('bill', billId)
+    .order('date', { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data && data.length > 0 ? data[0] as BillSummary : null;
 };

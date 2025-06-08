@@ -258,3 +258,11 @@ export type PolicyArea =
   | 'Taxation'
   | 'Transportation and Public Works'
   | 'Water Resources Development';
+
+export interface BillSummary {
+  id: string;
+  bill: string;
+  date?: string;
+  text: string;
+  created_at?: string;
+}

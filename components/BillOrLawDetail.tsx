@@ -7,7 +7,7 @@ import SaveButton from './SaveButton';
 import PdfViewer from './PdfViewer';
 import Breadcrumbs from './Breadcrumbs';
 import AiChat from './AiChat';
-import { BillText, Congressman } from '@/types/types';
+import { BillText, Congressman, BillSummary } from '@/types/types';
 import { AuthProvider } from '../contexts/AuthContext';
 
 interface BillAction {
@@ -39,10 +39,11 @@ interface BillOrLawDetailProps {
   sponsors: Congressman[];
   cosponsors: Congressman[];
   actions: BillAction[];
+  summary?: BillSummary | null;
   isLaw?: boolean;
 }
 
-type TabType = 'sponsors' | 'actions' | 'text';
+type TabType = 'details' | 'sponsors' | 'actions' | 'text';
 
 export default function BillOrLawDetail({
   item,
@@ -50,9 +51,10 @@ export default function BillOrLawDetail({
   sponsors,
   cosponsors,
   actions,
+  summary,
   isLaw = false
 }: BillOrLawDetailProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('text');
+  const [activeTab, setActiveTab] = useState<TabType>('details');
   const latestText = texts.length > 0 ? texts[0] : null;
 
   const itemType = isLaw ? 'law' : 'bill';
@@ -93,7 +95,17 @@ export default function BillOrLawDetail({
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6 overflow-x-auto">
         <nav className="flex space-x-4 md:space-x-8 whitespace-nowrap" aria-label="Tabs">
-        <button
+          <button
+            onClick={() => setActiveTab('details')}
+            className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
+              activeTab === 'details'
+                ? 'border-blue-700 text-blue-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Details
+          </button>
+          <button
             onClick={() => setActiveTab('text')}
             className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
               activeTab === 'text'
@@ -103,7 +115,6 @@ export default function BillOrLawDetail({
           >
             Text
           </button>
-
           <button
             onClick={() => setActiveTab('sponsors')}
             className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
@@ -121,7 +132,6 @@ export default function BillOrLawDetail({
               {(sponsors?.length || 0) + (cosponsors?.length || 0)}
             </span>
           </button>
-
           <button
             onClick={() => setActiveTab('actions')}
             className={`py-3 md:py-4 px-1 inline-flex items-center gap-2 border-b-2 ${
@@ -144,6 +154,22 @@ export default function BillOrLawDetail({
 
       {/* Tab Content */}
       <div className="mb-8">
+        {activeTab === 'details' && (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Summary</h3>
+              {summary && summary.text ? (
+                <div className="prose max-w-none mb-6">
+                  <div className="bg-gray-50 p-4 rounded text-gray-900 whitespace-pre-line">
+                    {summary.text}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-500 italic">No summary available for this bill.</div>
+              )}
+            </div>
+          </div>
+        )}
         {activeTab === 'sponsors' && (
           <div className="space-y-8">
             <div>
