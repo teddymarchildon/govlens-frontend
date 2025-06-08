@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/profile';
   const { signIn, hasCompletedOnboarding, user, checkOnboardingStatus } = useAuth();
 
   // Check if user has completed onboarding when they're authenticated
@@ -21,11 +23,11 @@ export default function LoginPage() {
         const completed = await checkOnboardingStatus();
 
         if (!completed) {
-          // Redirect to onboarding if saw_onboarding_flow_at is null
-          router.push('/onboarding');
+          // Redirect to onboarding, passing along the redirect param if present
+          router.push(`/onboarding${redirectPath ? `?redirect=${encodeURIComponent(redirectPath)}` : ''}`);
         } else {
-          // Otherwise redirect to profile
-          router.push('/profile');
+          // Otherwise redirect to the original page or profile
+          router.push(redirectPath);
         }
       }
     };
@@ -33,7 +35,7 @@ export default function LoginPage() {
     if (user) {
       checkAndRedirect();
     }
-  }, [user, hasCompletedOnboarding, checkOnboardingStatus, router]);
+  }, [user, hasCompletedOnboarding, checkOnboardingStatus, router, redirectPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

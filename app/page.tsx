@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import BillCard from '../components/BillCard';
 import LawCard from '../components/LawCard';
@@ -27,6 +27,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const currentPolicyArea = searchParams.get('policy_area');
+  const pathname = usePathname();
 
   // State for logged-out experience
   const [bills, setBills] = useState<Bill[]>([]);
@@ -558,7 +559,7 @@ function HomeContent() {
         </ul>
         <div className="flex space-x-3">
           <Link href="/signup" className="inline-block px-4 py-2 bg-blue-700 text-white rounded-md font-medium hover:bg-blue-700 transition-colors">Sign Up</Link>
-          <Link href="/login" className="inline-block px-4 py-2 bg-gray-100 text-blue-700 rounded-md font-medium hover:bg-gray-200 transition-colors">Log In</Link>
+          <Link href={`/login?redirect=${encodeURIComponent(pathname)}`} className="inline-block px-4 py-2 bg-gray-100 text-blue-700 rounded-md font-medium hover:bg-gray-200 transition-colors">Log In</Link>
         </div>
       </div>
 

@@ -20,6 +20,7 @@ import {
 } from '../../types/types';
 import Link from 'next/link';
 import UserPreferencesSection from '../../components/UserPreferencesSection';
+import { usePathname } from 'next/navigation';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function ProfilePage() {
   const [savedClusters, setSavedClusters] = useState<SavedCluster[]>([]);
   const [savedAgencyDocuments, setSavedAgencyDocuments] = useState<SavedAgencyDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchSavedItems = async () => {
@@ -142,7 +144,7 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
           <h1 className="text-2xl font-bold mb-4">Please sign in to view your profile</h1>
           <Link
-            href="/login"
+            href={`/login?redirect=${encodeURIComponent(pathname)}`}
             className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Sign In

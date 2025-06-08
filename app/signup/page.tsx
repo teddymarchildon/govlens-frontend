@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -16,6 +16,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { signUp, user } = useAuth();
   const [showConfirmNotice, setShowConfirmNotice] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (user && user.email_confirmed_at) {
@@ -144,8 +145,8 @@ export default function SignupPage() {
         <div className="mt-4 text-center">
           <p>
             Already have an account?{' '}
-            <Link href="/login" className="text-blue-700 hover:underline">
-              Sign in
+            <Link href={`/login?redirect=${encodeURIComponent(pathname)}`} className="text-blue-700 hover:underline">
+              Sign In
             </Link>
           </p>
         </div>

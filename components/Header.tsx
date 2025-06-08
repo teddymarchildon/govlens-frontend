@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 import SearchResults from './SearchResults';
 import useSearch from '../hooks/useSearch';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Header() {
   const { user, signOut, loading } = useAuth();
@@ -13,6 +14,8 @@ export default function Header() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Use our custom search hook
   const {
@@ -163,7 +166,7 @@ export default function Header() {
             {!loading && !user && (
               <div className="flex items-center space-x-4">
                 <Link
-                  href="/login"
+                  href={`/login?redirect=${encodeURIComponent(pathname)}`}
                   className="text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Sign In
@@ -268,7 +271,7 @@ export default function Header() {
           {!loading && !user && (
             <div className="flex flex-col space-y-3">
               <Link
-                href="/login"
+                href={`/login?redirect=${encodeURIComponent(pathname)}`}
                 className="text-sm font-medium text-gray-700 hover:text-gray-900 py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
