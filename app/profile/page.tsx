@@ -185,10 +185,10 @@ export default function ProfilePage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to view your profile</h1>
+          <h1 className="text-2xl font-bold mb-4">Sign in to view your profile</h1>
           <Link
             href={`/login?redirect=${encodeURIComponent(pathname)}`}
-            className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="inline-block bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
             Sign In
           </Link>
@@ -211,6 +211,26 @@ export default function ProfilePage() {
       {/* Subscription & Payments Section */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Subscription & Payments</h2>
+
+        {/* Free vs Paid Tiers */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1 border rounded-lg p-4 bg-gray-50">
+            <h3 className="text-lg font-bold mb-2 text-gray-700">Free Tier</h3>
+            <ul className="list-disc pl-5 text-gray-700">
+              <li>Access to GovSource&apos;s information</li>
+            </ul>
+          </div>
+          <div className="flex-1 border rounded-lg p-4 bg-purple-50">
+            <h3 className="text-lg font-bold mb-2 text-purple-700">Paid Tier</h3>
+            <ul className="list-disc pl-5 text-purple-800">
+              <li>Access to AI</li>
+              <li>No ads</li>
+              <li>Notifications (coming soon)</li>
+              <li>Digest (coming soon)</li>
+            </ul>
+          </div>
+        </div>
+
         {subLoading ? (
           <div>Loading subscription info...</div>
         ) : !subscription ? (
@@ -222,7 +242,7 @@ export default function ProfilePage() {
               rel="noopener noreferrer"
               className="inline-block bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
             >
-              Subscribe with Stripe
+              Subscribe through Stripe
             </a>
           </div>
         ) : (
