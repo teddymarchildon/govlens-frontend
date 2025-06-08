@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { AuthProvider } from '../contexts/AuthContext';
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -50,6 +51,7 @@ export default function RootLayout({
             </main>
           </div>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
