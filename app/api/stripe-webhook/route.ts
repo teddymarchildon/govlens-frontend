@@ -71,6 +71,20 @@ export async function POST(req: NextRequest) {
   // Handle the event
   try {
     switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as any;
+        const userId = session.client_reference_id;
+        const stripeCustomerId = session.customer;
+        if (userId && stripeCustomerId) {
+          // Upsert the mapping in the subscription table
+          await supabase.from('subscription').upsert({
+            user_id: userId,
+            stripe_customer_id: stripeCustomerId,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'stripe_customer_id' });
+        }
+        break;
+      }
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {

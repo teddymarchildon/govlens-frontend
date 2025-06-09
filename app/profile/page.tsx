@@ -236,14 +236,33 @@ export default function ProfilePage() {
         ) : !subscription ? (
           <div className="text-center">
             <p className="mb-4">You do not have an active subscription.</p>
-            <a
-              href="https://buy.stripe.com/7sY4gzcew0Exef437l2ZO00"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
+            <button
+              onClick={async () => {
+                if (!user) return;
+                setCancelLoading(true);
+                try {
+                  const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id }),
+                  });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  } else {
+                    alert('Failed to create checkout session.');
+                  }
+                } catch (err) {
+                  alert('Failed to create checkout session.');
+                } finally {
+                  setCancelLoading(false);
+                }
+              }}
+              className="inline-block bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
+              disabled={cancelLoading}
             >
-              Subscribe through Stripe
-            </a>
+              {cancelLoading ? 'Redirecting...' : 'Subscribe through Stripe'}
+            </button>
           </div>
         ) : (
           <div>
