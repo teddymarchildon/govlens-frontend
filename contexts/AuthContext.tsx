@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { createClient } from '../lib/supabase';
+import { createClient } from '../lib/supabase-helpers';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import type { User as AppUser } from '../types/types';
 import { createFreeSubscription } from '../services/api';

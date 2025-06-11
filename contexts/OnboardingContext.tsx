@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './AuthContext';
-import { createClient } from '../lib/supabase';
+import { createClient } from '../lib/supabase-helpers';
 import { UserPreferences } from '../types/types';
 
 // Extended UserPreferences for the onboarding flow

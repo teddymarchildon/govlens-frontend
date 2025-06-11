@@ -1,14 +1,14 @@
 'use server'
 
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import AgencyRulesClient from './AgencyRulesClient';
 import { Agency, AgencyDocument } from '@/types/types';
 
 // Server-side fetch for initial rules
 async function fetchInitialRules() {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
     const { data, error } = await supabase
       .from('agency_document')
       .select(`
@@ -38,7 +38,7 @@ async function fetchInitialRules() {
 // Server-side fetch for top-level agencies
 async function fetchTopLevelAgencies() {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
     const { data, error } = await supabase
       .from('agency')
       .select('*')

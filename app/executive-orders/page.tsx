@@ -1,13 +1,13 @@
 'use server'
 
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { AgencyDocument } from '@/types/types';
-import ExecutiveOrdersClient  from './ExecutiveOrdersClient';
+import ExecutiveOrdersClient from './ExecutiveOrdersClient';
 
 // Server Component
 async function fetchInitialOrders() {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
   try {
     const { data, error } = await supabase
       .from('agency_document')
@@ -52,7 +52,7 @@ async function fetchInitialOrders() {
 }
 
 async function fetchPresidents() {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
   try {
     const { data, error } = await supabase
       .from('agency_document')
