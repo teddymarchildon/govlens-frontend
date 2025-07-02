@@ -247,29 +247,29 @@ export default function AiChat({
 
   // Panel layout (always open, not floating)
   return (
-    <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden relative">
       {/* Header */}
-      <div className="p-2 bg-primary text-white flex justify-between items-center rounded-t-xl">
+      <div className="flex-shrink-0 p-2 bg-primary text-white flex justify-between items-center rounded-t-xl">
         <h2 className="text-base font-semibold">GovSource Assistant</h2>
       </div>
 
       {/* Info indicator if htmlFilePath is not defined */}
       {!htmlFilePath && (
-        <div className="flex items-center gap-2 px-3 py-1 bg-secondary text-secondary-foreground text-xs border-b border-primary/20">
+        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1 bg-secondary text-secondary-foreground text-xs border-b border-primary/20">
           <svg className="h-3 w-3 text-primary/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
           <span className="text-xs">The assistant cannot process this document. It will search the web to find additional information.</span>
         </div>
       )}
       {/* Info indicator if htmlFilePath is defined */}
       {htmlFilePath && (
-        <div className="flex items-center gap-2 px-3 py-1 bg-secondary text-secondary-foreground text-xs border-b border-primary/20">
+        <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1 bg-secondary text-secondary-foreground text-xs border-b border-primary/20">
           <svg className="h-3 w-3 text-primary/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
           <span className="text-xs">The assistant will objectively analyze the text and information here. No other sources are considered.</span>
         </div>
       )}
 
       {/* Preset buttons (top, with extra spacing) - always visible, disabled if not paid subscriber */}
-      <div className="p-2 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-1.5 justify-center">
+      <div className="flex-shrink-0 p-2 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-1.5 justify-center">
         {PRESETS.map((preset) => {
           let IconComponent = null;
           switch (preset.type) {
@@ -310,7 +310,7 @@ export default function AiChat({
       </div>
 
       {/* Messages (scrollable area) */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2 bg-gray-50">
+      <div className="flex-grow flex-shrink min-h-0 overflow-y-auto p-2 space-y-2 bg-gray-50">
         {(!user && !authLoading) ? (
           <div className="p-4">
             <div className="text-center">
@@ -408,7 +408,7 @@ export default function AiChat({
       </div>
 
       {/* Input form (always visible at bottom) */}
-      <form onSubmit={handleSubmit} className="p-2 bg-white border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="flex-shrink-0 p-2 bg-white border-t border-gray-200">
         <div className="flex space-x-2">
           <Input
             type="text"
