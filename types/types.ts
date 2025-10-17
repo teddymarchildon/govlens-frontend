@@ -18,6 +18,30 @@ export interface Bill {
   } | null;
 }
 
+export type ArticlePrimaryItemType =
+  | 'bill'
+  | 'law'
+  | 'agency_document'
+  | 'executive_order'
+  | 'cluster';
+
+export interface ArticleFeedItem {
+  id: string;
+  title: string;
+  dek?: string | null;
+  summary?: string | null;
+  excerpt?: string | null;
+  bodyMarkdown?: string | null;
+  publishedAt: string;
+  author?: string | null;
+  readingTime?: number | null;
+  typeLabel: string;
+  tags: string[];
+  sourcePath: string;
+  primaryItemType: ArticlePrimaryItemType;
+  primaryItemId: string;
+}
+
 export interface BillText {
   id: string;
   bill_id: string;

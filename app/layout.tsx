@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
 import { AuthProvider } from '../contexts/AuthContext';
-import { SidebarProvider } from '../contexts/SidebarContext';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import FeedbackForm from '@/components/FeedbackForm';
+import { SiteHeader } from '@/components/shell/SiteHeader';
+import { SiteFooter } from '@/components/shell/SiteFooter';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,16 +47,14 @@ export default async function RootLayout({
     <html lang="en" className={`${inter.variable}`}>
       <body className={`${inter.className} font-sans`}>
         <AuthProvider>
-          <SidebarProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Header />
-              <Sidebar />
-              <main className="md:ml-64 pt-16 md:pt-16 p-4 md:p-6">
-                {children}
-              </main>
-            </div>
-            <FeedbackForm />
-          </SidebarProvider>
+          <div className="min-h-screen bg-slate-100">
+            <SiteHeader />
+            <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 py-10 lg:px-8">
+              {children}
+            </main>
+            <SiteFooter />
+          </div>
+          <FeedbackForm />
         </AuthProvider>
         <Analytics />
         <SpeedInsights />
